@@ -1,6 +1,6 @@
 {
 	"schemaVersion": 1,
-	"id": "modid",
+	"id": "umbral_world",
 	"version": "${version}",
 	"name": "Umbral World",
 	"description": "A terrifying dimension sequestered in the dark depths of the cosmic void!",
@@ -12,23 +12,15 @@
 		"sources": "https://github.com/TheDarkHorse99/Shadestone-Mod"
 	},
 	"license": "CC0-1.0",
-	"icon": "assets/modid/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"com.example.ExampleMod"
+			"io.github.thedarkhorse99.umbralworld.UmbralWorld"
 		],
 		"client": [
-			"com.example.client.ExampleModClient"
+			"io.github.thedarkhorse99.umbralworld.client.UmbralWorldClient"
 		]
 	},
-	"mixins": [
-		"modid.mixins.json",
-		{
-			"config": "modid.client.mixins.json",
-			"environment": "client"
-		}
-	],
 	"depends": {
 		"fabricloader": ">=0.19.5",
 		"minecraft": "~26.3",
