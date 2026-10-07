@@ -10,7 +10,8 @@ import net.minecraft.world.item.ItemStack;
 
 public class ShadestoneBladeEvents {
 	private static final int BLINDNESS_TICKS = 80;  // 4 seconds (20 ticks = 1 second)
-	private static final int COOLDOWN_TICKS = 200;  // 10 seconds
+	private static final int COOLDOWN_TICKS = 160;  // 8 seconds
+
 
 	public static void initialize() {
 		AttackEntityCallback.EVENT.register((player, level, hand, entity, hitResult) -> {
