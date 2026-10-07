@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:ore",
+  "config": {
+    "size": 3,
+    "discard_chance_on_air_exposure": 0.0,
+    "targets": [
+      {
+        "state": { "Name": "umbral_world:shadestone_ore" },
+        "target": {
+          "predicate_type": "minecraft:tag_match",
+          "tag": "minecraft:deepslate_ore_replaceables"
+        }
+      }
+    ]
+  }
+}
