@@ -13,29 +13,36 @@ import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.DropExperienceBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 
 public class ModBlocks {
-    public static final Block SHADESTONE_ORE = register(
-            "shadestone_ore",
-            properties -> new ShadestoneOreBlock(UniformInt.of(3, 7), properties),
-            BlockBehaviour.Properties.ofFullCopy(Blocks.DEEPSLATE_DIAMOND_ORE)
-    );
+	public static final Block SHADESTONE_ORE = register(
+			"shadestone_ore",
+			properties -> new ShadestoneOreBlock(UniformInt.of(3, 7), properties),
+			BlockBehaviour.Properties.ofFullCopy(Blocks.DEEPSLATE_DIAMOND_ORE)
+	);
 
-    private static Block register(String name, Function<BlockBehaviour.Properties, Block> factory, BlockBehaviour.Properties properties) {
-        ResourceKey<Block> blockKey = ResourceKey.create(Registries.BLOCK, UmbralWorld.id(name));
-        Block block = factory.apply(properties.setId(blockKey));
+	public static final Block SHADESTONE_BLOCK = register(
+			"shadestone_block",
+			Block::new,
+			BlockBehaviour.Properties.ofFullCopy(Blocks.DIAMOND_BLOCK)
+	);
 
-        ResourceKey<Item> itemKey = ResourceKey.create(Registries.ITEM, UmbralWorld.id(name));
-        BlockItem blockItem = new BlockItem(block, new Item.Properties().setId(itemKey).useBlockDescriptionPrefix());
-        Registry.register(BuiltInRegistries.ITEM, itemKey, blockItem);
+	private static Block register(String name, Function<BlockBehaviour.Properties, Block> factory, BlockBehaviour.Properties properties) {
+		ResourceKey<Block> blockKey = ResourceKey.create(Registries.BLOCK, UmbralWorld.id(name));
+		Block block = factory.apply(properties.setId(blockKey));
 
-        return Registry.register(BuiltInRegistries.BLOCK, blockKey, block);
-    }
+		ResourceKey<Item> itemKey = ResourceKey.create(Registries.ITEM, UmbralWorld.id(name));
+		BlockItem blockItem = new BlockItem(block, new Item.Properties().setId(itemKey).useBlockDescriptionPrefix());
+		Registry.register(BuiltInRegistries.ITEM, itemKey, blockItem);
 
-    public static void initialize() {
-        CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.NATURAL_BLOCKS)
-                .register(output -> output.accept(SHADESTONE_ORE));
-    }
+		return Registry.register(BuiltInRegistries.BLOCK, blockKey, block);
+	}
+
+	public static void initialize() {
+		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.NATURAL_BLOCKS)
+				.register(output -> output.accept(SHADESTONE_ORE));
+		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.BUILDING_BLOCKS)
+				.register(output -> output.accept(SHADESTONE_BLOCK));
+	}
 }
