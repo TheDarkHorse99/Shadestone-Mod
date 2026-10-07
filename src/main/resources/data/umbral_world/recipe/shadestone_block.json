@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "##",
+    "##"
+  ],
+  "key": {
+    "#": "umbral_world:shadestone_shard"
+  },
+  "result": {
+    "id": "umbral_world:shadestone_block"
+  }
+}
