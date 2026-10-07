@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "#",
+    "#",
+    "|"
+  ],
+  "key": {
+    "#": "umbral_world:shadestone_shard",
+    "|": "minecraft:stick"
+  },
+  "result": {
+    "id": "umbral_world:shadestone_blade"
+  }
+}
