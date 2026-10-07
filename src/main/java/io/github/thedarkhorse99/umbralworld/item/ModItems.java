@@ -19,9 +19,9 @@ public class ModItems {
 
 	public static final ToolMaterial SHADESTONE_MATERIAL = new ToolMaterial(
 			BlockTags.INCORRECT_FOR_IRON_TOOL,
-			500,   // durability
+			150,   // durability
 			6.0f,  // mining speed
-			2.0f,  // attack damage bonus (same as iron)
+			3.0f,  // attack damage bonus (same as diamond)
 			15,    // enchantability
 			REPAIRS_SHADESTONE
 	);
