@@ -28,6 +28,12 @@ public class ModBlocks {
 			BlockBehaviour.Properties.ofFullCopy(Blocks.DIAMOND_BLOCK)
 	);
 
+	public static final Block BARROW_DIRT = register(
+			"barrow_dirt",
+			Block::new,
+			BlockBehaviour.Properties.ofFullCopy(Blocks.COARSE_DIRT)
+	);
+
 	private static Block register(String name, Function<BlockBehaviour.Properties, Block> factory, BlockBehaviour.Properties properties) {
 		ResourceKey<Block> blockKey = ResourceKey.create(Registries.BLOCK, UmbralWorld.id(name));
 		Block block = factory.apply(properties.setId(blockKey));
@@ -44,5 +50,7 @@ public class ModBlocks {
 				.register(output -> output.accept(SHADESTONE_ORE));
 		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.BUILDING_BLOCKS)
 				.register(output -> output.accept(SHADESTONE_BLOCK));
+		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.NATURAL_BLOCKS)
+				.register(output -> output.accept(BARROW_DIRT));
 	}
 }
