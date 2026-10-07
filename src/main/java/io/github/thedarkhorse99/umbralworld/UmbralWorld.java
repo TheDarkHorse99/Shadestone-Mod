@@ -5,6 +5,7 @@ import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import io.github.thedarkhorse99.umbralworld.item.ModItems;
+import io.github.thedarkhorse99.umbralworld.block.ModBlocks;
 
 
 public class UmbralWorld implements ModInitializer {
@@ -13,6 +14,7 @@ public class UmbralWorld implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+		ModBlocks.initialize();
 		ModItems.initialize();
 		LOGGER.info("The darkness stirs beneath the bedrock...");
 	}
