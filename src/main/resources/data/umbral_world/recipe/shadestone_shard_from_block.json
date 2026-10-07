@@ -1,0 +1,9 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": ["umbral_world:shadestone_block"],
+  "result": {
+    "id": "umbral_world:shadestone_shard",
+    "count": 4
+  }
+}
