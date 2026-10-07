@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "umbral_world:block/barrow_dirt_top",
+    "side": "umbral_world:block/barrow_dirt_side",
+    "bottom": "minecraft:block/coarse_dirt"
+  }
+}
