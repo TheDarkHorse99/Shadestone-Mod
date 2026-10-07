@@ -1,12 +1,12 @@
 package io.github.thedarkhorse99.umbralworld;
 
+import io.github.thedarkhorse99.umbralworld.block.ModBlocks;
+import io.github.thedarkhorse99.umbralworld.item.ModItems;
+import io.github.thedarkhorse99.umbralworld.world.ModWorldGen;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import io.github.thedarkhorse99.umbralworld.item.ModItems;
-import io.github.thedarkhorse99.umbralworld.block.ModBlocks;
-
 
 public class UmbralWorld implements ModInitializer {
 	public static final String MOD_ID = "umbral_world";
@@ -16,6 +16,7 @@ public class UmbralWorld implements ModInitializer {
 	public void onInitialize() {
 		ModBlocks.initialize();
 		ModItems.initialize();
+		ModWorldGen.initialize();
 		LOGGER.info("The darkness stirs beneath the bedrock...");
 	}
 
