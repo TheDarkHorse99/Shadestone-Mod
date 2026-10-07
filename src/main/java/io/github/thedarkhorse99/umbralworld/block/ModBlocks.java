@@ -19,7 +19,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 public class ModBlocks {
     public static final Block SHADESTONE_ORE = register(
             "shadestone_ore",
-            properties -> new DropExperienceBlock(UniformInt.of(3, 7), properties),
+            properties -> new ShadestoneOreBlock(UniformInt.of(3, 7), properties),
             BlockBehaviour.Properties.ofFullCopy(Blocks.DEEPSLATE_DIAMOND_ORE)
     );
 
