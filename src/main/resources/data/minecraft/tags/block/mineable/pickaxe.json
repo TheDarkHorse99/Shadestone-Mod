@@ -1,4 +1,4 @@
 {
   "replace": false,
-  "values": ["umbral_world:shadestone_ore"]
+  "values": ["umbral_world:shadestone_ore", "umbral_world:shadestone_block"]
 }
