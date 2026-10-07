@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "umbral_world:item/shadestone_blade"
+  }
+}
