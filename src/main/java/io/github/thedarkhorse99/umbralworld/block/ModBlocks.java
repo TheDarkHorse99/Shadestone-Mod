@@ -24,7 +24,7 @@ public class ModBlocks {
 
 	public static final Block SHADESTONE_BLOCK = register(
 			"shadestone_block",
-			Block::new,
+			ShadestoneBlock::new,
 			BlockBehaviour.Properties.ofFullCopy(Blocks.DIAMOND_BLOCK)
 	);
 
