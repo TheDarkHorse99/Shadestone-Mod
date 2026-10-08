@@ -34,6 +34,12 @@ public class ModBlocks {
 			BlockBehaviour.Properties.ofFullCopy(Blocks.COARSE_DIRT)
 	);
 
+	public static final Block UMBRAL_PORTAL = registerBlockOnly(
+			"umbral_portal",
+			UmbralPortalBlock::new,
+			BlockBehaviour.Properties.ofFullCopy(Blocks.NETHER_PORTAL).lightLevel(state -> 0)
+	);
+
 	private static Block register(String name, Function<BlockBehaviour.Properties, Block> factory, BlockBehaviour.Properties properties) {
 		ResourceKey<Block> blockKey = ResourceKey.create(Registries.BLOCK, UmbralWorld.id(name));
 		Block block = factory.apply(properties.setId(blockKey));
@@ -42,6 +48,12 @@ public class ModBlocks {
 		BlockItem blockItem = new BlockItem(block, new Item.Properties().setId(itemKey).useBlockDescriptionPrefix());
 		Registry.register(BuiltInRegistries.ITEM, itemKey, blockItem);
 
+		return Registry.register(BuiltInRegistries.BLOCK, blockKey, block);
+	}
+
+	private static Block registerBlockOnly(String name, Function<BlockBehaviour.Properties, Block> factory, BlockBehaviour.Properties properties) {
+		ResourceKey<Block> blockKey = ResourceKey.create(Registries.BLOCK, UmbralWorld.id(name));
+		Block block = factory.apply(properties.setId(blockKey));
 		return Registry.register(BuiltInRegistries.BLOCK, blockKey, block);
 	}
 

@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "axis=x": { "model": "umbral_world:block/umbral_portal_ns" },
+    "axis=z": { "model": "umbral_world:block/umbral_portal_ew" }
+  }
+}
