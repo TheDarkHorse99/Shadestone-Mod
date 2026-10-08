@@ -6,6 +6,6 @@
       "type": "minecraft:fixed",
       "biome": "umbral_world:grave"
     },
-    "settings": "minecraft:overworld"
+    "settings": "umbral_world:umbral_world"
   }
 }
