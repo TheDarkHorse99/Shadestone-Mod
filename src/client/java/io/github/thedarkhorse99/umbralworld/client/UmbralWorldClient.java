@@ -5,5 +5,6 @@ import net.fabricmc.api.ClientModInitializer;
 public class UmbralWorldClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
+		ModRenderPipelines.initialize();
 	}
 }

@@ -21,6 +21,12 @@
 			"io.github.thedarkhorse99.umbralworld.client.UmbralWorldClient"
 		]
 	},
+	"mixins": [
+		{
+			"config": "umbral_world.client.mixins.json",
+			"environment": "client"
+		}
+	],
 	"depends": {
 		"fabricloader": ">=0.19.5",
 		"minecraft": "~26.3",

@@ -31,7 +31,10 @@
     "minecraft:visual/fog_end_distance": 24.0,
     "minecraft:visual/sky_color": "#0a0a0f",
     "minecraft:visual/sky_light_color": "#808080",
-    "minecraft:visual/sky_light_factor": 0.5
+    "minecraft:visual/sky_light_factor": 0.5,
+    "minecraft:visual/sun_angle": 45.0,
+    "minecraft:visual/moon_angle": 180.0,
+    "minecraft:visual/moon_phase": "new_moon"
   },
   "coordinate_scale": 1.0,
   "has_ceiling": false,
@@ -48,5 +51,5 @@
     "max_inclusive": 7,
     "min_inclusive": 0
   },
-  "skybox": "none"
+  "skybox": "overworld"
 }
