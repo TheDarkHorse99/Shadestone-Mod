@@ -3,6 +3,7 @@
   "block.umbral_world.shadestone_ore": "Shadestone Ore",
   "item.umbral_world.shadestone_blade": "Shadestone Blade",
   "block.umbral_world.shadestone_block": "Block of Shadestone",
-  "block.umbral_world.barrow_dirt": "Barrow Dirt"
+  "block.umbral_world.barrow_dirt": "Barrow Dirt",
+  "umbral_world.bed.no_sleep": "In the void...you cannot rest."
 }
 

@@ -1,0 +1,11 @@
+{
+  "type": "umbral_world:umbral_world",
+  "generator": {
+    "type": "minecraft:noise",
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "umbral_world:grave"
+    },
+    "settings": "minecraft:overworld"
+  }
+}
