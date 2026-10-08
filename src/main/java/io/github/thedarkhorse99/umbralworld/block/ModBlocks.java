@@ -14,6 +14,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.fabricmc.fabric.api.object.builder.v1.world.poi.PoiHelper;
+import net.minecraft.world.entity.ai.village.poi.PoiType;
 
 public class ModBlocks {
 	public static final Block SHADESTONE_ORE = register(
@@ -40,6 +42,9 @@ public class ModBlocks {
 			BlockBehaviour.Properties.ofFullCopy(Blocks.NETHER_PORTAL).lightLevel(state -> 0)
 	);
 
+	public static final ResourceKey<PoiType> UMBRAL_PORTAL_POI =
+			ResourceKey.create(Registries.POINT_OF_INTEREST_TYPE, UmbralWorld.id("umbral_portal"));
+
 	private static Block register(String name, Function<BlockBehaviour.Properties, Block> factory, BlockBehaviour.Properties properties) {
 		ResourceKey<Block> blockKey = ResourceKey.create(Registries.BLOCK, UmbralWorld.id(name));
 		Block block = factory.apply(properties.setId(blockKey));
@@ -64,5 +69,6 @@ public class ModBlocks {
 				.register(output -> output.accept(SHADESTONE_BLOCK));
 		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.NATURAL_BLOCKS)
 				.register(output -> output.accept(BARROW_DIRT));
+		PoiHelper.register(UmbralWorld.id("umbral_portal"), 0, 1, UMBRAL_PORTAL);
 	}
 }

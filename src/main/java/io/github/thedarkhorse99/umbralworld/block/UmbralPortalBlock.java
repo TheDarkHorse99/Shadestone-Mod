@@ -25,19 +25,23 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
-import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.portal.TeleportTransition;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jspecify.annotations.Nullable;
+import java.util.Comparator;
+import java.util.Optional;
+import net.minecraft.world.entity.ai.village.poi.PoiManager;
+import net.minecraft.world.entity.ai.village.poi.PoiRecord;
 
 public class UmbralPortalBlock extends Block implements Portal {
     public static final EnumProperty<Direction.Axis> AXIS = BlockStateProperties.HORIZONTAL_AXIS;
     private static final Map<Direction.Axis, VoxelShape> SHAPES =
             Shapes.rotateHorizontalAxis(Block.column(4.0, 16.0, 0.0, 16.0));
     private static final int LIGHT_CHECK_INTERVAL = 20; // ticks (1 second)
+    private static final int EXIT_SEARCH_RADIUS = 32;
 
     public UmbralPortalBlock(BlockBehaviour.Properties properties) {
         super(properties);
@@ -120,25 +124,44 @@ public class UmbralPortalBlock extends Block implements Portal {
             return null;
         }
 
-        int x = portalEntryPos.getX();
-        int z = portalEntryPos.getZ();
-        targetLevel.getChunk(x >> 4, z >> 4);
-        int y = targetLevel.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
-        Vec3 arrival = new Vec3(x + 0.5, y, z + 0.5);
+        BlockPos approximateExit = BlockPos.containing(entity.getX(), entity.getY(), entity.getZ());
 
+        // Is there already a portal near where we'd arrive?
+        Optional<BlockPos> existing = findExitPortal(targetLevel, approximateExit);
+        if (existing.isPresent()) {
+            BlockPos found = existing.get();
+            Direction.Axis axis = targetLevel.getBlockState(found).getValue(AXIS);
+            UmbralPortalShape exitShape = UmbralPortalShape.findAnyShape(targetLevel, found, axis);
+            if (exitShape.isValid()) {
+                return new TeleportTransition(targetLevel, exitShape.getArrivalPoint(), Vec3.ZERO,
+                        entity.getYRot(), entity.getXRot(),
+                        TeleportTransition.PLAY_PORTAL_SOUND.then(e -> e.placePortalTicket(found)));
+            }
+        }
+
+        // No portal found: build one
+        if (entity.isSpectator()) {
+            return null;
+        }
+        Direction.Axis sourceAxis = currentLevel.getBlockState(portalEntryPos).getOptionalValue(AXIS).orElse(Direction.Axis.X);
+        Optional<BlockPos> created = UmbralPortalForcer.createPortal(targetLevel, approximateExit, sourceAxis);
+        if (created.isEmpty()) {
+            return null;
+        }
+        BlockPos bottomLeft = created.get();
+        UmbralPortalShape newShape = UmbralPortalShape.findAnyShape(targetLevel, bottomLeft, sourceAxis);
+        Vec3 arrival = newShape.isValid() ? newShape.getArrivalPoint() : Vec3.atBottomCenterOf(bottomLeft);
         return new TeleportTransition(targetLevel, arrival, Vec3.ZERO,
-                entity.getYRot(), entity.getXRot(), TeleportTransition.PLAY_PORTAL_SOUND);
+                entity.getYRot(), entity.getXRot(),
+                TeleportTransition.PLAY_PORTAL_SOUND.then(TeleportTransition.PLACE_PORTAL_TICKET));
     }
 
-    // ---- Visuals ----
-
-    @Override
-    public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random) {
-        for (int i = 0; i < 2; i++) {
-            double x = pos.getX() + random.nextDouble();
-            double y = pos.getY() + random.nextDouble();
-            double z = pos.getZ() + random.nextDouble();
-            level.addParticle(ParticleTypes.SMOKE, x, y, z, 0.0, 0.02, 0.0);
-        }
+    private static Optional<BlockPos> findExitPortal(ServerLevel level, BlockPos center) {
+        PoiManager poiManager = level.getPoiManager();
+        poiManager.ensureLoadedAndValid(level, center, EXIT_SEARCH_RADIUS);
+        return poiManager.getInSquare(type -> type.is(ModBlocks.UMBRAL_PORTAL_POI), center, EXIT_SEARCH_RADIUS, PoiManager.Occupancy.ANY)
+                .map(PoiRecord::getPos)
+                .filter(pos -> level.getBlockState(pos).is(ModBlocks.UMBRAL_PORTAL))
+                .min(Comparator.comparingDouble(pos -> pos.distSqr(center)));
     }
 }

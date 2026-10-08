@@ -8,6 +8,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.Nullable;
+import net.minecraft.world.phys.Vec3;
 
 public class UmbralPortalShape {
     private static final int MIN_WIDTH = 2;
@@ -177,6 +178,12 @@ public class UmbralPortalShape {
 
     public BlockPos getCenter() {
         return bottomLeft.above(height / 2).relative(rightDir, width / 2);
+    }
+
+    public Vec3 getArrivalPoint() {
+        Vec3 first = Vec3.atBottomCenterOf(bottomLeft);
+        Vec3 last = Vec3.atBottomCenterOf(bottomLeft.relative(rightDir, width - 1));
+        return first.add(last).scale(0.5);
     }
 
     private Iterable<BlockPos> interior() {
