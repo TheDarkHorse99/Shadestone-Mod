@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:block_blob",
+  "can_place_on": {
+    "type": "minecraft:matching_block_tag",
+    "tag": "umbral_world:grave_rock_can_place_on"
+  },
+  "state": "minecraft:tuff"
+}
