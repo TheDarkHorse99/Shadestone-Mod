@@ -1,7 +1,7 @@
 {
   "type": "minecraft:ore",
   "discard_chance_on_air_exposure": 0.0,
-  "size": 3,
+  "size": 4,
   "targets": [
     {
       "state": "umbral_world:shadestone_ore",
