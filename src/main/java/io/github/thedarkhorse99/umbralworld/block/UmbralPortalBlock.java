@@ -7,13 +7,18 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.InsideBlockEffectApplier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.ScheduledTickAccess;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Portal;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
@@ -26,11 +31,13 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import org.jspecify.annotations.Nullable;
 
 public class UmbralPortalBlock extends Block implements Portal {
     public static final EnumProperty<Direction.Axis> AXIS = BlockStateProperties.HORIZONTAL_AXIS;
     private static final Map<Direction.Axis, VoxelShape> SHAPES =
             Shapes.rotateHorizontalAxis(Block.column(4.0, 16.0, 0.0, 16.0));
+    private static final int LIGHT_CHECK_INTERVAL = 20; // ticks (1 second)
 
     public UmbralPortalBlock(BlockBehaviour.Properties properties) {
         super(properties);
@@ -46,6 +53,44 @@ public class UmbralPortalBlock extends Block implements Portal {
     protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return SHAPES.get(state.getValue(AXIS));
     }
+
+    // ---- Collapse: frame broken ----
+
+    @Override
+    protected BlockState updateShape(BlockState state, LevelReader level, ScheduledTickAccess ticks, BlockPos pos,
+                                     Direction directionToNeighbour, BlockPos neighbourPos, BlockState neighbourState,
+                                     RandomSource random) {
+        Direction.Axis updateAxis = directionToNeighbour.getAxis();
+        Direction.Axis axis = state.getValue(AXIS);
+        boolean wrongAxis = axis != updateAxis && updateAxis.isHorizontal();
+
+        if (wrongAxis || neighbourState.is(this) || UmbralPortalShape.findAnyShape(level, pos, axis).isComplete()) {
+            return super.updateShape(state, level, ticks, pos, directionToNeighbour, neighbourPos, neighbourState, random);
+        }
+        return Blocks.AIR.defaultBlockState();
+    }
+
+    // ---- Collapse: too much light ----
+
+    @Override
+    protected void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean movedByPiston) {
+        level.scheduleTick(pos, this, LIGHT_CHECK_INTERVAL);
+    }
+
+    @Override
+    protected void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
+        if (level.getMaxLocalRawBrightness(pos) > UmbralPortalShape.MAX_LIGHT) {
+            level.playSound(null, pos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 1.0f, 0.6f);
+            level.sendParticles(ParticleTypes.SMOKE,
+                    pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
+                    10, 0.3, 0.5, 0.3, 0.01);
+            level.removeBlock(pos, false);
+        } else {
+            level.scheduleTick(pos, this, LIGHT_CHECK_INTERVAL);
+        }
+    }
+
+    // ---- Teleporting ----
 
     @Override
     protected void entityInside(BlockState state, Level level, BlockPos pos, Entity entity,
@@ -66,7 +111,7 @@ public class UmbralPortalBlock extends Block implements Portal {
     }
 
     @Override
-    public TeleportTransition getPortalDestination(ServerLevel currentLevel, Entity entity, BlockPos portalEntryPos) {
+    public @Nullable TeleportTransition getPortalDestination(ServerLevel currentLevel, Entity entity, BlockPos portalEntryPos) {
         ResourceKey<Level> targetKey = currentLevel.dimension() == ModDimensions.UMBRAL_WORLD
                 ? Level.OVERWORLD
                 : ModDimensions.UMBRAL_WORLD;
@@ -84,6 +129,8 @@ public class UmbralPortalBlock extends Block implements Portal {
         return new TeleportTransition(targetLevel, arrival, Vec3.ZERO,
                 entity.getYRot(), entity.getXRot(), TeleportTransition.PLAY_PORTAL_SOUND);
     }
+
+    // ---- Visuals ----
 
     @Override
     public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random) {
