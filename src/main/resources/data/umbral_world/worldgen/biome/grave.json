@@ -39,12 +39,14 @@
         }
       ],
       "modifier": "append"
-    }
+    },
+    "minecraft:visual/water_fog_color": "#0b0609",
+    "minecraft:visual/water_fog_end_distance": 24.0
   },
   "carvers": [],
   "downfall": 0.5,
   "effects": {
-    "water_color": "#2a2838"
+    "water_color": "#170b12"
   },
   "features": [
     [],

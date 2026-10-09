@@ -2,13 +2,6 @@
   "type": "minecraft:sequence",
   "sequence": [
     "minecraft:bedrock_floor",
-    {
-      "type": "minecraft:condition",
-      "if_true": {
-        "type": "minecraft:above_preliminary_surface"
-      },
-      "then_run": "umbral_world:grave_surface"
-    },
-    "minecraft:overworld/underground"
+    "umbral_world:grave_surface"
   ]
 }

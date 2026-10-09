@@ -1,5 +1,14 @@
 {
   "variants": {
-    "": { "model": "umbral_world:block/barrow_dirt" }
+    "": [
+      { "model": "umbral_world:block/barrow_dirt" },
+      { "model": "umbral_world:block/barrow_dirt", "y": 90 },
+      { "model": "umbral_world:block/barrow_dirt", "y": 180 },
+      { "model": "umbral_world:block/barrow_dirt", "y": 270 },
+      { "model": "umbral_world:block/barrow_dirt_mirrored" },
+      { "model": "umbral_world:block/barrow_dirt_mirrored", "y": 90 },
+      { "model": "umbral_world:block/barrow_dirt_mirrored", "y": 180 },
+      { "model": "umbral_world:block/barrow_dirt_mirrored", "y": 270 }
+    ]
   }
 }

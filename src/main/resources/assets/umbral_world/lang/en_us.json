@@ -6,6 +6,7 @@
   "block.umbral_world.barrow_dirt": "Barrow Dirt",
   "umbral_world.bed.no_sleep": "In the void...you cannot rest.",
   "block.umbral_world.umbral_portal": "Umbral Portal",
-  "umbral_world.portal.too_bright": "The light is too strong. (light level %s)"
+  "umbral_world.portal.too_bright": "The light is too strong. (light level %s)",
+  "tag.item.umbral_world.repairs_shadestone": "Shadestone Repair Materials"
 }
 

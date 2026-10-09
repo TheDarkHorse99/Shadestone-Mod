@@ -1,8 +1,21 @@
 {
-  "type": "minecraft:block_blob",
-  "can_place_on": {
+  "type": "minecraft:block_column",
+  "allowed_placement": {
     "type": "minecraft:matching_block_tag",
-    "tag": "umbral_world:grave_rock_can_place_on"
+    "tag": "minecraft:air"
   },
-  "state": "minecraft:tuff"
+  "direction": "up",
+  "layers": [
+    {
+      "height": {
+        "type": "minecraft:biased_to_bottom",
+        "min_inclusive": 2,
+        "max_inclusive": 6
+      },
+      "provider": {
+        "id": "minecraft:bone_block"
+      }
+    }
+  ],
+  "prioritize_tip": false
 }
