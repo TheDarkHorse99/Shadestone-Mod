@@ -3,6 +3,7 @@
   "values": [
     "umbral_world:barrow_dirt",
     "umbral_world:shadestone_ore",
-    "umbral_world:shadestone_block"
+    "umbral_world:shadestone_block",
+    "umbral_world:dark_furnace"
   ]
 }

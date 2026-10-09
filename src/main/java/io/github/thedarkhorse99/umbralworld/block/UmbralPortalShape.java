@@ -148,7 +148,7 @@ public class UmbralPortalShape {
     }
 
     private static boolean isFrame(BlockState state) {
-        return state.is(ModBlocks.SHADESTONE_BLOCK);
+        return state.is(ModBlocks.SHADESTONE_BLOCK) && state.getValue(ShadestoneBlock.PLACED);
     }
 
     // ---- Using a found frame ----
@@ -174,6 +174,11 @@ public class UmbralPortalShape {
         for (BlockPos pos : interior()) {
             level.setBlock(pos, portalState, 18);
         }
+    }
+
+    /** The frame block directly under the opening's bottom-left corner. Always a placed Shadestone. */
+    public BlockPos getAnchor() {
+        return bottomLeft.below();
     }
 
     public BlockPos getCenter() {

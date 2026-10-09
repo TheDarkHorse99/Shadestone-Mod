@@ -88,6 +88,9 @@ public class UmbralPortalBlock extends Block implements Portal {
             level.sendParticles(ParticleTypes.SMOKE,
                     pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
                     10, 0.3, 0.5, 0.3, 0.01);
+            UmbralPortalShape shape = UmbralPortalShape.findAnyShape(level, pos, state.getValue(AXIS));
+            if (shape.isValid()) ShadestoneBlock.watch(level, shape);
+            level.removeBlock(pos, false);
             level.removeBlock(pos, false);
         } else {
             level.scheduleTick(pos, this, LIGHT_CHECK_INTERVAL);

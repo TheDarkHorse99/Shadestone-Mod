@@ -42,6 +42,12 @@ public class ModBlocks {
 			BlockBehaviour.Properties.ofFullCopy(Blocks.NETHER_PORTAL).lightLevel(_ -> 0)
 	);
 
+	public static final Block DARK_FURNACE = register(
+			"dark_furnace",
+			DarkFurnaceBlock::new,
+			BlockBehaviour.Properties.ofFullCopy(Blocks.DEEPSLATE)
+	);
+
 	public static final ResourceKey<PoiType> UMBRAL_PORTAL_POI =
 			ResourceKey.create(Registries.POINT_OF_INTEREST_TYPE, UmbralWorld.id("umbral_portal"));
 
@@ -69,6 +75,8 @@ public class ModBlocks {
 				.register(output -> output.accept(SHADESTONE_BLOCK));
 		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.NATURAL_BLOCKS)
 				.register(output -> output.accept(BARROW_DIRT));
+		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.FUNCTIONAL_BLOCKS)
+				.register(output -> output.accept(DARK_FURNACE));
 		PoiHelper.register(UmbralWorld.id("umbral_portal"), 0, 1, UMBRAL_PORTAL);
 	}
 }

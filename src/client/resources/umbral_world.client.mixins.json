@@ -3,7 +3,8 @@
   "package": "io.github.thedarkhorse99.umbralworld.client.mixin",
   "compatibilityLevel": "JAVA_25",
   "client": [
-    "SkyRendererMixin"
+    "SkyRendererMixin",
+    "FogRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -101,7 +101,7 @@ public final class UmbralPortalForcer {
         }
 
         // 3. Build the frame.
-        BlockState frame = ModBlocks.SHADESTONE_BLOCK.defaultBlockState();
+        BlockState frame = ModBlocks.SHADESTONE_BLOCK.defaultBlockState().setValue(ShadestoneBlock.PLACED, true);
         for (int width = -1; width < 3; width++) {
             for (int h = -1; h < 4; h++) {
                 boolean isEdge = width == -1 || width == 2 || h == -1 || h == 3;

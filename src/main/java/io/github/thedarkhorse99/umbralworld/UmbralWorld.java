@@ -7,6 +7,9 @@ import net.fabricmc.api.ModInitializer;
 import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import io.github.thedarkhorse99.umbralworld.effect.ModEffects;
+import io.github.thedarkhorse99.umbralworld.block.entity.ModBlockEntities;
+import io.github.thedarkhorse99.umbralworld.menu.ModMenus;
 
 public class UmbralWorld implements ModInitializer {
 	public static final String MOD_ID = "umbral_world";
@@ -14,8 +17,11 @@ public class UmbralWorld implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+		ModEffects.initialize();
 		ModBlocks.initialize();
 		ModItems.initialize();
+		ModBlockEntities.initialize();
+		ModMenus.initialize();
 		ModWorldGen.initialize();
 		LOGGER.info("The darkness stirs beneath the bedrock...");
 	}
