@@ -26,7 +26,7 @@ public class ShadestoneBlock extends Block {
 
     @Override
     public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random) {
-        ShadestoneSmoke.spawn(level, pos, random, 1.0f);
+        ShadestoneSmoke.spawn(level, pos, random, 0.15f);
     }
 
     @Override

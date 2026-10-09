@@ -27,7 +27,7 @@ public class ModBlocks {
 	public static final Block SHADESTONE_BLOCK = register(
 			"shadestone_block",
 			ShadestoneBlock::new,
-			BlockBehaviour.Properties.ofFullCopy(Blocks.DIAMOND_BLOCK)
+			BlockBehaviour.Properties.ofFullCopy(Blocks.DEEPSLATE)
 	);
 
 	public static final Block BARROW_DIRT = register(
@@ -39,7 +39,7 @@ public class ModBlocks {
 	public static final Block UMBRAL_PORTAL = registerBlockOnly(
 			"umbral_portal",
 			UmbralPortalBlock::new,
-			BlockBehaviour.Properties.ofFullCopy(Blocks.NETHER_PORTAL).lightLevel(state -> 0)
+			BlockBehaviour.Properties.ofFullCopy(Blocks.NETHER_PORTAL).lightLevel(_ -> 0)
 	);
 
 	public static final ResourceKey<PoiType> UMBRAL_PORTAL_POI =

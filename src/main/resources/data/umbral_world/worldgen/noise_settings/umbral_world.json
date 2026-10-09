@@ -1,5 +1,5 @@
 {
-  "default_block": "minecraft:deepslate",
+  "default_block": "umbral_world:shadestone_block",
   "default_fluid": "minecraft:water",
   "disable_mob_generation": false,
   "legacy_random_source": false,
