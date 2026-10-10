@@ -10,6 +10,7 @@
   "tag.item.umbral_world.repairs_shadestone": "Shadestone Repair Materials",
   "effect.umbral_world.deep_blindness": "Deep Blindness",
   "block.umbral_world.dark_furnace": "Dark Furnace",
-  "container.umbral_world.dark_furnace": "Dark Furnace"
+  "container.umbral_world.dark_furnace": "Dark Furnace",
+  "itemGroup.umbral_world": "Umbral World"
 }
 

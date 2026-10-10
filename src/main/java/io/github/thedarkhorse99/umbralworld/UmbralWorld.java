@@ -1,6 +1,7 @@
 package io.github.thedarkhorse99.umbralworld;
 
 import io.github.thedarkhorse99.umbralworld.block.ModBlocks;
+import io.github.thedarkhorse99.umbralworld.item.ModCreativeTabs;
 import io.github.thedarkhorse99.umbralworld.item.ModItems;
 import io.github.thedarkhorse99.umbralworld.world.ModWorldGen;
 import net.fabricmc.api.ModInitializer;
@@ -20,6 +21,7 @@ public class UmbralWorld implements ModInitializer {
 		ModEffects.initialize();
 		ModBlocks.initialize();
 		ModItems.initialize();
+		ModCreativeTabs.initialize();
 		ModBlockEntities.initialize();
 		ModMenus.initialize();
 		ModWorldGen.initialize();
