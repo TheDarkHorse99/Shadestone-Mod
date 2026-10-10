@@ -16,6 +16,9 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.fabricmc.fabric.api.object.builder.v1.world.poi.PoiHelper;
 import net.minecraft.world.entity.ai.village.poi.PoiType;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.material.MapColor;
+import net.minecraft.world.level.material.PushReaction;
 
 public class ModBlocks {
 	public static final Block SHADESTONE_ORE = register(
@@ -48,6 +51,22 @@ public class ModBlocks {
 			BlockBehaviour.Properties.ofFullCopy(Blocks.DEEPSLATE)
 	);
 
+	public static final Block WITHERED_TUFTS = register(
+			"withered_tufts",
+			properties -> new GravePlantBlock(Block.column(12.0, 0.0, 13.0), properties),
+			BlockBehaviour.Properties.ofFullCopy(Blocks.DEAD_BUSH)
+	);
+
+	public static final Block GRAVE_THORNS = register(
+			"grave_thorns",
+			GraveThornsBlock::new,
+			BlockBehaviour.Properties.of()
+					.mapColor(MapColor.COLOR_BLACK)
+					.noCollision()
+					.sound(SoundType.SWEET_BERRY_BUSH)
+					.pushReaction(PushReaction.POPPED)
+	);
+
 	public static final ResourceKey<PoiType> UMBRAL_PORTAL_POI =
 			ResourceKey.create(Registries.POINT_OF_INTEREST_TYPE, UmbralWorld.id("umbral_portal"));
 
@@ -75,6 +94,11 @@ public class ModBlocks {
 				.register(output -> output.accept(SHADESTONE_BLOCK));
 		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.NATURAL_BLOCKS)
 				.register(output -> output.accept(BARROW_DIRT));
+		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.NATURAL_BLOCKS)
+				.register(output -> {
+					output.accept(WITHERED_TUFTS);
+					output.accept(GRAVE_THORNS);
+				});
 		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.FUNCTIONAL_BLOCKS)
 				.register(output -> output.accept(DARK_FURNACE));
 		PoiHelper.register(UmbralWorld.id("umbral_portal"), 0, 1, UMBRAL_PORTAL);

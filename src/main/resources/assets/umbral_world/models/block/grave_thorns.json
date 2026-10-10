@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cross",
+  "textures": {
+    "cross": "umbral_world:block/grave_thorns"
+  }
+}

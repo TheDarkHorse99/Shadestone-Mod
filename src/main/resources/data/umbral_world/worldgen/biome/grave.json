@@ -51,16 +51,14 @@
   "features": [
     [],
     [],
-    [
-      "umbral_world:grave_rock"
-    ],
+    ["umbral_world:grave_rock"],
     [],
     [],
     [],
     [],
     [],
     [],
-    [],
+    ["umbral_world:patch_withered_tufts", "umbral_world:patch_grave_thorns"],
     []
   ],
   "has_precipitation": false,

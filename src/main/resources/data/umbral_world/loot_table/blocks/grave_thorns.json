@@ -1,0 +1,31 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:alternatives",
+          "children": [
+            {
+              "type": "minecraft:item",
+              "condition": "minecraft:tool/can_shear",
+              "name": "umbral_world:grave_thorns"
+            },
+            {
+              "type": "minecraft:item",
+              "name": "minecraft:stick",
+              "modifier": [
+                {
+                  "type": "minecraft:set_count",
+                  "count": { "type": "minecraft:uniform", "min": 0, "max": 2 }
+                },
+                { "type": "minecraft:explosion_decay" }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

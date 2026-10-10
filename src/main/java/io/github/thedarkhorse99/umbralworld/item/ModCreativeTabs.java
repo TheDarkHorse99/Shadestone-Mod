@@ -27,6 +27,8 @@ public final class ModCreativeTabs {
 						output.accept(ModBlocks.SHADESTONE_BLOCK);
 						output.accept(ModBlocks.SHADESTONE_ORE);
 						output.accept(ModBlocks.BARROW_DIRT);
+						output.accept(ModBlocks.WITHERED_TUFTS);
+						output.accept(ModBlocks.GRAVE_THORNS);
 						output.accept(ModBlocks.DARK_FURNACE);
 						output.accept(ModItems.SHADESTONE_SHARD);
 						output.accept(ModItems.SHADESTONE_BLADE);

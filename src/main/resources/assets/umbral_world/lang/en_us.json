@@ -11,6 +11,10 @@
   "effect.umbral_world.deep_blindness": "Deep Blindness",
   "block.umbral_world.dark_furnace": "Dark Furnace",
   "container.umbral_world.dark_furnace": "Dark Furnace",
-  "itemGroup.umbral_world": "Umbral World"
+  "itemGroup.umbral_world": "Umbral World",
+  "block.umbral_world.withered_tufts": "Withered Tufts",
+  "block.umbral_world.grave_thorns": "Grave Thorns",
+  "death.attack.umbral_world.grave_thorns": "%1$s succumbed to the Grave Thorns",
+  "death.attack.umbral_world.grave_thorns.player": "%1$s succumbed to the Grave Thorns while trying to escape %2$s"
 }
 
