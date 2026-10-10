@@ -8,7 +8,6 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
-import net.minecraft.world.inventory.FurnaceResultSlot;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
@@ -44,7 +43,7 @@ public class DarkFurnaceMenu extends AbstractContainerMenu {
         this.smeltable = inventory.player.level().recipeAccess().propertySet(RecipePropertySet.FURNACE_INPUT);
 
         addSlot(new Slot(container, INPUT, 56, 17));
-        addSlot(new FurnaceResultSlot(inventory.player, container, RESULT, 116, 35));
+        addSlot(new DarkFurnaceResultSlot(inventory.player, container, RESULT, 116, 35));
         addStandardInventorySlots(inventory, 8, 84);
         addDataSlots(data);
     }
