@@ -91,7 +91,13 @@ public class Crawler extends Monster {
 		goalSelector.addGoal(1, new CrawlAwayGoal());                            // after being hit
 		goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.0, false));          // chase off whoever came near its plant
 		goalSelector.addGoal(4, new SeekPlantGoal());                            // crawl back to the plants
-		goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 0.6));  // shift around now and then
+		// Wander only while it has no plant: once it's lying next to one, it stays put
+		goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 0.6) {
+			@Override
+			public boolean canUse() {
+				return plant == null && super.canUse();
+			}
+		});
 		goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8.0f));
 		goalSelector.addGoal(7, new RandomLookAroundGoal(this));
 		// No target goals: it only picks targets itself, in guardPlant()

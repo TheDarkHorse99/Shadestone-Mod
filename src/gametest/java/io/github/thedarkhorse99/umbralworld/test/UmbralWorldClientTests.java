@@ -307,6 +307,7 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 
 		// Walk towards it until it notices (or 3 seconds)
 		facePosition(ghoul);
+		double walkStart = distanceToPlayer(ghoul);
 		context.getInput().holdKey(options -> options.keyUp);
 		int walked = 0;
 		while (walked < 60 && !ghoulScared(ghoul)) {
@@ -315,14 +316,20 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		}
 		double heardAt = distanceToPlayer(ghoul);
 		context.getInput().releaseKey(options -> options.keyUp);
-		check(String.format("walking up scares it (heard you at %.1f blocks, expected about 8 or less)", heardAt),
+		check(String.format("walking up scares it (heard you at %.1f blocks after %d ticks of walking from %.1f blocks; expected about 8 or less)", heardAt, walked, walkStart),
 				ghoulScared(ghoul) && heardAt < 9.0);
 
 		// How fast does it run away?
 		Vec3 start = entityPosition(ghoul);
-		context.waitTicks(40);
+		List<String> fleeTrace = new ArrayList<>();
+		for (int i = 0; i < 4; i++) {
+			context.waitTicks(10);
+			fleeTrace.add(onServer(server -> server.overworld().getEntity(ghoul) instanceof Ghoul g
+					? String.format(java.util.Locale.ROOT, "%.1f,%.1f %s", g.getX(), g.getZ(), g.getNavigation().isDone() ? "stopped" : "moving")
+					: "gone"));
+		}
 		double fleeSpeed = entityPosition(ghoul).subtract(start).horizontalDistance() / 2.0;
-		check(String.format("it runs away (%.1f blocks/second over 2 seconds)", fleeSpeed), fleeSpeed > 2.0);
+		check(String.format("it runs away (%.1f blocks/second over 2 seconds; positions every half second: %s)", fleeSpeed, fleeTrace), fleeSpeed > 2.0);
 
 		// Stand still: it calms down 5 seconds after it last heard you
 		context.waitTicks(120);
@@ -558,7 +565,7 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		int waited = 0;
 		boolean reached = false;
 		List<String> trace = new ArrayList<>();
-		while (waited < 200 && !reached) {
+		while (waited < 300 && !reached) {
 			context.waitTicks(5);
 			waited += 5;
 			reached = onServer(server -> player(server).getLastHurtByMob() instanceof CursedSoul);

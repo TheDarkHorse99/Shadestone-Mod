@@ -59,7 +59,7 @@ public class CursedSoul extends Vex {
 	protected void populateDefaultEquipmentSlots(RandomSource random, DifficultyInstance difficulty) {
 	}
 
-	/** Like the Vex's idle drifting, but quicker, so it never seems to stay still. */
+	/** Like the Vex's idle drifting, but quicker, so it never seems to stay still. Only when it has no target. */
 	private class DartAroundGoal extends Goal {
 		DartAroundGoal() {
 			setFlags(EnumSet.of(Flag.MOVE));
@@ -67,7 +67,8 @@ public class CursedSoul extends Vex {
 
 		@Override
 		public boolean canUse() {
-			return !getMoveControl().hasWanted() && getRandom().nextInt(reducedTickDelay(5)) == 0;
+			// Only while idle: mid-fight the Vex's own goals take over, so it keeps charging
+			return getTarget() == null && !getMoveControl().hasWanted() && getRandom().nextInt(reducedTickDelay(5)) == 0;
 		}
 
 		@Override
