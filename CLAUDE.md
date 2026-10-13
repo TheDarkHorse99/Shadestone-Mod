@@ -90,11 +90,16 @@ Written, awaiting Mac's in-game test: **Miasma stage 4, Ectoplasm**. The Phantom
 
 ## Planned
 
-Shadestone tools and armor · animated portal · twin black suns with a purple-blue/dark-red sky cycle · the Wight's Shroud and the invisible-in-light system · Corpse Candles and the ghoul mob · snuffing vanilla candles/campfires · Grave ruins with a spire · the Miasma and Chasm biomes (see below) · a see-in-the-dark item and shadow powers · falling into the void as a way in · license, icon, version 0.1.0
+Shadestone tools and armor · animated portal · twin black suns with a purple-blue/dark-red sky cycle · the Wight's Shroud, Corpse Candles and the Ghoul (see Grave biome below) · snuffing vanilla candles/campfires · Grave ruins with a spire · the Miasma and Chasm biomes (see below) · a see-in-the-dark item and shadow powers · falling into the void as a way in · license, icon, version 0.1.0
 
 ## Biome designs (decided, partly built)
 
 The dimension will have three biomes, roughly equal in size: the Grave, the Miasma and the Chasm. Terrain shape is shared by all biomes, so biome placement and terrain must be driven by the same noise for the Chasm's flat land and fissures to line up with the biome.
+
+**Grave biome** (built: Barrow Dirt, ash, Withered Tufts, Grave Thorns, the Wight). Next additions, designs agreed but details still open:
+- **Ghoul**: a hunched, zombie-like creature, very dark except for bright fiery glowing eyes that should be visible through the fog even when its body isn't. It moves slowly and runs away (faster) when it notices a player. It notices players by "hearing": sprinting alerts it from far away, walking only when closer, sneaking doesn't alert it. Weak: dies to 1-2 diamond sword hits. Drops 0-2 Corpse Candles
+- **Corpse Candle**: a floating orb of fire that sits just above the ground. Light level 4, bright orange-red like normal fire. Dropped by Ghouls
+- **Wight's Shroud**: a cloth item dropped by the Wight that makes the wearer invisible in the day/light
 
 **Miasma biome** (being built in stages: soil/particles/colours → tree → 3 bushes → sap/potion → mobs): a pink/purple/blue "sinister fairy forest". It should feel slow, drowsy and sickly, but more colourful and pretty than the other biomes.
 - Its own custom soil, **Effluvium**, coloured like the flora, with separate top/side/bottom textures like grass
@@ -105,7 +110,9 @@ The dimension will have three biomes, roughly equal in size: the Grave, the Mias
   - Ectoplasm Bottle + Awkward Potion → **Potion of the Nightstalker** (3:00; redstone → 8:00; no Strong version). Effect **Nightstalker**: "Frodo's ring" vision (washed-out purple screen, hostile mobs you can see are outlined, not through walls), +2 attack damage, +15% speed, but hostile mobs notice you from 1.5× as far away
   - Rejected: phasing through blocks (buggy and exploitable); invisible-in-the-dark overlaps the Wight's Shroud
 - Three plants that give an effect to players standing near them, shown by coloured specks: **Frail Bramble** (thorny bush, Weakness, purple), **Pale Blossoms** (single white flower, Nausea, white; rarest because nausea is harshest), **Torpor Sprout** (ground cover like Pink Petals, 1–4 per block, Slowness, red)
-- One peaceful mob and one hostile mob
+- Two mobs (drops not decided yet):
+  - **Cursed Soul** (hostile): a black/dark wisp of light with a trail. Flies around fast and attacks players. Spawns near Ghost Trees
+  - **Crawler** (passive): the top half of a zombie, crawling on its arms. Drawn to the aura plants as if addicted to their effects. Crawls away when hit
 
 **Chasm biome**: flat land cut by very deep fissures, too dark to see the bottom. Mostly thin fissures, sometimes large gorges.
 - A third custom block makes the surface and the first few layers down; below that it's Shadestone
