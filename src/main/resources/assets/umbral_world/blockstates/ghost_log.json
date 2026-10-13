@@ -1,0 +1,120 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "umbral_world:block/ghost_log_side"
+      },
+      "when": {
+        "north": "true"
+      }
+    },
+    {
+      "apply": {
+        "model": "umbral_world:block/ghost_log_noside"
+      },
+      "when": {
+        "north": "false"
+      }
+    },
+    {
+      "apply": {
+        "model": "umbral_world:block/ghost_log_side",
+        "y": 90,
+        "uvlock": true
+      },
+      "when": {
+        "east": "true"
+      }
+    },
+    {
+      "apply": {
+        "model": "umbral_world:block/ghost_log_noside",
+        "y": 90,
+        "uvlock": true
+      },
+      "when": {
+        "east": "false"
+      }
+    },
+    {
+      "apply": {
+        "model": "umbral_world:block/ghost_log_side",
+        "y": 180,
+        "uvlock": true
+      },
+      "when": {
+        "south": "true"
+      }
+    },
+    {
+      "apply": {
+        "model": "umbral_world:block/ghost_log_noside",
+        "y": 180,
+        "uvlock": true
+      },
+      "when": {
+        "south": "false"
+      }
+    },
+    {
+      "apply": {
+        "model": "umbral_world:block/ghost_log_side",
+        "y": 270,
+        "uvlock": true
+      },
+      "when": {
+        "west": "true"
+      }
+    },
+    {
+      "apply": {
+        "model": "umbral_world:block/ghost_log_noside",
+        "y": 270,
+        "uvlock": true
+      },
+      "when": {
+        "west": "false"
+      }
+    },
+    {
+      "apply": {
+        "model": "umbral_world:block/ghost_log_side",
+        "x": 270,
+        "uvlock": true
+      },
+      "when": {
+        "up": "true"
+      }
+    },
+    {
+      "apply": {
+        "model": "umbral_world:block/ghost_log_noside",
+        "x": 270,
+        "uvlock": true
+      },
+      "when": {
+        "up": "false"
+      }
+    },
+    {
+      "apply": {
+        "model": "umbral_world:block/ghost_log_side",
+        "x": 90,
+        "uvlock": true
+      },
+      "when": {
+        "down": "true"
+      }
+    },
+    {
+      "apply": {
+        "model": "umbral_world:block/ghost_log_noside",
+        "x": 90,
+        "uvlock": true
+      },
+      "when": {
+        "down": "false"
+      }
+    }
+  ]
+}

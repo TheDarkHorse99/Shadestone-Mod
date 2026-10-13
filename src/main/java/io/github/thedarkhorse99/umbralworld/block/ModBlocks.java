@@ -48,6 +48,48 @@ public class ModBlocks {
 					.sound(SoundType.GRASS)
 	);
 
+	// ---- Ghost Tree (Miasma) ----
+
+	public static final Block GHOST_LOG = register(
+			"ghost_log",
+			GhostLogBlock::new,
+			BlockBehaviour.Properties.of()
+					.mapColor(MapColor.COLOR_LIGHT_BLUE)
+					.strength(2.0F)
+					.sound(SoundType.CHERRY_WOOD)
+					.noOcclusion()
+	);
+
+	public static final Block GHOST_PLANKS = register(
+			"ghost_planks",
+			GhostPlanksBlock::new,
+			BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_PLANKS)
+					.mapColor(MapColor.COLOR_LIGHT_BLUE)
+					.sound(SoundType.CHERRY_WOOD)
+					.noOcclusion()
+	);
+
+	// Block only: players never hold Ghost Vapor
+	public static final Block GHOST_VAPOR = registerBlockOnly(
+			"ghost_vapor",
+			GhostVaporBlock::new,
+			BlockBehaviour.Properties.of()
+					.mapColor(MapColor.NONE)
+					.noCollision()
+					.noOcclusion()
+					.replaceable()
+					.randomTicks()
+					.lightLevel(_ -> 3)
+					.sound(SoundType.EMPTY)
+					.pushReaction(PushReaction.POPPED)
+	);
+
+	public static final Block GHOST_SAPLING = register(
+			"ghost_sapling",
+			GhostSaplingBlock::new,
+			BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_SAPLING)
+	);
+
 	public static final Block UMBRAL_PORTAL = registerBlockOnly(
 			"umbral_portal",
 			UmbralPortalBlock::new,
@@ -105,7 +147,11 @@ public class ModBlocks {
 				.register(output -> {
 					output.accept(BARROW_DIRT);
 					output.accept(EFFLUVIUM);
+					output.accept(GHOST_LOG);
+					output.accept(GHOST_SAPLING);
 				});
+		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.BUILDING_BLOCKS)
+				.register(output -> output.accept(GHOST_PLANKS));
 		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.NATURAL_BLOCKS)
 				.register(output -> {
 					output.accept(WITHERED_TUFTS);

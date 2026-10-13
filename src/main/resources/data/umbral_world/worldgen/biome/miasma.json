@@ -65,7 +65,9 @@
     [],
     [],
     [],
-    [],
+    [
+      "umbral_world:ghost_tree"
+    ],
     []
   ],
   "has_precipitation": false,

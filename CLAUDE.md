@@ -54,6 +54,10 @@ Act as a veteran modder: rigorous, honest feedback, no reflexive praise. Point o
 - Spawn eggs: `new Item.Properties().spawnEgg(type)` with `SpawnEggItem::new`; each egg has its own texture (no tinting).
 - `EntityRenderers.register` and `SpawnPlacements.register` are public — no Fabric helper needed.
 - Custom damage: `data/umbral_world/damage_type/*.json`, death message key `death.attack.<message_id>`.
+- Worldgen: there are no "configured features" any more. `Feature` is an interface; each feature is a record with a `MapCodec`, registered in `BuiltInRegistries.FEATURE_TYPE`; JSON in `worldgen/feature/` uses its fields directly. Noise JSON uses `base_octave` / `base_amplitude` / `octave_count` / `amplitude_modifiers`.
+- `new TreeGrower(name, trees, megaTrees, flowerTrees, shortestTree)` takes `WeightedList<ResourceKey<Feature>>`s. Saplings need light 9+ unless `randomTick` is overridden.
+- `PushReaction` has no `DESTROY`; it's `POPPED`. No sources jar: inspect classes with `javap` from the Adoptium JDK on the Loom jars.
+- Don't edit Java files with PowerShell `Set-Content`: it adds a BOM that breaks compilation.
 
 ## Current state
 
@@ -62,6 +66,8 @@ Done and tested: Shadestone ore/shard/block, Shadestone Blade with Deep Blindnes
 Written, awaiting Mac's in-game test: **the Wight** (Enderman body, skeleton-style texture, 30 HP / 8 attack / 4 armor / speed 0.27 / follow range 35, thorn-immune, undead, drops bones, spawns in the Grave). Needs Mac's spawn egg art at `textures/item/wight_spawn_egg.png`.
 
 Written, awaiting Mac's in-game test: **Miasma stage 1**. The dimension now uses a `multi_noise` biome source: the Grave and Miasma are split 50/50 by the `vegetation` (humidity) slot, driven by `worldgen/noise/biome_layout.json`. Temperature is reserved for the Chasm. The Miasma has Effluvium on top, Barrow Dirt underneath, blue and red spore particles, and purple fog/water. No plants or mobs yet. Needs Mac's art: `textures/block/effluvium_top.png`, `effluvium_side.png`, `effluvium_bottom.png`.
+
+Written, awaiting Mac's in-game test: **Miasma stage 2, the Ghost Tree**. `GhostLogBlock` (a `PipeBlock`, 6 px thick), `GhostPlanksBlock` (a `TransparentBlock`), `GhostVaporBlock` (a `LeavesBlock` with an invisible render shape, empty shapes, `END_ROD` particles for now), `GhostSaplingBlock` (custom `TreeGrower`, skips the light check). `world/GhostTreeFeature.java` grows the tree; in 26.3 a `Feature` is a record registered as a `MapCodec` in `BuiltInRegistries.FEATURE_TYPE`. 1–3 trees per chunk. Needs Mac's art: `textures/block/ghost_log.png`, `ghost_planks.png`, `ghost_sapling.png`.
 
 ## To-do
 
@@ -76,14 +82,14 @@ Written, awaiting Mac's in-game test: **Miasma stage 1**. The dimension now uses
 
 Shadestone tools and armor · animated portal · twin black suns with a purple-blue/dark-red sky cycle · the Wight's Shroud and the invisible-in-light system · Corpse Candles and the ghoul mob · snuffing vanilla candles/campfires · Grave ruins with a spire · the Miasma and Chasm biomes (see below) · a see-in-the-dark item and shadow powers · falling into the void as a way in · license, icon, version 0.1.0
 
-## Biome designs (decided, not built yet)
+## Biome designs (decided, partly built)
 
 The dimension will have three biomes, roughly equal in size: the Grave, the Miasma and the Chasm. Terrain shape is shared by all biomes, so biome placement and terrain must be driven by the same noise for the Chasm's flat land and fissures to line up with the biome.
 
 **Miasma biome** (being built in stages: soil/particles/colours → tree → 3 bushes → sap/potion → mobs): a pink/purple/blue "sinister fairy forest". It should feel slow, drowsy and sickly, but more colourful and pretty than the other biomes.
 - Its own custom soil, **Effluvium**, coloured like the flora, with separate top/side/bottom textures like grass
 - An ambient particle effect in the air, like the Grave's ash. For now it uses vanilla's blue (warped) and red (crimson) spores
-- Big trees similar to chorus plants, with some kind of foliage. The tree has sap you can extract, a valuable potion ingredient. The tree gives its own wood (logs/planks set), so it's built like a real tree, not a chorus plant
+- The **Ghost Tree**: a skinny, branching tree shaped like a chorus plant (thin connecting **Ghost Logs**, not block-sized logs), but breaking a piece doesn't collapse the rest. Gives its own wood: Ghost Logs → **Ghost Planks** (1 log → 2 planks, because the logs are thin). Just logs, planks and "leaves" for now; more wood blocks later. Logs are slightly see-through, planks even more faintly. The "leaves" are **Ghost Vapor**: invisible, untouchable, unbreakable, faint light (level 3), only particles; it fades like leaves when the tree is cut and sometimes drops a **Ghost Sapling**. Saplings grow without light. The tree's sap, **Ectoplasm**, can be extracted and is a valuable potion ingredient (stage 4)
 - At least 3 smaller bush-like plants, each giving a different effect to players nearby (slowness, nausea, weakness), shown by particles around the plant
 - One peaceful mob and one hostile mob
 
