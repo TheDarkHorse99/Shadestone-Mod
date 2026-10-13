@@ -12,6 +12,13 @@ public final class ModBlockEntities {
             BuiltInRegistries.BLOCK_ENTITY_TYPE,
             UmbralWorld.id("dark_furnace"),
             new BlockEntityType<>(DarkFurnaceBlockEntity::new, Set.of(ModBlocks.DARK_FURNACE)));
+
+    // Only there to make the Corpse Candle's flame particles every tick; stores nothing
+    public static final BlockEntityType<CorpseCandleBlockEntity> CORPSE_CANDLE = Registry.register(
+            BuiltInRegistries.BLOCK_ENTITY_TYPE,
+            UmbralWorld.id("corpse_candle"),
+            new BlockEntityType<>(CorpseCandleBlockEntity::new, Set.of(ModBlocks.CORPSE_CANDLE)));
+
     private ModBlockEntities() {
     }
 

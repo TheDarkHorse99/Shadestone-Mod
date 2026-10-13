@@ -1,8 +1,9 @@
 package io.github.thedarkhorse99.umbralworld.block;
 
+import io.github.thedarkhorse99.umbralworld.block.entity.CorpseCandleBlockEntity;
+import io.github.thedarkhorse99.umbralworld.block.entity.ModBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockGetter;
@@ -11,21 +12,28 @@ import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.ScheduledTickAccess;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A little orb of fire floating just above the ground. Dropped by Ghouls.
+ * It has no model: the orb is made of flame particles, drawn by {@link CorpseCandleBlockEntity}.
  * On Effluvium it slowly spreads: now and then it makes a new candle on a
  * nearby Effluvium block, and the Effluvium under the old one dies into Barrow Dirt.
  */
-public class CorpseCandleBlock extends Block {
+public class CorpseCandleBlock extends Block implements EntityBlock {
     /** Chance per random tick to spread. A block gets a random tick about once a minute, so this is roughly every 5 minutes. */
     private static final float SPREAD_CHANCE = 0.2F;
 
-    /** Hitbox: the orb, floating 1 pixel above the ground. */
+    /** Hitbox (only the outline you aim at; you can walk through it): the orb, floating 1 pixel above the ground. */
     private static final VoxelShape SHAPE = Block.box(4.0, 1.0, 4.0, 12.0, 9.0, 12.0);
 
     public CorpseCandleBlock(BlockBehaviour.Properties properties) {
@@ -71,15 +79,24 @@ public class CorpseCandleBlock extends Block {
         }
     }
 
-    /** Runs on the player's screen only: a tiny flame now and then. */
+    /** No model at all: only the particles show. */
     @Override
-    public void animateTick(BlockState state, Level level, BlockPos pos, RandomSource random) {
-        if (random.nextInt(4) == 0) {
-            level.addParticle(ParticleTypes.SMALL_FLAME,
-                    pos.getX() + 0.5 + (random.nextDouble() - 0.5) * 0.25,
-                    pos.getY() + 0.55,
-                    pos.getZ() + 0.5 + (random.nextDouble() - 0.5) * 0.25,
-                    0.0, 0.01, 0.0);
+    protected RenderShape getRenderShape(BlockState state) {
+        return RenderShape.INVISIBLE;
+    }
+
+    @Override
+    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+        return new CorpseCandleBlockEntity(pos, state);
+    }
+
+    /** The flame particles are made every tick, on the player's screen only (nothing to do on the server). */
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T extends BlockEntity> @Nullable BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
+        if (!level.isClientSide() || type != ModBlockEntities.CORPSE_CANDLE) {
+            return null;
         }
+        return (BlockEntityTicker<T>) (BlockEntityTicker<CorpseCandleBlockEntity>) CorpseCandleBlockEntity::clientTick;
     }
 }
