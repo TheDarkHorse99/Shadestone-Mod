@@ -72,4 +72,22 @@ Written, awaiting Mac's in-game test: **the Wight** (Enderman body, skeleton-sty
 
 ## Planned
 
-Shadestone tools and armor · animated portal · twin black suns with a purple-blue/dark-red sky cycle · the Wight's Shroud and the invisible-in-light system · Corpse Candles and the ghoul mob · snuffing vanilla candles/campfires · Grave ruins with a spire · Miasma and Canyons biomes · heat ore · a see-in-the-dark item and shadow powers · falling into the void as a way in · license, icon, version 0.1.0
+Shadestone tools and armor · animated portal · twin black suns with a purple-blue/dark-red sky cycle · the Wight's Shroud and the invisible-in-light system · Corpse Candles and the ghoul mob · snuffing vanilla candles/campfires · Grave ruins with a spire · the Miasma and Chasm biomes (see below) · a see-in-the-dark item and shadow powers · falling into the void as a way in · license, icon, version 0.1.0
+
+## Biome designs (decided, not built yet)
+
+The dimension will have three biomes, roughly equal in size: the Grave, the Miasma and the Chasm. Terrain shape is shared by all biomes, so biome placement and terrain must be driven by the same noise for the Chasm's flat land and fissures to line up with the biome.
+
+**Miasma biome**: a pink/purple/blue "sinister fairy forest". It should feel slow, drowsy and sickly, but more colourful and pretty than the other biomes.
+- Its own custom soil, coloured like the flora
+- An ambient particle effect in the air, like the Grave's ash
+- Big trees similar to chorus plants, with some kind of foliage. The tree has sap you can extract, a valuable potion ingredient
+- At least 3 smaller bush-like plants, each giving a different effect to players nearby (slowness, nausea, weakness), shown by particles around the plant
+- One peaceful mob and one hostile mob
+
+**Chasm biome**: flat land cut by very deep fissures, too dark to see the bottom. Mostly thin fissures, sometimes large gorges.
+- A third custom block makes the surface and the first few layers down; below that it's Shadestone
+- Relatively shallow water at the bottom of the chasms. This needs the dimension's `sea_level` (currently 63) lowered to near the world floor, or every chasm floods up to y=63. Landing in water cancels fall damage, so jumping in is survivable
+- The only plant is a climbable vine-like plant growing on the chasm walls
+- A couple of hostile aquatic mobs living in the bottom water
+- The heat ore, the rare resource, is found at the bottom
