@@ -1,6 +1,8 @@
 package io.github.thedarkhorse99.umbralworld.client;
 
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.particle.v1.ParticleProviderRegistry;
+import io.github.thedarkhorse99.umbralworld.particle.ModParticles;
 import net.fabricmc.fabric.api.client.rendering.v1.ModelLayerRegistry;
 import io.github.thedarkhorse99.umbralworld.menu.ModMenus;
 import net.minecraft.client.gui.screens.MenuScreens;
@@ -11,6 +13,7 @@ public class UmbralWorldClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 		ModRenderPipelines.initialize();
+		ParticleProviderRegistry.getInstance().register(ModParticles.CORPSE_FLAME, CorpseFlameParticle.Provider::new);
 		MenuScreens.register(ModMenus.DARK_FURNACE, DarkFurnaceScreen::new);
 		EntityRenderers.register(ModEntities.WIGHT, WightRenderer::new);
 		ModelLayerRegistry.registerModelLayer(GhoulModel.LAYER, GhoulModel::createBodyLayer);
