@@ -18,6 +18,7 @@ Act as a veteran modder: rigorous, honest feedback, no reflexive praise. Point o
 6. **Vanilla flavor.** Content and art should feel like Mojang could have made it. Item art is sized like diamonds/emeralds.
 7. **Balance:** basic Umbral gear is diamond-tier; Umbral mobs are scaled so diamond gear is the baseline (as dangerous to a diamond player as a zombie/skeleton is to an iron-ish one).
 8. **Mac tests in-game himself.** End each change with a short numbered test list. Compile with `.\gradlew.bat build` (Windows) before handing over.
+9. **Keep this file current.** Whenever Mac decides something new about the mod (a to-do item, a design decision, or a new rule), update CLAUDE.md in the same session and tell him exactly what changed (which section, what was added, edited, or removed).
 
 ## Project layout
 
