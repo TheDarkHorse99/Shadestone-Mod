@@ -32,6 +32,7 @@ public final class ModCreativeTabs {
 						output.accept(ModBlocks.DARK_FURNACE);
 						output.accept(ModItems.SHADESTONE_SHARD);
 						output.accept(ModItems.SHADESTONE_BLADE);
+						output.accept(ModItems.WIGHT_SPAWN_EGG);
 					})
 					.build());
 

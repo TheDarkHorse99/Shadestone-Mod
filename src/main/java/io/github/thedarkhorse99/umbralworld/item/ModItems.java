@@ -11,6 +11,8 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.SpawnEggItem;
+import io.github.thedarkhorse99.umbralworld.entity.ModEntities;
 import net.minecraft.world.item.ToolMaterial;
 
 public class ModItems {
@@ -31,6 +33,9 @@ public class ModItems {
 	public static final Item SHADESTONE_BLADE = register("shadestone_blade", Item::new,
 			new Item.Properties().sword(SHADESTONE_MATERIAL, 3.0f, -2.4f));
 
+	public static final Item WIGHT_SPAWN_EGG = register("wight_spawn_egg", SpawnEggItem::new,
+			new Item.Properties().spawnEgg(ModEntities.WIGHT));
+
 	public static Item register(String name, Function<Item.Properties, Item> factory, Item.Properties properties) {
 		ResourceKey<Item> key = ResourceKey.create(Registries.ITEM, UmbralWorld.id(name));
 		Item item = factory.apply(properties.setId(key));
@@ -43,6 +48,8 @@ public class ModItems {
 				.register(output -> output.accept(SHADESTONE_SHARD));
 		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.COMBAT)
 				.register(output -> output.accept(SHADESTONE_BLADE));
+		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.SPAWN_EGGS)
+				.register(output -> output.accept(WIGHT_SPAWN_EGG));
 		ShadestoneBladeEvents.initialize();
 	}
 }
