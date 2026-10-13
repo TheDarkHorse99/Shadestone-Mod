@@ -31,6 +31,9 @@ public final class ModCreativeTabs {
 						output.accept(ModBlocks.GHOST_LOG);
 						output.accept(ModBlocks.GHOST_PLANKS);
 						output.accept(ModBlocks.GHOST_SAPLING);
+						output.accept(ModBlocks.FRAIL_BRAMBLE);
+						output.accept(ModBlocks.PALE_BLOSSOMS);
+						output.accept(ModBlocks.TORPOR_SPROUT);
 						output.accept(ModBlocks.WITHERED_TUFTS);
 						output.accept(ModBlocks.GRAVE_THORNS);
 						output.accept(ModBlocks.DARK_FURNACE);

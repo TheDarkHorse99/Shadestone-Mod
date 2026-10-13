@@ -1,5 +1,6 @@
 package io.github.thedarkhorse99.umbralworld;
 
+import io.github.thedarkhorse99.umbralworld.block.MiasmaPlantAuras;
 import io.github.thedarkhorse99.umbralworld.block.ModBlocks;
 import io.github.thedarkhorse99.umbralworld.entity.ModEntities;
 import io.github.thedarkhorse99.umbralworld.item.ModCreativeTabs;
@@ -21,6 +22,7 @@ public class UmbralWorld implements ModInitializer {
 	public void onInitialize() {
 		ModEffects.initialize();
 		ModBlocks.initialize();
+		MiasmaPlantAuras.initialize();
 		ModEntities.initialize();
 		ModItems.initialize();
 		ModCreativeTabs.initialize();

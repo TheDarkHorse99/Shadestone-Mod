@@ -8,6 +8,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.valueproviders.UniformInt;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
@@ -90,6 +91,29 @@ public class ModBlocks {
 			BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_SAPLING)
 	);
 
+	// ---- Miasma plants: each gives an effect to players standing nearby ----
+
+	public static final Block FRAIL_BRAMBLE = register(
+			"frail_bramble",
+			properties -> new MiasmaPlantBlock(Block.column(14.0, 0.0, 13.0), MobEffects.WEAKNESS, 0x9B4DCA, properties),
+			BlockBehaviour.Properties.ofFullCopy(Blocks.DEAD_BUSH)
+					.mapColor(MapColor.COLOR_PURPLE)
+					.sound(SoundType.SWEET_BERRY_BUSH)
+	);
+
+	public static final Block PALE_BLOSSOMS = register(
+			"pale_blossoms",
+			properties -> new MiasmaPlantBlock(Block.column(6.0, 0.0, 10.0), MobEffects.NAUSEA, 0xF2F2F2, properties),
+			BlockBehaviour.Properties.ofFullCopy(Blocks.OXEYE_DAISY)
+	);
+
+	public static final Block TORPOR_SPROUT = register(
+			"torpor_sprout",
+			TorporSproutBlock::new,
+			BlockBehaviour.Properties.ofFullCopy(Blocks.PINK_PETALS)
+					.mapColor(MapColor.COLOR_RED)
+	);
+
 	public static final Block UMBRAL_PORTAL = registerBlockOnly(
 			"umbral_portal",
 			UmbralPortalBlock::new,
@@ -149,6 +173,9 @@ public class ModBlocks {
 					output.accept(EFFLUVIUM);
 					output.accept(GHOST_LOG);
 					output.accept(GHOST_SAPLING);
+					output.accept(FRAIL_BRAMBLE);
+					output.accept(PALE_BLOSSOMS);
+					output.accept(TORPOR_SPROUT);
 				});
 		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.BUILDING_BLOCKS)
 				.register(output -> output.accept(GHOST_PLANKS));

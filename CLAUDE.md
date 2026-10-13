@@ -69,6 +69,8 @@ Written, awaiting Mac's in-game test: **Miasma stage 1**. The dimension now uses
 
 Written, awaiting Mac's in-game test: **Miasma stage 2, the Ghost Tree**. `GhostLogBlock` (a `PipeBlock`, 6 px thick), `GhostPlanksBlock` (a `TransparentBlock`), `GhostVaporBlock` (a `LeavesBlock` with an invisible render shape, empty shapes, `END_ROD` particles for now), `GhostSaplingBlock` (custom `TreeGrower`, skips the light check). `world/GhostTreeFeature.java` grows the tree; in 26.3 a `Feature` is a record registered as a `MapCodec` in `BuiltInRegistries.FEATURE_TYPE`. 1–3 trees per chunk. Needs Mac's art: `textures/block/ghost_log.png`, `ghost_planks.png`, `ghost_sapling.png`.
 
+Written, awaiting Mac's in-game test: **Miasma stage 3, the aura plants**. Frail Bramble and Pale Blossoms are `MiasmaPlantBlock`; Torpor Sprout is `TorporSproutBlock` (a `FlowerBedBlock`). Both implement `AuraPlant`. `MiasmaPlantAuras` checks blocks within 2 sideways / 1 up-down of each player every 10 ticks (Fabric `ServerTickEvents.END_LEVEL_TICK`) and gives level I of the effect for 4 s, topped up while they stay near. Needs Mac's art: `textures/block/frail_bramble.png`, `pale_blossoms.png`, `torpor_sprout.png`, `torpor_sprout_stem.png`, and `textures/item/torpor_sprout.png`.
+
 ## To-do
 
 - Test the blade's Deep Blindness on a second player over LAN
@@ -90,7 +92,7 @@ The dimension will have three biomes, roughly equal in size: the Grave, the Mias
 - Its own custom soil, **Effluvium**, coloured like the flora, with separate top/side/bottom textures like grass
 - An ambient particle effect in the air, like the Grave's ash. For now it uses vanilla's blue (warped) and red (crimson) spores
 - The **Ghost Tree**: a skinny, branching tree shaped like a chorus plant (thin connecting **Ghost Logs**, not block-sized logs), but breaking a piece doesn't collapse the rest. Gives its own wood: Ghost Logs → **Ghost Planks** (1 log → 2 planks, because the logs are thin). Just logs, planks and "leaves" for now; more wood blocks later. Logs are slightly see-through, planks even more faintly. The "leaves" are **Ghost Vapor**: invisible, untouchable, unbreakable, faint light (level 3), only particles; it fades like leaves when the tree is cut and sometimes drops a **Ghost Sapling**. Saplings grow without light. The tree's sap, **Ectoplasm**, can be extracted and is a valuable potion ingredient (stage 4)
-- At least 3 smaller bush-like plants, each giving a different effect to players nearby (slowness, nausea, weakness), shown by particles around the plant
+- Three plants that give an effect to players standing near them, shown by coloured specks: **Frail Bramble** (thorny bush, Weakness, purple), **Pale Blossoms** (single white flower, Nausea, white; rarest because nausea is harshest), **Torpor Sprout** (ground cover like Pink Petals, 1–4 per block, Slowness, red)
 - One peaceful mob and one hostile mob
 
 **Chasm biome**: flat land cut by very deep fissures, too dark to see the bottom. Mostly thin fissures, sometimes large gorges.

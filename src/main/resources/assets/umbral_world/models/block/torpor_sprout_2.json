@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/flowerbed_2",
+  "textures": {
+    "flowerbed": "umbral_world:block/torpor_sprout",
+    "stem": "umbral_world:block/torpor_sprout_stem"
+  }
+}
