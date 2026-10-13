@@ -15,6 +15,8 @@
   "block.umbral_world.withered_tufts": "Withered Tufts",
   "block.umbral_world.grave_thorns": "Grave Thorns",
   "death.attack.umbral_world.grave_thorns": "%1$s succumbed to the Grave Thorns",
-  "death.attack.umbral_world.grave_thorns.player": "%1$s succumbed to the Grave Thorns while trying to escape %2$s"
+  "death.attack.umbral_world.grave_thorns.player": "%1$s succumbed to the Grave Thorns while trying to escape %2$s",
+  "entity.umbral_world.wight": "Wight",
+  "item.umbral_world.wight_spawn_egg": "Wight Spawn Egg"
 }
 
