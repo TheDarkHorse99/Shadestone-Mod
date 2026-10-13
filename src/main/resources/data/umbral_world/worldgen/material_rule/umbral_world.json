@@ -2,6 +2,14 @@
   "type": "minecraft:sequence",
   "sequence": [
     "minecraft:bedrock_floor",
+    {
+      "type": "minecraft:condition",
+      "if_true": {
+        "type": "minecraft:biome",
+        "biome_is": "umbral_world:miasma"
+      },
+      "then_run": "umbral_world:miasma_surface"
+    },
     "umbral_world:grave_surface"
   ]
 }

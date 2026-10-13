@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "": [
+      { "model": "umbral_world:block/effluvium" },
+      { "model": "umbral_world:block/effluvium", "y": 90 },
+      { "model": "umbral_world:block/effluvium", "y": 180 },
+      { "model": "umbral_world:block/effluvium", "y": 270 }
+    ]
+  }
+}

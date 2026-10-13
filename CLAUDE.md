@@ -61,6 +61,8 @@ Done and tested: Shadestone ore/shard/block, Shadestone Blade with Deep Blindnes
 
 Written, awaiting Mac's in-game test: **the Wight** (Enderman body, skeleton-style texture, 30 HP / 8 attack / 4 armor / speed 0.27 / follow range 35, thorn-immune, undead, drops bones, spawns in the Grave). Needs Mac's spawn egg art at `textures/item/wight_spawn_egg.png`.
 
+Written, awaiting Mac's in-game test: **Miasma stage 1**. The dimension now uses a `multi_noise` biome source: the Grave and Miasma are split 50/50 by the `vegetation` (humidity) slot, driven by `worldgen/noise/biome_layout.json`. Temperature is reserved for the Chasm. The Miasma has Effluvium on top, Barrow Dirt underneath, blue and red spore particles, and purple fog/water. No plants or mobs yet. Needs Mac's art: `textures/block/effluvium_top.png`, `effluvium_side.png`, `effluvium_bottom.png`.
+
 ## To-do
 
 - Test the blade's Deep Blindness on a second player over LAN
@@ -78,10 +80,10 @@ Shadestone tools and armor · animated portal · twin black suns with a purple-b
 
 The dimension will have three biomes, roughly equal in size: the Grave, the Miasma and the Chasm. Terrain shape is shared by all biomes, so biome placement and terrain must be driven by the same noise for the Chasm's flat land and fissures to line up with the biome.
 
-**Miasma biome**: a pink/purple/blue "sinister fairy forest". It should feel slow, drowsy and sickly, but more colourful and pretty than the other biomes.
-- Its own custom soil, coloured like the flora
-- An ambient particle effect in the air, like the Grave's ash
-- Big trees similar to chorus plants, with some kind of foliage. The tree has sap you can extract, a valuable potion ingredient
+**Miasma biome** (being built in stages: soil/particles/colours → tree → 3 bushes → sap/potion → mobs): a pink/purple/blue "sinister fairy forest". It should feel slow, drowsy and sickly, but more colourful and pretty than the other biomes.
+- Its own custom soil, **Effluvium**, coloured like the flora, with separate top/side/bottom textures like grass
+- An ambient particle effect in the air, like the Grave's ash. For now it uses vanilla's blue (warped) and red (crimson) spores
+- Big trees similar to chorus plants, with some kind of foliage. The tree has sap you can extract, a valuable potion ingredient. The tree gives its own wood (logs/planks set), so it's built like a real tree, not a chorus plant
 - At least 3 smaller bush-like plants, each giving a different effect to players nearby (slowness, nausea, weakness), shown by particles around the plant
 - One peaceful mob and one hostile mob
 

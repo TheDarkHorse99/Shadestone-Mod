@@ -39,6 +39,15 @@ public class ModBlocks {
 			BlockBehaviour.Properties.ofFullCopy(Blocks.COARSE_DIRT)
 	);
 
+	// The Miasma's soil. A plain block for now; it doesn't spread like grass.
+	public static final Block EFFLUVIUM = register(
+			"effluvium",
+			Block::new,
+			BlockBehaviour.Properties.ofFullCopy(Blocks.DIRT)
+					.mapColor(MapColor.COLOR_PURPLE)
+					.sound(SoundType.GRASS)
+	);
+
 	public static final Block UMBRAL_PORTAL = registerBlockOnly(
 			"umbral_portal",
 			UmbralPortalBlock::new,
@@ -93,7 +102,10 @@ public class ModBlocks {
 		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.BUILDING_BLOCKS)
 				.register(output -> output.accept(SHADESTONE_BLOCK));
 		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.NATURAL_BLOCKS)
-				.register(output -> output.accept(BARROW_DIRT));
+				.register(output -> {
+					output.accept(BARROW_DIRT);
+					output.accept(EFFLUVIUM);
+				});
 		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.NATURAL_BLOCKS)
 				.register(output -> {
 					output.accept(WITHERED_TUFTS);
