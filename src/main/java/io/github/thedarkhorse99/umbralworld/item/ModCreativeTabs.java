@@ -45,6 +45,7 @@ public final class ModCreativeTabs {
 						output.accept(ModItems.SHADESTONE_SHARD);
 						output.accept(ModItems.SHADESTONE_BLADE);
 						output.accept(ModItems.ECTOPLASM_BOTTLE);
+						output.accept(ModItems.WIGHTS_SHROUD);
 						output.accept(ModItems.WIGHT_SPAWN_EGG);
 						output.accept(ModItems.GHOUL_SPAWN_EGG);
 					})

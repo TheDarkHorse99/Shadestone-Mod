@@ -33,12 +33,12 @@ Act as a veteran modder: rigorous, honest feedback, no reflexive praise. Point o
   - `block/` — `ModBlocks`, Shadestone blocks, portal (`UmbralPortalBlock`, `UmbralPortalShape`), Dark Furnace, Grave plants
   - `block/entity/` — `ModBlockEntities`, `DarkFurnaceBlockEntity`
   - `menu/` — Dark Furnace menu and result slot
-  - `item/` — `ModItems`, `ModCreativeTabs` ("Umbral World" tab)
+  - `item/` — `ModItems`, `ModCreativeTabs` ("Umbral World" tab), `WightsShroud` (light check + invisibility)
   - `effect/` — Deep Blindness, Nightstalker (`NightstalkerEffect`), `ModPotions`
   - `mixin/` — common mixins (`umbral_world.mixins.json`): `LivingEntityMixin` (Nightstalker visibility)
   - `entity/` — `ModEntities`, `Wight`, `Ghoul`
   - `world/` — dimension keys and helpers
-- `src/client/java/.../umbralworld/client/` — client-only code: `UmbralWorldClient`, renderers and models (`GhoulModel`), `ModRenderPipelines` (black sun, fog-proof glowing eyes), `NightstalkerVision`, `mixin/` (fog, sky, Nightstalker screen filter and outlines)
+- `src/client/java/.../umbralworld/client/` — client-only code: `UmbralWorldClient`, renderers and models (`GhoulModel`), `ModRenderPipelines` (black sun, fog-proof glowing eyes), `NightstalkerVision`, `mixin/` (fog, sky, Nightstalker screen filter and outlines, hiding the Shroud on invisible players)
 - `src/main/resources/assets/umbral_world/` — blockstates, `items/` + `models/` (every item needs both), textures, `lang/en_us.json`
 - `src/main/resources/data/umbral_world/` — dimension, dimension_type, worldgen (biome, noise, features), loot tables, recipes, damage types, tags
 - `src/main/resources/data/minecraft/tags/` — additions to vanilla tags (`"replace": false`)
@@ -67,6 +67,7 @@ Act as a veteran modder: rigorous, honest feedback, no reflexive praise. Point o
 - Mob models: build a `LayerDefinition` in Java and register it with Fabric's `ModelLayerRegistry.registerModelLayer`. `Model.setupAnim` starts with `resetPose()`, so add animation on top of the default pose with `+=`.
 - Mob speed: a mob's ground speed goes with the square of `MOVEMENT_SPEED` × goal speed (`Mob.setSpeed` also sets its forward input). A player's is about 0.098 walking and 0.127 sprinting on that scale (zombie 0.23 → 0.053).
 - Players' movement on the server: `player.getKnownMovement()`; sneaking is `isShiftKeyDown()`.
+- Wearable items: `Item.Properties().component(DataComponents.EQUIPPABLE, Equippable.builder(slot).setAsset(key)...)`, key = `ResourceKey.create(EquipmentAssets.ROOT_ID, id)`. The look is `assets/<ns>/equipment/<name>.json` (`layers.humanoid[].texture`), texture at `textures/entity/equipment/humanoid/<name>.png` (chestplate layout). `HumanoidArmorLayer` still draws armor on invisible players.
 - A short `.\gradlew.bat runClient` (killed after ~4 min) is a safe smoke test that mixins and registries load; it needs no EULA.
 
 ## Current state
@@ -85,6 +86,8 @@ Written, awaiting Mac's in-game test: **Miasma stage 4, Ectoplasm**. The Phantom
 
 Written, awaiting Mac's in-game test: **the Ghoul and Corpse Candles**. `entity/Ghoul.java` (a `PathfinderMob` in the CREATURE category, hearing check every 5 ticks, `RunAwayGoal`), `block/CorpseCandleBlock.java` (no model; flame particles from `block/entity/CorpseCandleBlockEntity`), client `GhoulModel` (zombie parts bent forward, zombie 64x64 texture layout), `GhoulRenderer` with an `EyesLayer` drawn through `ModRenderPipelines.GLOWING_EYES` and `shaders/core/glowing_eyes.fsh` (vanilla's entity shader without fog). Spawns in the Grave (creature list). Needs Mac's art: `textures/entity/ghoul/ghoul.png`, `textures/entity/ghoul/ghoul_eyes.png`, `textures/item/ghoul_spawn_egg.png`, `textures/item/corpse_candle.png`.
 
+Written, awaiting Mac's in-game test: **the Wight's Shroud**. `item/WightsShroud.java` checks every 5 ticks; a wearer in light 5+ gets vanilla Invisibility in short hidden bursts (ambient, no particles, no icon), removed at once in the dark. Client `HumanoidArmorLayerMixin` hides the shroud while its wearer is invisible. Needs Mac's art: `textures/item/wights_shroud.png` and the worn look `textures/entity/equipment/humanoid/wights_shroud.png` (64x32 chestplate layout; transparent where it shouldn't cover).
+
 ## To-do
 
 - Test the blade's Deep Blindness on a second player over LAN
@@ -96,16 +99,16 @@ Written, awaiting Mac's in-game test: **the Ghoul and Corpse Candles**. `entity/
 
 ## Planned
 
-Shadestone tools and armor · animated portal · twin black suns with a purple-blue/dark-red sky cycle · the Wight's Shroud, Corpse Candles and the Ghoul (see Grave biome below) · snuffing vanilla candles/campfires · Grave ruins with a spire · the Miasma and Chasm biomes (see below) · a see-in-the-dark item and shadow powers · falling into the void as a way in · license, icon, version 0.1.0
+Shadestone tools and armor · animated portal · twin black suns with a purple-blue/dark-red sky cycle · snuffing vanilla candles/campfires · Grave ruins with a spire · the Miasma and Chasm biomes (see below) · a see-in-the-dark item and shadow powers · falling into the void as a way in · license, icon, version 0.1.0
 
 ## Biome designs (decided, partly built)
 
 The dimension will have three biomes, roughly equal in size: the Grave, the Miasma and the Chasm. Terrain shape is shared by all biomes, so biome placement and terrain must be driven by the same noise for the Chasm's flat land and fissures to line up with the biome.
 
-**Grave biome** (built: Barrow Dirt, ash, Withered Tufts, Grave Thorns, the Wight, the Ghoul, Corpse Candles). Still to build: the Wight's Shroud.
+**Grave biome** (built: Barrow Dirt, ash, Withered Tufts, Grave Thorns, the Wight, the Ghoul, Corpse Candles, the Wight's Shroud).
 - **Ghoul** (built): a hunched, zombie-like creature, very dark except for bright fiery glowing eyes that show through the fog even when its body doesn't. A passive "creature" that never attacks. It shuffles slowly and runs away when it hears a player: sprinting is heard within 16 blocks, walking within 8, sneaking or standing still not at all; being hit always scares it. When fleeing it is just slower than a sprinting player (about 96%), so chasing works but takes a while and sneaking up is the better way. 10 HP (1-2 diamond sword hits). Undead. Drops 0-2 Corpse Candles (+0-1 per Looting level)
 - **Corpse Candle** (built): a floating orb of fire just above the ground, made only of vanilla flame particles (no model; Mac didn't want it to look like a mini fire). A tiny block entity makes the particles every tick, because a plain block's display ticks are too rare to keep the orb solid. Placed only on the ground (solid top face), no collision, breaks instantly, doesn't burn. Light level 4, bright orange-red like normal fire. Only for light for now. Farmable: a candle on Effluvium slowly spreads (about every 5 minutes) to a nearby Effluvium block (1 sideways, up to 1 up/down) that has nothing on top, and each time the Effluvium under the old candle turns into Barrow Dirt. It can't spread from anything but Effluvium
-- **Wight's Shroud**: a 1 in 50 drop from the Wight. Worn in the chest slot (so no chestplate). Makes the wearer invisible while standing in light level 5 or higher; like a player, it can still be seen in the dark
+- **Wight's Shroud** (built): a 1 in 50 drop from the Wight (killed by a player; +1% per Looting level). Worn in the chest slot (so no chestplate), no armor points, no durability. Shows on the player as a poncho-like garment, drawn by Mac to match how it looks on the Wight's own texture. Makes the wearer (and the shroud) invisible while standing in light level 5 or higher; in the dark both can be seen as normal
 
 **Miasma biome** (being built in stages: soil/particles/colours → tree → 3 bushes → sap/potion → mobs): a pink/purple/blue "sinister fairy forest". It should feel slow, drowsy and sickly, but more colourful and pretty than the other biomes.
 - Its own custom soil, **Effluvium**, coloured like the flora, with separate top/side/bottom textures like grass

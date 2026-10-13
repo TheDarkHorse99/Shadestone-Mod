@@ -6,7 +6,8 @@
     "SkyRendererMixin",
     "FogRendererMixin",
     "GameRendererMixin",
-    "MinecraftMixin"
+    "MinecraftMixin",
+    "HumanoidArmorLayerMixin"
   ],
   "injectors": {
     "defaultRequire": 1
