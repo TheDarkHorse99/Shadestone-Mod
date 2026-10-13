@@ -40,7 +40,7 @@ Act as a veteran modder: rigorous, honest feedback, no reflexive praise. Point o
   - `entity/` — `ModEntities`, `Wight`, `Ghoul`, `Crawler`, `CursedSoul`
   - `particle/` — `ModParticles` (the Corpse Candle's flame)
   - `world/` — dimension keys and helpers
-- `src/client/java/.../umbralworld/client/` — client-only code: `UmbralWorldClient`, renderers and models (`GhoulModel`, `CrawlerModel`, `CursedSoulRenderer` billboard), `ModRenderPipelines` (black sun, fog-proof glowing eyes), `NightstalkerVision`, `mixin/` (fog, sky, Nightstalker screen filter and outlines, hiding the Shroud on invisible players)
+- `src/client/java/.../umbralworld/client/` — client-only code: `UmbralWorldClient`, renderers and models (`GhoulModel`, `CrawlerModel`, `CursedSoulRenderer` billboard), `ModRenderPipelines` (black suns, fog-proof glowing eyes), `NightstalkerVision`, `mixin/` (fog, sky, Nightstalker screen filter and outlines, hiding the Shroud on invisible players)
 - `src/gametest/` — the in-game tests (own mod id `umbral_world_test`, set up by `fabricApi.configureTests` in `build.gradle`; not part of the finished mod)
 - `src/main/resources/assets/umbral_world/` — blockstates, `items/` + `models/` (every item needs both), textures, `lang/en_us.json`
 - `src/main/resources/data/umbral_world/` — dimension, dimension_type, worldgen (biome, noise, features), loot tables, recipes, damage types, tags
@@ -75,6 +75,7 @@ Act as a veteran modder: rigorous, honest feedback, no reflexive praise. Point o
 - A Vex subclass gets wall-flying for free (`Vex.tick` sets `noPhysics`); override `populateDefaultEquipmentSlots` or it spawns with an iron sword.
 - Client game tests (`fabric-client-gametest`): `context.worldBuilder().create()` makes a flat survival world with time, weather and mob spawning frozen. Use `computeOnServer` for server work and `getInput().holdKey(o -> o.keyUp)` for real movement. In commands use `@a`, not `@p` (`@p` only finds players in the dimension the command runs in). `/fill` fails in areas that haven't loaded; place blocks in code instead (`ServerLevel.setBlock` loads the chunk). Every monster gets a small random bonus (±) to follow range when it spawns.
 - Custom particles: register a `FabricParticleTypes.simple()` in `BuiltInRegistries.PARTICLE_TYPE`, add `assets/<ns>/particles/<name>.json` (`textures` list, may point at vanilla sprites), and on the client `ParticleProviderRegistry.getInstance().register(type, Provider::new)` with a `SingleQuadParticle`. Vanilla's flame sprite has its colour baked in; `minecraft:glow` is white and can be tinted with `setColor`.
+- Day cycles are data: `world_clock/<name>.json` (`{}`) plus `timeline/<name>.json` (`clock`, `period_ticks`, `time_markers`, `tracks` of keyframes for attributes like `minecraft:visual/sun_angle`, `moon_angle`, `sky_color`). The dimension type points at them with `default_clock` and `timelines`. Copy vanilla's `timeline/day.json` for the sun/moon paths. `has_fixed_time` now only decides whether the dimension counts as bright or dark outside. `SkyRenderer.renderMoon` is called with the sky already turned to the moon's angle.
 - A short `.\gradlew.bat runClient` (killed after ~4 min) is a safe smoke test that mixins and registries load; it needs no EULA.
 
 ## Current state
@@ -99,6 +100,8 @@ Written, awaiting Mac's in-game test: **the Crawler**. `entity/Crawler.java` (a 
 
 Written, awaiting Mac's in-game test: **the Cursed Soul**. `entity/CursedSoul.java` (extends `Vex`, `DartAroundGoal`, `checkCursedSoulSpawnRules` looks for vapor), client `CursedSoulRenderer`. Spawns in the Miasma's monster list. Needs Mac's art: `textures/entity/cursed_soul/cursed_soul.png` (one square picture, e.g. 16x16 or 32x32; see-through edges allowed for a soft glow), `textures/item/cursed_soul_spawn_egg.png`. Drops still to decide.
 
+Written, tested by the in-game tests (screenshots), awaiting Mac's art: **the twin black suns**. The Umbral World has its own clock (`world_clock/umbral_world.json`) and timeline (`timeline/twin_suns.json`, 24000 ticks = 20 minutes). The purple black sun takes the vanilla sun's path (rises at tick 0, highest at 6000) and the red one the moon's path (rises at 12000, highest at 18000), so they take turns. The sky is dark purple-blue (`#1b1238`) under the purple sun and dark red (`#300a10`) under the red one, blending at sunrise. Only the look changes: light level and gameplay are the same (Mac's choice). `SkyRendererMixin` draws the suns in place of the vanilla sun and moon. `/time of umbral_world:umbral_world set umbral_world:red_noon` (also `purple_noon`, `purple_sunrise`, `red_sunrise`) jumps to a point. Mac renamed the textures: his existing sun is now `textures/environment/celestial/purple_black_sun.png`; he still needs to draw `red_black_sun.png` (same size and style).
+
 ## To-do
 
 - Test the blade's Deep Blindness on a second player over LAN
@@ -110,7 +113,7 @@ Written, awaiting Mac's in-game test: **the Cursed Soul**. `entity/CursedSoul.ja
 
 ## Planned
 
-Shadestone tools and armor · animated portal · twin black suns with a purple-blue/dark-red sky cycle · snuffing vanilla candles/campfires · Grave ruins with a spire · the Miasma and Chasm biomes (see below) · a see-in-the-dark item and shadow powers · falling into the void as a way in · license, icon, version 0.1.0
+Shadestone tools and armor · animated portal · snuffing vanilla candles/campfires · Grave ruins with a spire · the Miasma and Chasm biomes (see below) · a see-in-the-dark item and shadow powers · falling into the void as a way in · license, icon, version 0.1.0
 
 ## Biome designs (decided, partly built)
 

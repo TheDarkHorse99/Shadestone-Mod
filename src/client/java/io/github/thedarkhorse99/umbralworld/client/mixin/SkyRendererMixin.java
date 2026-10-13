@@ -17,6 +17,7 @@ import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.client.resources.model.sprite.AtlasManager;
+import net.minecraft.world.level.MoonPhase;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
 import org.jspecify.annotations.NullMarked;
@@ -49,15 +50,21 @@ public class SkyRendererMixin {
     }
 
     // ---- Our own additions ----
-    @Unique private @Nullable GpuBuffer umbral_world$blackSunBuffer;
+    // The twin black suns take turns: the purple one follows the vanilla sun's path and the red
+    // one the moon's (always on the opposite side). Both paths are driven by the Umbral World's
+    // timeline, data/umbral_world/timeline/twin_suns.json.
+    @Unique private @Nullable GpuBuffer umbral_world$purpleSunBuffer;
+    @Unique private @Nullable GpuBuffer umbral_world$redSunBuffer;
     @Unique private boolean umbral_world$inUmbralWorld;
 
-    // 1. When the sky renderer is built, also build the black sun's shape.
+    // 1. When the sky renderer is built, also build the two suns' shapes.
     @Inject(method = "<init>", at = @At("TAIL"))
-    private void umbral_world$buildBlackSun(TextureManager textureManager, AtlasManager atlasManager,
-                                            RenderTarget renderTarget, CallbackInfo ci) {
-        TextureAtlasSprite sprite = this.celestialsAtlas.getSprite(UmbralWorld.id("black_sun"));
-        this.umbral_world$blackSunBuffer = buildCelestialQuad("Black sun quad", sprite);
+    private void umbral_world$buildBlackSuns(TextureManager textureManager, AtlasManager atlasManager,
+                                             RenderTarget renderTarget, CallbackInfo ci) {
+        this.umbral_world$purpleSunBuffer = buildCelestialQuad("Purple black sun quad",
+                this.celestialsAtlas.getSprite(UmbralWorld.id("purple_black_sun")));
+        this.umbral_world$redSunBuffer = buildCelestialQuad("Red black sun quad",
+                this.celestialsAtlas.getSprite(UmbralWorld.id("red_black_sun")));
     }
 
     // 2. Every frame, remember whether we're in the Umbral World.
@@ -67,20 +74,33 @@ public class SkyRendererMixin {
         this.umbral_world$inUmbralWorld = level.dimension() == ModDimensions.UMBRAL_WORLD;
     }
 
-    // 3. In the Umbral World, draw the black sun instead of the vanilla one.
+    // 3. In the Umbral World, draw the purple black sun instead of the vanilla sun...
     @Inject(method = "renderSun", at = @At("HEAD"), cancellable = true)
-    private void umbral_world$renderBlackSun(RenderPass renderPass, float rainBrightness,
-                                             PoseStack poseStack, CallbackInfo ci) {
-        GpuBuffer buffer = this.umbral_world$blackSunBuffer;
-        if (!this.umbral_world$inUmbralWorld || buffer == null) {
-            return; // anywhere else: let vanilla draw its normal sun
+    private void umbral_world$renderPurpleSun(RenderPass renderPass, float rainBrightness,
+                                              PoseStack poseStack, CallbackInfo ci) {
+        if (this.umbral_world$inUmbralWorld && this.umbral_world$purpleSunBuffer != null) {
+            umbral_world$drawBlackSun(renderPass, poseStack, this.umbral_world$purpleSunBuffer, "Purple black sun");
+            ci.cancel(); // skip vanilla's sun
         }
+    }
 
+    // 4. ...and the red black sun instead of the moon (vanilla has already turned the sky to the moon's angle).
+    @Inject(method = "renderMoon", at = @At("HEAD"), cancellable = true)
+    private void umbral_world$renderRedSun(RenderPass renderPass, MoonPhase moonPhase, float rainBrightness,
+                                           PoseStack poseStack, CallbackInfo ci) {
+        if (this.umbral_world$inUmbralWorld && this.umbral_world$redSunBuffer != null) {
+            umbral_world$drawBlackSun(renderPass, poseStack, this.umbral_world$redSunBuffer, "Red black sun");
+            ci.cancel(); // skip vanilla's moon
+        }
+    }
+
+    @Unique
+    private void umbral_world$drawBlackSun(RenderPass renderPass, PoseStack poseStack, GpuBuffer buffer, String name) {
         Matrix4f modelView = this.applyCelestialBodyTransform(poseStack, 100.0f, BLACK_SUN_SIZE);
         GpuBufferSlice transforms = RenderSystem.getDynamicUniforms()
                 .writeTransform(modelView, new Vector4f(1.0f, 1.0f, 1.0f, 1.0f));
 
-        renderPass.pushDebugGroup(() -> "Black sun");
+        renderPass.pushDebugGroup(() -> name);
         renderPass.setPipeline(RenderSystem.getCompiledPipeline(ModRenderPipelines.BLACK_SUN));
         RenderSystem.bindDefaultUniforms(renderPass);
         renderPass.setUniform("DynamicTransforms", transforms);
@@ -89,16 +109,18 @@ public class SkyRendererMixin {
         renderPass.setIndexBuffer(this.quadIndices.getBuffer(6), this.quadIndices.type());
         renderPass.drawIndexed(6, 1, 0, 0, 0);
         renderPass.popDebugGroup();
-
-        ci.cancel(); // skip vanilla's sun
     }
 
-    // 4. Clean up when the sky renderer is thrown away.
+    // 5. Clean up when the sky renderer is thrown away.
     @Inject(method = "close", at = @At("HEAD"))
-    private void umbral_world$closeBlackSun(CallbackInfo ci) {
-        if (this.umbral_world$blackSunBuffer != null) {
-            this.umbral_world$blackSunBuffer.close();
-            this.umbral_world$blackSunBuffer = null;
+    private void umbral_world$closeBlackSuns(CallbackInfo ci) {
+        if (this.umbral_world$purpleSunBuffer != null) {
+            this.umbral_world$purpleSunBuffer.close();
+            this.umbral_world$purpleSunBuffer = null;
+        }
+        if (this.umbral_world$redSunBuffer != null) {
+            this.umbral_world$redSunBuffer.close();
+            this.umbral_world$redSunBuffer = null;
         }
     }
 }

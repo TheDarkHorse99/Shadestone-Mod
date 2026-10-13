@@ -85,6 +85,7 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			section("Ghoul", this::testGhoul);
 			section("Crawler", this::testCrawler);
 			section("Cursed Soul", this::testCursedSoul);
+			section("Twin suns", this::testTwinSuns);
 		}
 		writeReport();
 		if (failures > 0) {
@@ -578,6 +579,36 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		context.waitTicks(40);
 		context.takeScreenshot("cursed_soul_at_night_4_blocks");
 		command("kill @e[type=umbral_world:cursed_soul]");
+	}
+
+	// =====================================================================================
+	// Twin black suns
+	// =====================================================================================
+
+	private void testTwinSuns() {
+		// High above the Umbral World's fog, so the sky is clear
+		onServer(server -> {
+			fill(server.getLevel(ModDimensions.UMBRAL_WORLD), new BlockPos(-2, 299, -2), new BlockPos(2, 299, 2), Blocks.STONE.defaultBlockState());
+			return null;
+		});
+		command("execute in umbral_world:umbral_world run tp @a 0.5 300 0.5 0 -90");
+		world.getConnection().waitForChunksRender();
+		String[][] times = {
+				{"umbral_world:purple_noon", "sky_purple_sun_overhead", "-90"},
+				{"umbral_world:red_noon", "sky_red_sun_overhead", "-90"},
+				{"umbral_world:purple_sunrise", "sky_purple_sunrise_looking_east", "-10"},
+				{"umbral_world:red_sunrise", "sky_red_sunrise_looking_east", "-10"},
+		};
+		for (String[] time : times) {
+			command("time of umbral_world:umbral_world set " + time[0]);
+			command("execute in umbral_world:umbral_world run tp @a 0.5 300 0.5 -90 " + time[2]);
+			context.waitTicks(30);
+			context.takeScreenshot(time[1]);
+		}
+		long umbralTime = onServer(server -> server.getLevel(ModDimensions.UMBRAL_WORLD).getDefaultClockTime());
+		report.add("INFO  Umbral World time after setting red sunrise: " + umbralTime);
+		command("execute in minecraft:overworld run tp @a 0.5 -60 0.5");
+		world.getConnection().waitForChunksRender();
 	}
 
 	// =====================================================================================
