@@ -24,6 +24,7 @@ Act as a veteran modder: rigorous, honest feedback, no reflexive praise. Point o
 
 - **Commit and push straight to `26.3`.** No feature branches or pull requests; Mac doesn't want to approve each change. Because nothing is reviewed before it lands, only push after `.\gradlew.bat build` passes, keep each commit to one feature or fix with a clear message, and never commit `.mcp.json`.
 - **Mac often works from his phone** through Remote Control of a Claude Code session running in IntelliJ's terminal on his PC (the PC stays on). He can't easily reach the PC mid-session, so finish work end to end (code, build, commit, push) without needing him at the keyboard. In-game testing waits until he's back at the PC.
+- **In-game tests (do this before pushing gameplay changes):** `.\gradlew.bat runClientGameTest` (about 1.5 minutes; opens a game window, so it works while Mac is away from the PC). It runs `src/gametest/java/.../test/UmbralWorldClientTests.java` in a fresh flat world: places blocks, spawns mobs, presses keys, waits, and checks results. Results: `build/run/clientGameTest/umbral_test_report.txt` (PASS/FAIL per check, with measured numbers); screenshots: `build/run/clientGameTest/screenshots/` (look at them with Read). Add checks for every new feature. Tests can't judge Mac's art, how things feel, or long-term spawn rates, so Mac's in-game test list still covers those.
 - **GitHub access:** the GitHub CLI is installed at `C:\Program Files\GitHub CLI\gh.exe` (may not be on PATH), logged in as TheDarkHorse99, and set up as git's credential helper, so `git push` works without prompts.
 
 ## Project layout
@@ -39,6 +40,7 @@ Act as a veteran modder: rigorous, honest feedback, no reflexive praise. Point o
   - `entity/` — `ModEntities`, `Wight`, `Ghoul`, `Crawler`, `CursedSoul`
   - `world/` — dimension keys and helpers
 - `src/client/java/.../umbralworld/client/` — client-only code: `UmbralWorldClient`, renderers and models (`GhoulModel`, `CrawlerModel`, `CursedSoulRenderer` billboard), `ModRenderPipelines` (black sun, fog-proof glowing eyes), `NightstalkerVision`, `mixin/` (fog, sky, Nightstalker screen filter and outlines, hiding the Shroud on invisible players)
+- `src/gametest/` — the in-game tests (own mod id `umbral_world_test`, set up by `fabricApi.configureTests` in `build.gradle`; not part of the finished mod)
 - `src/main/resources/assets/umbral_world/` — blockstates, `items/` + `models/` (every item needs both), textures, `lang/en_us.json`
 - `src/main/resources/data/umbral_world/` — dimension, dimension_type, worldgen (biome, noise, features), loot tables, recipes, damage types, tags
 - `src/main/resources/data/minecraft/tags/` — additions to vanilla tags (`"replace": false`)
@@ -70,6 +72,7 @@ Act as a veteran modder: rigorous, honest feedback, no reflexive praise. Point o
 - Wearable items: `Item.Properties().component(DataComponents.EQUIPPABLE, Equippable.builder(slot).setAsset(key)...)`, key = `ResourceKey.create(EquipmentAssets.ROOT_ID, id)`. The look is `assets/<ns>/equipment/<name>.json` (`layers.humanoid[].texture`), texture at `textures/entity/equipment/humanoid/<name>.png` (chestplate layout). `HumanoidArmorLayer` still draws armor on invisible players.
 - Flat camera-facing entities (billboards): copy `DragonFireballRenderer` (`submit` → `poseStack.rotate(camera.orientation)` → `collector.submitCustomGeometry(poseStack, renderType, (pose, consumer) -> ...)`).
 - A Vex subclass gets wall-flying for free (`Vex.tick` sets `noPhysics`); override `populateDefaultEquipmentSlots` or it spawns with an iron sword.
+- Client game tests (`fabric-client-gametest`): `context.worldBuilder().create()` makes a flat survival world with time, weather and mob spawning frozen. Use `computeOnServer` for server work and `getInput().holdKey(o -> o.keyUp)` for real movement. In commands use `@a`, not `@p` (`@p` only finds players in the dimension the command runs in). `/fill` fails in areas that haven't loaded; place blocks in code instead (`ServerLevel.setBlock` loads the chunk). Every monster gets a small random bonus (±) to follow range when it spawns.
 - A short `.\gradlew.bat runClient` (killed after ~4 min) is a safe smoke test that mixins and registries load; it needs no EULA.
 
 ## Current state

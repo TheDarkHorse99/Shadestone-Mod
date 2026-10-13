@@ -180,6 +180,11 @@ public class Crawler extends Monster {
 		}
 	}
 
+	/** Is it crawling away after being hit? (Used by the in-game tests.) */
+	public boolean isFleeing() {
+		return fleeTicks > 0;
+	}
+
 	/** Getting hit makes it crawl away for a moment, whoever it was fighting. */
 	@Override
 	public boolean hurtServer(ServerLevel level, DamageSource source, float amount) {

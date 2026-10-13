@@ -22,6 +22,19 @@ loom {
 	}
 }
 
+// In-game tests: a separate "gametest" source set (src/gametest/) that only runs with
+// .\gradlew.bat runClientGameTest. It opens the game, runs the tests in a fresh flat world,
+// takes screenshots, and closes. It is not part of the normal build or the finished mod.
+fabricApi {
+	configureTests {
+		createSourceSet = true
+		modId = "umbral_world_test"
+		enableGameTests = false        // no headless server tests (those need the server EULA)
+		enableClientGameTests = true
+		eula = false
+	}
+}
+
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"

@@ -103,6 +103,11 @@ public class Ghoul extends PathfinderMob {
 		scaredTicks = SCARED_TICKS;
 	}
 
+	/** Is it running away right now? (Used by the in-game tests.) */
+	public boolean isScared() {
+		return scaredTicks > 0;
+	}
+
 	/** Getting hit always scares it, even by a sneaking player. */
 	@Override
 	public boolean hurtServer(ServerLevel level, DamageSource source, float amount) {

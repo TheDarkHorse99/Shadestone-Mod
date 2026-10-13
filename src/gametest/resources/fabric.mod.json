@@ -1,0 +1,15 @@
+{
+	"schemaVersion": 1,
+	"id": "umbral_world_test",
+	"version": "1.0.0",
+	"name": "Umbral World in-game tests",
+	"environment": "client",
+	"entrypoints": {
+		"fabric-client-gametest": [
+			"io.github.thedarkhorse99.umbralworld.test.UmbralWorldClientTests"
+		]
+	},
+	"depends": {
+		"umbral_world": "*"
+	}
+}
