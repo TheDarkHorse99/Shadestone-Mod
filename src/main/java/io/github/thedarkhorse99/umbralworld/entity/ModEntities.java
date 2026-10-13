@@ -54,6 +54,20 @@ public final class ModEntities {
 					.notInPeaceful()
 					.build(CRAWLER_KEY));
 
+	public static final ResourceKey<EntityType<?>> CURSED_SOUL_KEY =
+			ResourceKey.create(Registries.ENTITY_TYPE, UmbralWorld.id("cursed_soul"));
+
+	public static final EntityType<CursedSoul> CURSED_SOUL = Registry.register(
+			BuiltInRegistries.ENTITY_TYPE,
+			CURSED_SOUL_KEY,
+			EntityType.Builder.of(CursedSoul::new, MobCategory.MONSTER)
+					.sized(0.5f, 0.5f)     // a small floating wisp
+					.eyeHeight(0.25f)
+					.fireImmune()
+					.clientTrackingRange(8)
+					.notInPeaceful()
+					.build(CURSED_SOUL_KEY));
+
 	private ModEntities() {
 	}
 
@@ -74,5 +88,10 @@ public final class ModEntities {
 		// Like vanilla monsters: on solid ground, in the dark
 		SpawnPlacements.register(CRAWLER, SpawnPlacementTypes.ON_GROUND,
 				Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, Monster::checkMonsterSpawnRules);
+
+		FabricDefaultAttributeRegistry.register(CURSED_SOUL, CursedSoul.createAttributes());
+		// In mid-air is fine (it flies), but only near Ghost or Phantom Vapor
+		SpawnPlacements.register(CURSED_SOUL, SpawnPlacementTypes.NO_RESTRICTIONS,
+				Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CursedSoul::checkCursedSoulSpawnRules);
 	}
 }

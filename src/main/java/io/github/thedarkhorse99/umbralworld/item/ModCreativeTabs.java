@@ -49,6 +49,7 @@ public final class ModCreativeTabs {
 						output.accept(ModItems.WIGHT_SPAWN_EGG);
 						output.accept(ModItems.GHOUL_SPAWN_EGG);
 						output.accept(ModItems.CRAWLER_SPAWN_EGG);
+						output.accept(ModItems.CURSED_SOUL_SPAWN_EGG);
 					})
 					.build());
 

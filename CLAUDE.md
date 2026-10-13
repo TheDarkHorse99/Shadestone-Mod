@@ -36,9 +36,9 @@ Act as a veteran modder: rigorous, honest feedback, no reflexive praise. Point o
   - `item/` — `ModItems`, `ModCreativeTabs` ("Umbral World" tab), `WightsShroud` (light check + invisibility)
   - `effect/` — Deep Blindness, Nightstalker (`NightstalkerEffect`), `ModPotions`
   - `mixin/` — common mixins (`umbral_world.mixins.json`): `LivingEntityMixin` (Nightstalker visibility)
-  - `entity/` — `ModEntities`, `Wight`, `Ghoul`, `Crawler`
+  - `entity/` — `ModEntities`, `Wight`, `Ghoul`, `Crawler`, `CursedSoul`
   - `world/` — dimension keys and helpers
-- `src/client/java/.../umbralworld/client/` — client-only code: `UmbralWorldClient`, renderers and models (`GhoulModel`, `CrawlerModel`), `ModRenderPipelines` (black sun, fog-proof glowing eyes), `NightstalkerVision`, `mixin/` (fog, sky, Nightstalker screen filter and outlines, hiding the Shroud on invisible players)
+- `src/client/java/.../umbralworld/client/` — client-only code: `UmbralWorldClient`, renderers and models (`GhoulModel`, `CrawlerModel`, `CursedSoulRenderer` billboard), `ModRenderPipelines` (black sun, fog-proof glowing eyes), `NightstalkerVision`, `mixin/` (fog, sky, Nightstalker screen filter and outlines, hiding the Shroud on invisible players)
 - `src/main/resources/assets/umbral_world/` — blockstates, `items/` + `models/` (every item needs both), textures, `lang/en_us.json`
 - `src/main/resources/data/umbral_world/` — dimension, dimension_type, worldgen (biome, noise, features), loot tables, recipes, damage types, tags
 - `src/main/resources/data/minecraft/tags/` — additions to vanilla tags (`"replace": false`)
@@ -68,6 +68,8 @@ Act as a veteran modder: rigorous, honest feedback, no reflexive praise. Point o
 - Mob speed: a mob's ground speed goes with the square of `MOVEMENT_SPEED` × goal speed (`Mob.setSpeed` also sets its forward input). A player's is about 0.098 walking and 0.127 sprinting on that scale (zombie 0.23 → 0.053).
 - Players' movement on the server: `player.getKnownMovement()`; sneaking is `isShiftKeyDown()`.
 - Wearable items: `Item.Properties().component(DataComponents.EQUIPPABLE, Equippable.builder(slot).setAsset(key)...)`, key = `ResourceKey.create(EquipmentAssets.ROOT_ID, id)`. The look is `assets/<ns>/equipment/<name>.json` (`layers.humanoid[].texture`), texture at `textures/entity/equipment/humanoid/<name>.png` (chestplate layout). `HumanoidArmorLayer` still draws armor on invisible players.
+- Flat camera-facing entities (billboards): copy `DragonFireballRenderer` (`submit` → `poseStack.rotate(camera.orientation)` → `collector.submitCustomGeometry(poseStack, renderType, (pose, consumer) -> ...)`).
+- A Vex subclass gets wall-flying for free (`Vex.tick` sets `noPhysics`); override `populateDefaultEquipmentSlots` or it spawns with an iron sword.
 - A short `.\gradlew.bat runClient` (killed after ~4 min) is a safe smoke test that mixins and registries load; it needs no EULA.
 
 ## Current state
@@ -89,6 +91,8 @@ Written, awaiting Mac's in-game test: **the Ghoul and Corpse Candles**. `entity/
 Written, awaiting Mac's in-game test: **the Wight's Shroud**. `item/WightsShroud.java` checks every 5 ticks; a wearer in light 5+ gets vanilla Invisibility in short hidden bursts (ambient, no particles, no icon), removed at once in the dark. Client `HumanoidArmorLayerMixin` hides the shroud while its wearer is invisible. Needs Mac's art: `textures/item/wights_shroud.png` and the worn look `textures/entity/equipment/humanoid/wights_shroud.png` (64x32 chestplate layout; transparent where it shouldn't cover).
 
 Written, awaiting Mac's in-game test: **the Crawler**. `entity/Crawler.java` (a `Monster`; plant check, buff and guarding every 10 ticks in `customServerAiStep`; `CrawlAwayGoal`, `SeekPlantGoal`), client `CrawlerModel` (zombie head/body/arms lying face down, zombie 64x64 layout, legs unused) and `CrawlerRenderer`. Needs Mac's art: `textures/entity/crawler/crawler.png`, `textures/item/crawler_spawn_egg.png`. Drops still to decide.
+
+Written, awaiting Mac's in-game test: **the Cursed Soul**. `entity/CursedSoul.java` (extends `Vex`, `DartAroundGoal`, `checkCursedSoulSpawnRules` looks for vapor), client `CursedSoulRenderer`. Spawns in the Miasma's monster list. Needs Mac's art: `textures/entity/cursed_soul/cursed_soul.png` (one square picture, e.g. 16x16 or 32x32; see-through edges allowed for a soft glow), `textures/item/cursed_soul_spawn_egg.png`. Drops still to decide.
 
 ## To-do
 
@@ -121,8 +125,8 @@ The dimension will have three biomes, roughly equal in size: the Grave, the Mias
   - Ectoplasm Bottle + Awkward Potion → **Potion of the Nightstalker** (3:00; redstone → 8:00; no Strong version). Effect **Nightstalker**: "Frodo's ring" vision (washed-out purple screen, hostile mobs you can see are outlined, not through walls), +2 attack damage, +15% speed, but hostile mobs notice you from 1.5× as far away
   - Rejected: phasing through blocks (buggy and exploitable); invisible-in-the-dark overlaps the Wight's Shroud
 - Three plants that give an effect to players standing near them, shown by coloured specks: **Frail Bramble** (thorny bush, Weakness, purple), **Pale Blossoms** (single white flower, Nausea, white; rarest because nausea is harshest), **Torpor Sprout** (ground cover like Pink Petals, 1–4 per block, Slowness, red)
-- Two mobs (drops not decided yet):
-  - **Cursed Soul** (hostile): a black/dark wisp of light with a trail (give it a coloured glow so it can be seen in the dark). Flies around fast, through walls like a Vex, and attacks players. Spawns only within a few blocks of Ghost Vapor
+- Two mobs (both built; drops not decided yet):
+  - **Cursed Soul** (hostile, built): a black/dark wisp of light with a trail (give it a coloured glow so it can be seen in the dark). Flies around fast, through walls like a Vex, and attacks players. Spawns only within 4 blocks of Ghost or Phantom Vapor (and not where block light is above 3). It extends vanilla's `Vex` (no sword, no owner, no time limit, darts around faster when idle); 14 HP, 6 damage, 5 XP, undead. Drawn as one camera-facing picture at full brightness, with a dark purple dust trail
   - **Crawler** (built): the top half of a zombie, crawling on its arms. Drawn to the aura plants as if addicted to their effects: when not next to one (2 sideways / 1 up-down, like the aura), it looks for one within 10 blocks and crawls over. Attacks a player who comes within 4 blocks of its plant; crawls away for 3 s when hit. Being next to the plants buffs it instead of giving it their effects: +50% speed, +3 damage, double follow range; the buff fades as soon as it leaves, so luring it away weakens it. 16 HP, 5 damage (8 buffed), 2 armor, speed 0.2 (about a walking player when buffed). Undead. Spawns in the Miasma like a monster (dark, solid ground), 1–2. No drops yet
 
 **Chasm biome**: flat land cut by very deep fissures, too dark to see the bottom. Mostly thin fissures, sometimes large gorges.

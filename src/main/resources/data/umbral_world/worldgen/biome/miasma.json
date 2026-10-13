@@ -23,6 +23,11 @@
           "misc": [],
           "monster": [
             {
+              "type": "umbral_world:cursed_soul",
+              "count": { "type": "minecraft:uniform", "min_inclusive": 1, "max_inclusive": 2 },
+              "weight": 100
+            },
+            {
               "type": "umbral_world:crawler",
               "count": { "type": "minecraft:uniform", "min_inclusive": 1, "max_inclusive": 2 },
               "weight": 100

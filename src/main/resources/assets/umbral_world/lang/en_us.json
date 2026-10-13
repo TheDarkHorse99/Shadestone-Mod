@@ -43,5 +43,7 @@
   "item.umbral_world.ghoul_spawn_egg": "Ghoul Spawn Egg",
   "item.umbral_world.wights_shroud": "Wight's Shroud",
   "entity.umbral_world.crawler": "Crawler",
-  "item.umbral_world.crawler_spawn_egg": "Crawler Spawn Egg"
+  "item.umbral_world.crawler_spawn_egg": "Crawler Spawn Egg",
+  "entity.umbral_world.cursed_soul": "Cursed Soul",
+  "item.umbral_world.cursed_soul_spawn_egg": "Cursed Soul Spawn Egg"
 }
