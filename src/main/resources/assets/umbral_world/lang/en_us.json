@@ -37,5 +37,8 @@
   "item.minecraft.potion.effect.nightstalker": "Potion of the Nightstalker",
   "item.minecraft.splash_potion.effect.nightstalker": "Splash Potion of the Nightstalker",
   "item.minecraft.lingering_potion.effect.nightstalker": "Lingering Potion of the Nightstalker",
-  "item.minecraft.tipped_arrow.effect.nightstalker": "Arrow of the Nightstalker"
+  "item.minecraft.tipped_arrow.effect.nightstalker": "Arrow of the Nightstalker",
+  "block.umbral_world.corpse_candle": "Corpse Candle",
+  "entity.umbral_world.ghoul": "Ghoul",
+  "item.umbral_world.ghoul_spawn_egg": "Ghoul Spawn Egg"
 }

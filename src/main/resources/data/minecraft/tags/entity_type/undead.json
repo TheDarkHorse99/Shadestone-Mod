@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "umbral_world:wight"
+    "umbral_world:wight",
+    "umbral_world:ghoul"
   ]
 }

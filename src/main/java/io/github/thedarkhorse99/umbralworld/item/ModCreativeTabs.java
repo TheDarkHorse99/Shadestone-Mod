@@ -41,10 +41,12 @@ public final class ModCreativeTabs {
 						output.accept(ModBlocks.GRAVE_THORNS);
 						output.accept(ModBlocks.DARK_FURNACE);
 						output.accept(ModBlocks.SPILE);
+						output.accept(ModBlocks.CORPSE_CANDLE);
 						output.accept(ModItems.SHADESTONE_SHARD);
 						output.accept(ModItems.SHADESTONE_BLADE);
 						output.accept(ModItems.ECTOPLASM_BOTTLE);
 						output.accept(ModItems.WIGHT_SPAWN_EGG);
+						output.accept(ModItems.GHOUL_SPAWN_EGG);
 					})
 					.build());
 

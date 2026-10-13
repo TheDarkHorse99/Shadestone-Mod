@@ -7,6 +7,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.entity.SpawnPlacementTypes;
 import net.minecraft.world.entity.SpawnPlacements;
@@ -27,6 +28,19 @@ public final class ModEntities {
 					.notInPeaceful()
 					.build(WIGHT_KEY));
 
+	public static final ResourceKey<EntityType<?>> GHOUL_KEY =
+			ResourceKey.create(Registries.ENTITY_TYPE, UmbralWorld.id("ghoul"));
+
+	// A "creature" like cows and pigs, not a monster: it never attacks, and it doesn't use up the Wights' spawn slots
+	public static final EntityType<Ghoul> GHOUL = Registry.register(
+			BuiltInRegistries.ENTITY_TYPE,
+			GHOUL_KEY,
+			EntityType.Builder.of(Ghoul::new, MobCategory.CREATURE)
+					.sized(0.7f, 1.6f)     // hunched over: shorter than a zombie (1.95)
+					.eyeHeight(1.35f)
+					.clientTrackingRange(10)
+					.build(GHOUL_KEY));
+
 	private ModEntities() {
 	}
 
@@ -37,5 +51,10 @@ public final class ModEntities {
 		// Where it may spawn naturally: on solid ground, in the dark, like vanilla monsters.
 		SpawnPlacements.register(WIGHT, SpawnPlacementTypes.ON_GROUND,
 				Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, Monster::checkMonsterSpawnRules);
+
+		FabricDefaultAttributeRegistry.register(GHOUL, Ghoul.createAttributes());
+		// Ghouls only need solid ground: they don't care about light
+		SpawnPlacements.register(GHOUL, SpawnPlacementTypes.ON_GROUND,
+				Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, Mob::checkMobSpawnRules);
 	}
 }

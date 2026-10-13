@@ -1,0 +1,97 @@
+{
+  "ambientocclusion": false,
+  "textures": {
+    "candle": "umbral_world:block/corpse_candle",
+    "particle": "umbral_world:block/corpse_candle"
+  },
+  "elements": [
+    {
+      "from": [
+        4,
+        1,
+        8
+      ],
+      "to": [
+        12,
+        9,
+        8
+      ],
+      "rotation": {
+        "origin": [
+          8,
+          8,
+          8
+        ],
+        "axis": "y",
+        "angle": 45,
+        "rescale": true
+      },
+      "shade_direction_override": "up",
+      "light_emission": 15,
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            4,
+            12,
+            12
+          ],
+          "texture": "#candle"
+        },
+        "south": {
+          "uv": [
+            4,
+            4,
+            12,
+            12
+          ],
+          "texture": "#candle"
+        }
+      }
+    },
+    {
+      "from": [
+        8,
+        1,
+        4
+      ],
+      "to": [
+        8,
+        9,
+        12
+      ],
+      "rotation": {
+        "origin": [
+          8,
+          8,
+          8
+        ],
+        "axis": "y",
+        "angle": 45,
+        "rescale": true
+      },
+      "shade_direction_override": "up",
+      "light_emission": 15,
+      "faces": {
+        "west": {
+          "uv": [
+            4,
+            4,
+            12,
+            12
+          ],
+          "texture": "#candle"
+        },
+        "east": {
+          "uv": [
+            4,
+            4,
+            12,
+            12
+          ],
+          "texture": "#candle"
+        }
+      }
+    }
+  ]
+}

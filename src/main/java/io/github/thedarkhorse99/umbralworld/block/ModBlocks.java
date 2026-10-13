@@ -166,6 +166,22 @@ public class ModBlocks {
 					.mapColor(MapColor.COLOR_RED)
 	);
 
+	// ---- Corpse Candle: a floating orb of fire, dropped by Ghouls ----
+
+	public static final Block CORPSE_CANDLE = register(
+			"corpse_candle",
+			CorpseCandleBlock::new,
+			BlockBehaviour.Properties.of()
+					.mapColor(MapColor.FIRE)
+					.noCollision()
+					.noOcclusion()
+					.instabreak()
+					.randomTicks()
+					.lightLevel(_ -> 4)
+					.sound(SoundType.CANDLE)
+					.pushReaction(PushReaction.POPPED)
+	);
+
 	public static final Block UMBRAL_PORTAL = registerBlockOnly(
 			"umbral_portal",
 			UmbralPortalBlock::new,
@@ -245,6 +261,7 @@ public class ModBlocks {
 				.register(output -> {
 					output.accept(DARK_FURNACE);
 					output.accept(SPILE);
+					output.accept(CORPSE_CANDLE);
 				});
 		// Middle-clicking an Ectoplasm Cauldron picks a normal cauldron, like vanilla's filled cauldrons
 		Item.BY_BLOCK.put(ECTOPLASM_CAULDRON, Items.CAULDRON);

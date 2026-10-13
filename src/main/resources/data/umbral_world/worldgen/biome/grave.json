@@ -19,7 +19,13 @@
         "spawns_by_category": {
           "ambient": [],
           "axolotls": [],
-          "creature": [],
+          "creature": [
+            {
+              "type": "umbral_world:ghoul",
+              "count": { "type": "minecraft:uniform", "min_inclusive": 1, "max_inclusive": 2 },
+              "weight": 100
+            }
+          ],
           "misc": [],
           "monster": [
             {
