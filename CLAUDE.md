@@ -20,6 +20,12 @@ Act as a veteran modder: rigorous, honest feedback, no reflexive praise. Point o
 8. **Mac tests in-game himself.** End each change with a short numbered test list. Compile with `.\gradlew.bat build` (Windows) before handing over.
 9. **Keep this file current.** Whenever Mac decides something new about the mod (a to-do item, a design decision, or a new rule), update CLAUDE.md in the same session and tell him exactly what changed (which section, what was added, edited, or removed).
 
+## Workflow
+
+- **Commit and push straight to `26.3`.** No feature branches or pull requests; Mac doesn't want to approve each change. Because nothing is reviewed before it lands, only push after `.\gradlew.bat build` passes, keep each commit to one feature or fix with a clear message, and never commit `.mcp.json`.
+- **Mac often works from his phone** through Remote Control of a Claude Code session running in IntelliJ's terminal on his PC (the PC stays on). He can't easily reach the PC mid-session, so finish work end to end (code, build, commit, push) without needing him at the keyboard. In-game testing waits until he's back at the PC.
+- **GitHub access:** the GitHub CLI is installed at `C:\Program Files\GitHub CLI\gh.exe` (may not be on PATH), logged in as TheDarkHorse99, and set up as git's credential helper, so `git push` works without prompts.
+
 ## Project layout
 
 - `src/main/java/.../umbralworld/` — common code
