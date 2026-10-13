@@ -25,5 +25,17 @@
   "death.attack.umbral_world.grave_thorns": "%1$s succumbed to the Grave Thorns",
   "death.attack.umbral_world.grave_thorns.player": "%1$s succumbed to the Grave Thorns while trying to escape %2$s",
   "entity.umbral_world.wight": "Wight",
-  "item.umbral_world.wight_spawn_egg": "Wight Spawn Egg"
+  "item.umbral_world.wight_spawn_egg": "Wight Spawn Egg",
+  "block.umbral_world.phantom_log": "Phantom Log",
+  "block.umbral_world.phantom_planks": "Phantom Planks",
+  "block.umbral_world.phantom_sapling": "Phantom Sapling",
+  "block.umbral_world.phantom_vapor": "Phantom Vapor",
+  "block.umbral_world.spile": "Spile",
+  "block.umbral_world.ectoplasm_cauldron": "Ectoplasm Cauldron",
+  "item.umbral_world.ectoplasm_bottle": "Ectoplasm Bottle",
+  "effect.umbral_world.nightstalker": "Nightstalker",
+  "item.minecraft.potion.effect.nightstalker": "Potion of the Nightstalker",
+  "item.minecraft.splash_potion.effect.nightstalker": "Splash Potion of the Nightstalker",
+  "item.minecraft.lingering_potion.effect.nightstalker": "Lingering Potion of the Nightstalker",
+  "item.minecraft.tipped_arrow.effect.nightstalker": "Arrow of the Nightstalker"
 }

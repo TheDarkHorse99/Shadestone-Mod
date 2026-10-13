@@ -1,3 +1,5 @@
 {
-  "type": "umbral_world:ghost_tree"
+  "type": "umbral_world:ghost_tree",
+  "log": "umbral_world:ghost_log",
+  "vapor": "umbral_world:ghost_vapor"
 }

@@ -15,13 +15,13 @@ import net.minecraft.world.level.block.grower.TreeGrower;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 
-/** Grows into a Ghost Tree. Unlike vanilla saplings it doesn't need light to grow. */
+/** Grows into a Ghost or Phantom Tree. Unlike vanilla saplings it doesn't need light to grow. */
 public class GhostSaplingBlock extends SaplingBlock {
     /** Blocks it can be planted on. Filled in by data/umbral_world/tags/block/supports_ghost_sapling.json */
     public static final TagKey<Block> SUPPORTS_GHOST_SAPLING =
             TagKey.create(Registries.BLOCK, UmbralWorld.id("supports_ghost_sapling"));
 
-    /** Which tree to grow: always the one Ghost Tree shape, no big or flowering variants. */
+    /** Which tree to grow: always the one shape, no big or flowering variants. */
     public static final TreeGrower GHOST_TREE_GROWER = new TreeGrower(
             "umbral_world:ghost",
             WeightedList.of(ModWorldGen.GHOST_TREE),
@@ -29,8 +29,15 @@ public class GhostSaplingBlock extends SaplingBlock {
             WeightedList.of(),
             ModWorldGen.GHOST_TREE);
 
-    public GhostSaplingBlock(BlockBehaviour.Properties properties) {
-        super(GHOST_TREE_GROWER, properties);
+    public static final TreeGrower PHANTOM_TREE_GROWER = new TreeGrower(
+            "umbral_world:phantom",
+            WeightedList.of(ModWorldGen.PHANTOM_TREE),
+            WeightedList.of(),
+            WeightedList.of(),
+            ModWorldGen.PHANTOM_TREE);
+
+    public GhostSaplingBlock(TreeGrower treeGrower, BlockBehaviour.Properties properties) {
+        super(treeGrower, properties);
     }
 
     /** Same speed as vanilla saplings, but skips their "needs light level 9" rule. */

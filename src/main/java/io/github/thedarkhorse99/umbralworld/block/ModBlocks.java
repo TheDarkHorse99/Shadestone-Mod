@@ -4,6 +4,7 @@ import io.github.thedarkhorse99.umbralworld.UmbralWorld;
 import java.util.function.Function;
 import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
 import net.minecraft.core.Registry;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
@@ -12,6 +13,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -73,7 +75,7 @@ public class ModBlocks {
 	// Block only: players never hold Ghost Vapor
 	public static final Block GHOST_VAPOR = registerBlockOnly(
 			"ghost_vapor",
-			GhostVaporBlock::new,
+			properties -> new GhostVaporBlock(ParticleTypes.END_ROD, properties),
 			BlockBehaviour.Properties.of()
 					.mapColor(MapColor.NONE)
 					.noCollision()
@@ -87,8 +89,58 @@ public class ModBlocks {
 
 	public static final Block GHOST_SAPLING = register(
 			"ghost_sapling",
-			GhostSaplingBlock::new,
+			properties -> new GhostSaplingBlock(GhostSaplingBlock.GHOST_TREE_GROWER, properties),
 			BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_SAPLING)
+	);
+
+	// ---- Phantom Tree (Miasma): the rare purple Ghost Tree, the only one that gives Ectoplasm ----
+
+	public static final Block PHANTOM_LOG = register(
+			"phantom_log",
+			GhostLogBlock::new,
+			BlockBehaviour.Properties.ofFullCopy(GHOST_LOG)
+					.mapColor(MapColor.COLOR_PURPLE)
+	);
+
+	public static final Block PHANTOM_PLANKS = register(
+			"phantom_planks",
+			GhostPlanksBlock::new,
+			BlockBehaviour.Properties.ofFullCopy(GHOST_PLANKS)
+					.mapColor(MapColor.COLOR_PURPLE)
+	);
+
+	public static final Block PHANTOM_VAPOR = registerBlockOnly(
+			"phantom_vapor",
+			properties -> new GhostVaporBlock(ParticleTypes.REVERSE_PORTAL, properties),
+			BlockBehaviour.Properties.ofFullCopy(GHOST_VAPOR)
+	);
+
+	public static final Block PHANTOM_SAPLING = register(
+			"phantom_sapling",
+			properties -> new GhostSaplingBlock(GhostSaplingBlock.PHANTOM_TREE_GROWER, properties),
+			BlockBehaviour.Properties.ofFullCopy(Blocks.OAK_SAPLING)
+	);
+
+	// ---- Ectoplasm: a spile on a Phantom Log drips it into a cauldron ----
+
+	public static final Block SPILE = register(
+			"spile",
+			SpileBlock::new,
+			BlockBehaviour.Properties.of()
+					.mapColor(MapColor.METAL)
+					.strength(0.5F)
+					.sound(SoundType.LANTERN)
+					.noCollision()
+					.noOcclusion()
+					.randomTicks()
+					.pushReaction(PushReaction.POPPED)
+	);
+
+	// Block only: picking it up gives a normal cauldron, like vanilla's Water Cauldron
+	public static final Block ECTOPLASM_CAULDRON = registerBlockOnly(
+			"ectoplasm_cauldron",
+			EctoplasmCauldronBlock::new,
+			BlockBehaviour.Properties.ofFullCopy(Blocks.CAULDRON)
 	);
 
 	// ---- Miasma plants: each gives an effect to players standing nearby ----
@@ -173,19 +225,29 @@ public class ModBlocks {
 					output.accept(EFFLUVIUM);
 					output.accept(GHOST_LOG);
 					output.accept(GHOST_SAPLING);
+					output.accept(PHANTOM_LOG);
+					output.accept(PHANTOM_SAPLING);
 					output.accept(FRAIL_BRAMBLE);
 					output.accept(PALE_BLOSSOMS);
 					output.accept(TORPOR_SPROUT);
 				});
 		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.BUILDING_BLOCKS)
-				.register(output -> output.accept(GHOST_PLANKS));
+				.register(output -> {
+					output.accept(GHOST_PLANKS);
+					output.accept(PHANTOM_PLANKS);
+				});
 		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.NATURAL_BLOCKS)
 				.register(output -> {
 					output.accept(WITHERED_TUFTS);
 					output.accept(GRAVE_THORNS);
 				});
 		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.FUNCTIONAL_BLOCKS)
-				.register(output -> output.accept(DARK_FURNACE));
+				.register(output -> {
+					output.accept(DARK_FURNACE);
+					output.accept(SPILE);
+				});
+		// Middle-clicking an Ectoplasm Cauldron picks a normal cauldron, like vanilla's filled cauldrons
+		Item.BY_BLOCK.put(ECTOPLASM_CAULDRON, Items.CAULDRON);
 		PoiHelper.register(UmbralWorld.id("umbral_portal"), 0, 1, UMBRAL_PORTAL);
 	}
 }

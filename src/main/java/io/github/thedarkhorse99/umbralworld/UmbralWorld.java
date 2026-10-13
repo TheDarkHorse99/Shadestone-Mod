@@ -11,6 +11,7 @@ import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import io.github.thedarkhorse99.umbralworld.effect.ModEffects;
+import io.github.thedarkhorse99.umbralworld.effect.ModPotions;
 import io.github.thedarkhorse99.umbralworld.block.entity.ModBlockEntities;
 import io.github.thedarkhorse99.umbralworld.menu.ModMenus;
 
@@ -21,6 +22,7 @@ public class UmbralWorld implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		ModEffects.initialize();
+		ModPotions.initialize();
 		ModBlocks.initialize();
 		MiasmaPlantAuras.initialize();
 		ModEntities.initialize();

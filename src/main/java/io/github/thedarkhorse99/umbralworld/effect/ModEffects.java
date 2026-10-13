@@ -10,6 +10,9 @@ public final class ModEffects {
     public static final Holder<MobEffect> DEEP_BLINDNESS = Registry.registerForHolder(
             BuiltInRegistries.MOB_EFFECT, UmbralWorld.id("deep_blindness"), new DeepBlindnessEffect());
 
+    public static final Holder<MobEffect> NIGHTSTALKER = Registry.registerForHolder(
+            BuiltInRegistries.MOB_EFFECT, UmbralWorld.id("nightstalker"), new NightstalkerEffect());
+
     private ModEffects() {
     }
 

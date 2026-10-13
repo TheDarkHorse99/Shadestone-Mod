@@ -19,8 +19,12 @@ public class ModWorldGen {
 	public static final ResourceKey<Feature> GHOST_TREE =
 			ResourceKey.create(Registries.FEATURE, UmbralWorld.id("ghost_tree"));
 
+	/** The rare Phantom Tree: same shape, purple blocks. data/umbral_world/worldgen/feature/phantom_tree.json */
+	public static final ResourceKey<Feature> PHANTOM_TREE =
+			ResourceKey.create(Registries.FEATURE, UmbralWorld.id("phantom_tree"));
+
 	public static void initialize() {
-		// Lets JSON files use "type": "umbral_world:ghost_tree"
+		// Lets JSON files use "type": "umbral_world:ghost_tree" (used by both the Ghost and Phantom Trees)
 		Registry.register(BuiltInRegistries.FEATURE_TYPE, UmbralWorld.id("ghost_tree"), GhostTreeFeature.CODEC);
 
 		BiomeModifications.addFeature(

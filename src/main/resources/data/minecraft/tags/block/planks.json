@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "umbral_world:ghost_planks"
+    "umbral_world:ghost_planks",
+    "umbral_world:phantom_planks"
   ]
 }

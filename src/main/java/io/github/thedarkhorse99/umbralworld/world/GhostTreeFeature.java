@@ -1,8 +1,8 @@
 package io.github.thedarkhorse99.umbralworld.world;
 
 import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.github.thedarkhorse99.umbralworld.block.GhostLogBlock;
-import io.github.thedarkhorse99.umbralworld.block.ModBlocks;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,8 +13,10 @@ import java.util.Map;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.WorldGenLevel;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkGenerator;
@@ -22,11 +24,16 @@ import net.minecraft.world.level.levelgen.feature.Feature;
 
 /**
  * Grows one Ghost Tree: a thin trunk that splits into right-angled branches, like a
- * chorus plant, with a puff of Ghost Vapor at the end of each branch.
- * Used both by world generation and by the Ghost Sapling.
+ * chorus plant, with a puff of vapor at the end of each branch.
+ * Used both by world generation and by the saplings. The JSON file says which log
+ * and vapor blocks to use, so the Phantom Tree is the same shape in purple.
  */
-public record GhostTreeFeature() implements Feature {
-    public static final MapCodec<GhostTreeFeature> CODEC = MapCodec.unit(GhostTreeFeature::new);
+public record GhostTreeFeature(Block log, Block vapor) implements Feature {
+    /** Reads "log" and "vapor" block names from the feature's JSON file. */
+    public static final MapCodec<GhostTreeFeature> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+            BuiltInRegistries.BLOCK.byNameCodec().fieldOf("log").forGetter(GhostTreeFeature::log),
+            BuiltInRegistries.BLOCK.byNameCodec().fieldOf("vapor").forGetter(GhostTreeFeature::vapor)
+    ).apply(instance, GhostTreeFeature::new));
 
     /** How far (in blocks) logs may reach sideways from the trunk. Keeps trees inside the area worldgen allows. */
     private static final int MAX_SPREAD = 4;
@@ -69,7 +76,7 @@ public record GhostTreeFeature() implements Feature {
         }
 
         // 3. Plan the vapor: a rough ball around each tip, a bit ragged at the edges
-        Set<BlockPos> vapor = new LinkedHashSet<>();
+        Set<BlockPos> vaporSpots = new LinkedHashSet<>();
         for (BlockPos tip : tips) {
             for (BlockPos pos : BlockPos.betweenClosed(tip.offset(-VAPOR_RADIUS, -1, -VAPOR_RADIUS),
                     tip.offset(VAPOR_RADIUS, VAPOR_RADIUS, VAPOR_RADIUS))) {
@@ -81,23 +88,23 @@ public record GhostTreeFeature() implements Feature {
                 BlockPos immutable = pos.immutable();
                 if (!logs.contains(immutable) && !level.isOutsideBuildHeight(immutable)
                         && isFree(level.getBlockState(immutable))) {
-                    vapor.add(immutable);
+                    vaporSpots.add(immutable);
                 }
             }
         }
 
         // 4. Build it: logs first, then work out how each log connects
-        BlockState log = ModBlocks.GHOST_LOG.defaultBlockState();
+        BlockState logState = log.defaultBlockState();
         for (BlockPos pos : logs) {
-            setBlock(level, pos, log);
+            setBlock(level, pos, logState);
         }
         for (BlockPos pos : logs) {
-            setBlock(level, pos, GhostLogBlock.withConnections(level, pos, log));
+            setBlock(level, pos, GhostLogBlock.withConnections(level, pos, logState));
         }
 
         // 5. Vapor needs to know how far it is from a log, like leaves do, or it would fade away at once
-        Map<BlockPos, Integer> distances = distancesFromLogs(logs, vapor);
-        BlockState vaporState = ModBlocks.GHOST_VAPOR.defaultBlockState();
+        Map<BlockPos, Integer> distances = distancesFromLogs(logs, vaporSpots);
+        BlockState vaporState = vapor.defaultBlockState();
         for (Map.Entry<BlockPos, Integer> entry : distances.entrySet()) {
             setBlock(level, entry.getKey(), vaporState.setValue(LeavesBlock.DISTANCE, entry.getValue()));
         }

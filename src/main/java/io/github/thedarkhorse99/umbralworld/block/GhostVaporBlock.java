@@ -1,7 +1,7 @@
 package io.github.thedarkhorse99.umbralworld.block;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -15,17 +15,20 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 /**
- * The Ghost Tree's "leaves": an invisible block you can't touch or aim at that only
+ * The Ghost and Phantom Trees' "leaves": an invisible block you can't touch or aim at that only
  * gives off faint light and drifting particles. It is still a real leaves block
  * underneath, so it fades away when its tree is chopped down (sometimes dropping a
- * Ghost Sapling as it goes).
+ * sapling as it goes). Each tree passes in its own particle.
  */
 public class GhostVaporBlock extends LeavesBlock {
     /** 1 in this many display ticks makes a particle. Lower = more particles. */
     private static final int PARTICLE_CHANCE = 6;
 
-    public GhostVaporBlock(BlockBehaviour.Properties properties) {
+    private final ParticleOptions particle;
+
+    public GhostVaporBlock(ParticleOptions particle, BlockBehaviour.Properties properties) {
         super(AmbientLeavesBlockSoundPlayer.noAmbientSound(), properties);
+        this.particle = particle;
     }
 
     /** No model at all, so nothing is drawn. */
@@ -60,6 +63,6 @@ public class GhostVaporBlock extends LeavesBlock {
         double dx = (random.nextDouble() - 0.5) * 0.02;
         double dy = (random.nextDouble() - 0.3) * 0.02;
         double dz = (random.nextDouble() - 0.5) * 0.02;
-        level.addParticle(ParticleTypes.END_ROD, x, y, z, dx, dy, dz);
+        level.addParticle(particle, x, y, z, dx, dy, dz);
     }
 }

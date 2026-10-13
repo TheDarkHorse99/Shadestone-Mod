@@ -22,6 +22,7 @@
 		]
 	},
 	"mixins": [
+		"umbral_world.mixins.json",
 		{
 			"config": "umbral_world.client.mixins.json",
 			"environment": "client"

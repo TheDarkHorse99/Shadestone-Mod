@@ -34,10 +34,11 @@ Act as a veteran modder: rigorous, honest feedback, no reflexive praise. Point o
   - `block/entity/` — `ModBlockEntities`, `DarkFurnaceBlockEntity`
   - `menu/` — Dark Furnace menu and result slot
   - `item/` — `ModItems`, `ModCreativeTabs` ("Umbral World" tab)
-  - `effect/` — Deep Blindness
+  - `effect/` — Deep Blindness, Nightstalker (`NightstalkerEffect`), `ModPotions`
+  - `mixin/` — common mixins (`umbral_world.mixins.json`): `LivingEntityMixin` (Nightstalker visibility)
   - `entity/` — `ModEntities`, `Wight`
   - `world/` — dimension keys and helpers
-- `src/client/java/.../umbralworld/client/` — client-only code: `UmbralWorldClient`, renderers, `mixin/` (fog, sky)
+- `src/client/java/.../umbralworld/client/` — client-only code: `UmbralWorldClient`, renderers, `NightstalkerVision`, `mixin/` (fog, sky, Nightstalker screen filter and outlines)
 - `src/main/resources/assets/umbral_world/` — blockstates, `items/` + `models/` (every item needs both), textures, `lang/en_us.json`
 - `src/main/resources/data/umbral_world/` — dimension, dimension_type, worldgen (biome, noise, features), loot tables, recipes, damage types, tags
 - `src/main/resources/data/minecraft/tags/` — additions to vanilla tags (`"replace": false`)
@@ -58,6 +59,11 @@ Act as a veteran modder: rigorous, honest feedback, no reflexive praise. Point o
 - `new TreeGrower(name, trees, megaTrees, flowerTrees, shortestTree)` takes `WeightedList<ResourceKey<Feature>>`s. Saplings need light 9+ unless `randomTick` is overridden.
 - `PushReaction` has no `DESTROY`; it's `POPPED`. No sources jar: inspect classes with `javap` from the Adoptium JDK on the Loom jars.
 - Don't edit Java files with PowerShell `Set-Content`: it adds a BOM that breaks compilation.
+- Brewing is data-driven: every mix is its own JSON in `recipe/brewing/` (`"type": "minecraft:brewing"`, input/reagent/output), including each splash/lingering/redstone/gunpowder/dragon's breath step. Potions themselves are registered in Java (`BuiltInRegistries.POTION`); names come from `item.minecraft.potion.effect.<name>` etc.
+- `CauldronInteraction.Dispatcher.put` is package-private: custom cauldrons override `useItemOn` instead.
+- Screen filters: `GameRenderer.getRequestedPostEffects()` is rebuilt every frame in `update()`; add an id there to show `assets/<ns>/post_effect/<name>.json`. Post effects may only use the `minecraft:main` target.
+- Entity outlines: `Minecraft.shouldEntityAppearGlowing(Entity)` (client). Mob detection range = follow range × `LivingEntity.getVisibilityPercent`.
+- A short `.\gradlew.bat runClient` (killed after ~4 min) is a safe smoke test that mixins and registries load; it needs no EULA.
 
 ## Current state
 
@@ -70,6 +76,8 @@ Written, awaiting Mac's in-game test: **Miasma stage 1**. The dimension now uses
 Written, awaiting Mac's in-game test: **Miasma stage 2, the Ghost Tree**. `GhostLogBlock` (a `PipeBlock`, 6 px thick), `GhostPlanksBlock` (a `TransparentBlock`), `GhostVaporBlock` (a `LeavesBlock` with an invisible render shape, empty shapes, `END_ROD` particles for now), `GhostSaplingBlock` (custom `TreeGrower`, skips the light check). `world/GhostTreeFeature.java` grows the tree; in 26.3 a `Feature` is a record registered as a `MapCodec` in `BuiltInRegistries.FEATURE_TYPE`. 1–3 trees per chunk. Needs Mac's art: `textures/block/ghost_log.png`, `ghost_planks.png`, `ghost_sapling.png`.
 
 Written, awaiting Mac's in-game test: **Miasma stage 3, the aura plants**. Frail Bramble and Pale Blossoms are `MiasmaPlantBlock`; Torpor Sprout is `TorporSproutBlock` (a `FlowerBedBlock`). Both implement `AuraPlant`. `MiasmaPlantAuras` checks blocks within 2 sideways / 1 up-down of each player every 10 ticks (Fabric `ServerTickEvents.END_LEVEL_TICK`) and gives level I of the effect for 4 s, topped up while they stay near. Needs Mac's art: `textures/block/frail_bramble.png`, `pale_blossoms.png`, `torpor_sprout.png`, `torpor_sprout_stem.png`, and `textures/item/torpor_sprout.png`.
+
+Written, awaiting Mac's in-game test: **Miasma stage 4, Ectoplasm**. The Phantom Tree (`GhostTreeFeature` now reads its log/vapor blocks from JSON; `worldgen/feature/phantom_tree.json`, 1 in 10 chunks), `SpileBlock`, `EctoplasmCauldronBlock`, the Ectoplasm Bottle, the Nightstalker effect and potions, 10 brewing recipes in `data/umbral_world/recipe/brewing/`. A dev-client launch loaded with no errors. Needs Mac's art: `textures/block/phantom_log.png`, `phantom_planks.png`, `phantom_sapling.png`, `spile.png`, `ectoplasm.png` (the liquid in the cauldron), `textures/item/spile.png`, `ectoplasm_bottle.png`.
 
 ## To-do
 
@@ -92,9 +100,10 @@ The dimension will have three biomes, roughly equal in size: the Grave, the Mias
 - Its own custom soil, **Effluvium**, coloured like the flora, with separate top/side/bottom textures like grass
 - An ambient particle effect in the air, like the Grave's ash. For now it uses vanilla's blue (warped) and red (crimson) spores
 - The **Ghost Tree**: a skinny, branching tree shaped like a chorus plant (thin connecting **Ghost Logs**, not block-sized logs), but breaking a piece doesn't collapse the rest. Gives its own wood: Ghost Logs → **Ghost Planks** (1 log → 2 planks, because the logs are thin). Just logs, planks and "leaves" for now; more wood blocks later. Logs are slightly see-through, planks even more faintly. The "leaves" are **Ghost Vapor**: invisible, untouchable, unbreakable, faint light (level 3), only particles; it fades like leaves when the tree is cut and sometimes drops a **Ghost Sapling**. Saplings grow without light. The tree's sap, **Ectoplasm**, is a valuable potion ingredient (stage 4):
-  - Two versions of the tree: the normal Ghost Tree (common) and a **rare variant**, the only one that gives sap (name, look and rarity still to decide)
-  - Players craft a **spile** and place it on a rare-tree log. It slowly drips like pointed dripstone over a cauldron (vanilla's `PointedDripstoneBlock` → cauldron filling is the model). A cauldron underneath fills with Ectoplasm; right-click it with a glass bottle to collect the sap
-  - The potion gives a ghostly/shadowy power. Mac's ideas: invisible in the dark, moving through shadows or blocks, or a "Frodo's ring" vision where enemies are highlighted and the rest of the world is warped/desaturated for contrast (not yet chosen)
+  - The rare **Phantom Tree** (Phantom Log, Phantom Planks, Phantom Vapor, Phantom Sapling): the same shape as the Ghost Tree but purple instead of pale white-blue. About 1 tree in 20. It is the only tree that gives sap
+  - A **Spile** (crafted from 3 iron nuggets) is placed on the side of a log. On a Phantom Log it drips like pointed dripstone (same rate as water dripstone) into a cauldron up to 11 blocks below, making an **Ectoplasm Cauldron** (3 levels). A glass bottle takes one level as an **Ectoplasm Bottle**
+  - Ectoplasm Bottle + Awkward Potion → **Potion of the Nightstalker** (3:00; redstone → 8:00; no Strong version). Effect **Nightstalker**: "Frodo's ring" vision (washed-out purple screen, hostile mobs you can see are outlined, not through walls), +2 attack damage, +15% speed, but hostile mobs notice you from 1.5× as far away
+  - Rejected: phasing through blocks (buggy and exploitable); invisible-in-the-dark overlaps the Wight's Shroud
 - Three plants that give an effect to players standing near them, shown by coloured specks: **Frail Bramble** (thorny bush, Weakness, purple), **Pale Blossoms** (single white flower, Nausea, white; rarest because nausea is harshest), **Torpor Sprout** (ground cover like Pink Petals, 1–4 per block, Slowness, red)
 - One peaceful mob and one hostile mob
 

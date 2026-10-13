@@ -31,14 +31,19 @@ public final class ModCreativeTabs {
 						output.accept(ModBlocks.GHOST_LOG);
 						output.accept(ModBlocks.GHOST_PLANKS);
 						output.accept(ModBlocks.GHOST_SAPLING);
+						output.accept(ModBlocks.PHANTOM_LOG);
+						output.accept(ModBlocks.PHANTOM_PLANKS);
+						output.accept(ModBlocks.PHANTOM_SAPLING);
 						output.accept(ModBlocks.FRAIL_BRAMBLE);
 						output.accept(ModBlocks.PALE_BLOSSOMS);
 						output.accept(ModBlocks.TORPOR_SPROUT);
 						output.accept(ModBlocks.WITHERED_TUFTS);
 						output.accept(ModBlocks.GRAVE_THORNS);
 						output.accept(ModBlocks.DARK_FURNACE);
+						output.accept(ModBlocks.SPILE);
 						output.accept(ModItems.SHADESTONE_SHARD);
 						output.accept(ModItems.SHADESTONE_BLADE);
+						output.accept(ModItems.ECTOPLASM_BOTTLE);
 						output.accept(ModItems.WIGHT_SPAWN_EGG);
 					})
 					.build());

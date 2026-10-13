@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "umbral_world:block/spile"
+    },
+    "facing=east": {
+      "model": "umbral_world:block/spile",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "umbral_world:block/spile",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "umbral_world:block/spile",
+      "y": 270
+    }
+  }
+}

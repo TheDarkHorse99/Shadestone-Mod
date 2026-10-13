@@ -11,6 +11,7 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.SpawnEggItem;
 import io.github.thedarkhorse99.umbralworld.entity.ModEntities;
 import net.minecraft.world.item.ToolMaterial;
@@ -33,6 +34,10 @@ public class ModItems {
 	public static final Item SHADESTONE_BLADE = register("shadestone_blade", Item::new,
 			new Item.Properties().sword(SHADESTONE_MATERIAL, 3.0f, -2.4f));
 
+	// Sap from the Phantom Tree. A brewing ingredient; the brewing stand hands back the glass bottle.
+	public static final Item ECTOPLASM_BOTTLE = register("ectoplasm_bottle", Item::new,
+			new Item.Properties().craftRemainder(Items.GLASS_BOTTLE).stacksTo(16));
+
 	public static final Item WIGHT_SPAWN_EGG = register("wight_spawn_egg", SpawnEggItem::new,
 			new Item.Properties().spawnEgg(ModEntities.WIGHT));
 
@@ -46,6 +51,8 @@ public class ModItems {
 	public static void initialize() {
 		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.INGREDIENTS)
 				.register(output -> output.accept(SHADESTONE_SHARD));
+		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.INGREDIENTS)
+				.register(output -> output.accept(ECTOPLASM_BOTTLE));
 		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.COMBAT)
 				.register(output -> output.accept(SHADESTONE_BLADE));
 		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.SPAWN_EGGS)
