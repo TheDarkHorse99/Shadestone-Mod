@@ -2,11 +2,11 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "N": "minecraft:iron_nugget"
+    "#": "minecraft:iron_ingot"
   },
   "pattern": [
-    "N N",
-    " N "
+    "## ",
+    "  #"
   ],
   "result": {
     "id": "umbral_world:spile"
