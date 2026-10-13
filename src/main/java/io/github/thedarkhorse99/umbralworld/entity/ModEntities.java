@@ -41,6 +41,19 @@ public final class ModEntities {
 					.clientTrackingRange(10)
 					.build(GHOUL_KEY));
 
+	public static final ResourceKey<EntityType<?>> CRAWLER_KEY =
+			ResourceKey.create(Registries.ENTITY_TYPE, UmbralWorld.id("crawler"));
+
+	public static final EntityType<Crawler> CRAWLER = Registry.register(
+			BuiltInRegistries.ENTITY_TYPE,
+			CRAWLER_KEY,
+			EntityType.Builder.of(Crawler::new, MobCategory.MONSTER)
+					.sized(0.8f, 0.6f)     // lying down: low and wide
+					.eyeHeight(0.4f)
+					.clientTrackingRange(8)
+					.notInPeaceful()
+					.build(CRAWLER_KEY));
+
 	private ModEntities() {
 	}
 
@@ -56,5 +69,10 @@ public final class ModEntities {
 		// Ghouls only need solid ground: they don't care about light
 		SpawnPlacements.register(GHOUL, SpawnPlacementTypes.ON_GROUND,
 				Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, Mob::checkMobSpawnRules);
+
+		FabricDefaultAttributeRegistry.register(CRAWLER, Crawler.createAttributes());
+		// Like vanilla monsters: on solid ground, in the dark
+		SpawnPlacements.register(CRAWLER, SpawnPlacementTypes.ON_GROUND,
+				Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, Monster::checkMonsterSpawnRules);
 	}
 }

@@ -15,5 +15,7 @@ public class UmbralWorldClient implements ClientModInitializer {
 		EntityRenderers.register(ModEntities.WIGHT, WightRenderer::new);
 		ModelLayerRegistry.registerModelLayer(GhoulModel.LAYER, GhoulModel::createBodyLayer);
 		EntityRenderers.register(ModEntities.GHOUL, GhoulRenderer::new);
+		ModelLayerRegistry.registerModelLayer(CrawlerModel.LAYER, CrawlerModel::createBodyLayer);
+		EntityRenderers.register(ModEntities.CRAWLER, CrawlerRenderer::new);
 	}
 }

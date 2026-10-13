@@ -64,6 +64,9 @@ public class ModItems {
 	public static final Item GHOUL_SPAWN_EGG = register("ghoul_spawn_egg", SpawnEggItem::new,
 			new Item.Properties().spawnEgg(ModEntities.GHOUL));
 
+	public static final Item CRAWLER_SPAWN_EGG = register("crawler_spawn_egg", SpawnEggItem::new,
+			new Item.Properties().spawnEgg(ModEntities.CRAWLER));
+
 	public static Item register(String name, Function<Item.Properties, Item> factory, Item.Properties properties) {
 		ResourceKey<Item> key = ResourceKey.create(Registries.ITEM, UmbralWorld.id(name));
 		Item item = factory.apply(properties.setId(key));
@@ -85,6 +88,7 @@ public class ModItems {
 				.register(output -> {
 					output.accept(WIGHT_SPAWN_EGG);
 					output.accept(GHOUL_SPAWN_EGG);
+					output.accept(CRAWLER_SPAWN_EGG);
 				});
 		ShadestoneBladeEvents.initialize();
 		WightsShroud.initialize();
