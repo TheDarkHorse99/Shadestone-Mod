@@ -15,12 +15,7 @@
     "erosion": 0.0,
     "ridges": 0.0,
     "temperature": "umbral_world:chasm/layout",
-    "vegetation": {
-      "type": "minecraft:noise",
-      "noise": "umbral_world:biome_layout",
-      "xz_scale": 1.0,
-      "y_scale": 0.0
-    },
+    "vegetation": "umbral_world:miasma/layout",
     "final_density": {
       "type": "minecraft:add",
       "left": {
@@ -34,36 +29,57 @@
             "left": {
               "type": "minecraft:add",
               "left": {
-                "type": "minecraft:gradient",
-                "axis": "y",
-                "from_coordinate": 33,
-                "from_value": 1.0,
-                "to_coordinate": 97,
-                "to_value": -1.0
+                "type": "minecraft:add",
+                "left": {
+                  "type": "minecraft:gradient",
+                  "axis": "y",
+                  "from_coordinate": 33,
+                  "from_value": 1.0,
+                  "to_coordinate": 97,
+                  "to_value": -1.0
+                },
+                "right": {
+                  "type": "minecraft:mul",
+                  "left": {
+                    "type": "minecraft:noise",
+                    "noise": "umbral_world:grave_hills",
+                    "xz_scale": 1.0,
+                    "y_scale": 0.0
+                  },
+                  "right": {
+                    "type": "minecraft:add",
+                    "left": 0.25,
+                    "right": {
+                      "type": "minecraft:mul",
+                      "left": "umbral_world:chasm/mask",
+                      "right": -0.2
+                    }
+                  }
+                }
               },
               "right": {
                 "type": "minecraft:mul",
-                "left": {
-                  "type": "minecraft:noise",
-                  "noise": "umbral_world:grave_hills",
-                  "xz_scale": 1.0,
-                  "y_scale": 0.0
-                },
-                "right": {
-                  "type": "minecraft:add",
-                  "left": 0.25,
-                  "right": {
-                    "type": "minecraft:mul",
-                    "left": "umbral_world:chasm/mask",
-                    "right": -0.2
-                  }
-                }
+                "left": "umbral_world:chasm/mask",
+                "right": 0.1
               }
             },
             "right": {
               "type": "minecraft:mul",
-              "left": "umbral_world:chasm/mask",
-              "right": 0.1
+              "left": "umbral_world:miasma/mask",
+              "right": {
+                "type": "minecraft:add",
+                "left": 0.15,
+                "right": {
+                  "type": "minecraft:mul",
+                  "right": 1.2,
+                  "left": {
+                    "type": "minecraft:noise",
+                    "noise": "umbral_world:miasma_hills",
+                    "xz_scale": 1.0,
+                    "y_scale": 0.0
+                  }
+                }
+              }
             }
           }
         },
