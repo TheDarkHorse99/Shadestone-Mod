@@ -21,6 +21,7 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.minecraft.client.CameraType;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
@@ -92,6 +93,7 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			section("Chasm terrain", this::testChasm);
 			section("Miasma terrain", this::testMiasmaHills);
 			section("Small things", this::testSmallThings);
+			section("Chasm life", this::testChasmLife);
 		}
 		writeReport();
 		if (failures > 0) {
@@ -785,7 +787,7 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 				for (int dz = -12; dz <= 12; dz++) {
 					BlockPos pos = new BlockPos(thin.startX() + dx, 0, thin.z() + dz);
 					int y = 120;
-					while (y > -64 && umbral.getBlockState(pos.atY(y)).isAir()) {
+					while (y > -64 && (umbral.getBlockState(pos.atY(y)).isAir() || (umbral.getBlockState(pos.atY(y)).is(ModBlocks.FINGER_WEEDS) && umbral.getFluidState(pos.atY(y)).isEmpty()))) { // dry weeds can be walked through, so they don't count as ground
 						y--;
 					}
 					columns++;
@@ -1119,8 +1121,281 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		});
 		check("falling into the Overworld's void lands you safely in the Umbral World (" + landed + ")", safe);
 		context.takeScreenshot("void_fall_arrival");
+
+		// ... and so does falling out of the End
+		command("execute in minecraft:the_end run tp @a 3000.5 -70 0.5");
+		context.waitTicks(60);
+		boolean fromEnd = onServer(server -> {
+			ServerPlayer player = player(server);
+			return player.level().dimension() == ModDimensions.UMBRAL_WORLD
+					&& player.isAlive() && player.getHealth() >= player.getMaxHealth() - 1.0f;
+		});
+		check("falling into the End's void also lands you safely in the Umbral World", fromEnd);
 		command("execute in minecraft:overworld run tp @a 0.5 -60 0.5");
 		world.getConnection().waitForChunksRender();
+	}
+
+	// =====================================================================================
+	// Chasm life: Finger Weeds and Cinderite Ore, in real generated chunks
+	// =====================================================================================
+
+	private void testChasmLife() {
+		int radius = 5; // chunks each way: 11 x 11 chunks
+		// Fields: weed blocks, columns, columns reaching the top, unbroken columns, Chasm chunks, ore blocks, veins,
+		// ore blocks touching water, ore blocks below the water top, average column width (x10)
+		int[] stats = new int[10];
+		List<String> notes = new ArrayList<>();
+		BlockPos[] climbStart = {null};
+		Direction[] climbFacing = {null};
+		BlockPos[] oreSpot = {null};
+		BlockPos centre = onServer(server -> {
+			ServerLevel umbral = server.getLevel(ModDimensions.UMBRAL_WORLD);
+			BlockPos found = null;
+			search:
+			for (int r = 0; r < 4096; r += 64) {
+				for (int x = -r; x <= r; x += 64) {
+					for (int z : new int[]{-r, r}) {
+						if (isChasm(umbral, x, z) && isChasm(umbral, x + 96, z) && isChasm(umbral, x - 96, z)
+								&& isChasm(umbral, x, z + 96) && isChasm(umbral, x, z - 96)) {
+							found = new BlockPos(x, 0, z);
+							break search;
+						}
+					}
+				}
+			}
+			if (found == null) {
+				return null;
+			}
+			int seaLevel = umbral.getChunkSource().getGenerator().getSeaLevel();
+			java.util.Set<BlockPos> weeds = new java.util.HashSet<>();
+			java.util.Set<BlockPos> ores = new java.util.HashSet<>();
+			int fcx = found.getX() >> 4;
+			int fcz = found.getZ() >> 4;
+			for (int cx = fcx - radius; cx <= fcx + radius; cx++) {
+				for (int cz = fcz - radius; cz <= fcz + radius; cz++) {
+					umbral.getChunk(cx, cz); // generates the chunk completely, features and all
+					if (Math.abs(cx - fcx) < radius && Math.abs(cz - fcz) < radius && isChasm(umbral, (cx << 4) + 8, (cz << 4) + 8)) {
+						stats[4]++;
+					}
+				}
+			}
+			for (int cx = fcx - radius; cx <= fcx + radius; cx++) {
+				for (int cz = fcz - radius; cz <= fcz + radius; cz++) {
+					for (BlockPos pos : BlockPos.betweenClosed((cx << 4), seaLevel - 20, (cz << 4), (cx << 4) + 15, 100, (cz << 4) + 15)) {
+						BlockState state = umbral.getBlockState(pos);
+						if (state.is(ModBlocks.FINGER_WEEDS)) {
+							weeds.add(pos.immutable());
+						} else if (state.is(ModBlocks.CINDERITE_ORE)) {
+							ores.add(pos.immutable());
+						}
+					}
+				}
+			}
+			stats[0] = weeds.size();
+			List<Integer> widths = new ArrayList<>(); // blocks per row (x10) of each column
+			for (List<BlockPos> column : groups(weeds)) {
+				// Skip columns touching the outer ring of chunks: they may carry on outside the scanned area
+				boolean nearEdge = column.stream().anyMatch(pos -> Math.abs((pos.getX() >> 4) - fcx) >= radius
+						|| Math.abs((pos.getZ() >> 4) - fcz) >= radius);
+				if (nearEdge) {
+					continue;
+				}
+				stats[1]++;
+				int low = column.stream().mapToInt(BlockPos::getY).min().orElse(0);
+				int high = column.stream().mapToInt(BlockPos::getY).max().orElse(0);
+				java.util.Map<Integer, Integer> perRow = new java.util.HashMap<>();
+				for (BlockPos pos : column) {
+					perRow.merge(pos.getY(), 1, Integer::sum);
+				}
+				boolean unbroken = perRow.size() == high - low + 1;
+				boolean fromWaterToTop = low <= seaLevel + 1 && high >= 55;
+				if (unbroken) {
+					stats[3]++;
+				}
+				if (fromWaterToTop) {
+					stats[2]++;
+				}
+				widths.add(10 * column.size() / perRow.size());
+				if (notes.size() < 3 || (!(unbroken && fromWaterToTop) && notes.size() < 12)) {
+					String gap = "";
+					if (!fromWaterToTop) {
+						// What's just above the top of this piece: deleted (air against a wall) or the wall ending?
+						BlockPos top = column.stream().filter(pos -> pos.getY() == high).findFirst().orElseThrow();
+						Direction facing = umbral.getBlockState(top).getValue(net.minecraft.world.level.block.HorizontalDirectionalBlock.FACING);
+						BlockPos above = top.above();
+						gap = " | above: " + umbral.getBlockState(above).getBlock().getName().getString()
+								+ ", behind it: " + umbral.getBlockState(above.relative(facing.getOpposite())).getBlock().getName().getString()
+								+ ", chunk " + (top.getX() >> 4) + "," + (top.getZ() >> 4) + " at " + top.toShortString();
+					}
+					notes.add("at " + column.getFirst().toShortString() + ": y " + low + " to " + high + ", " + column.size() + " blocks" + (unbroken ? "" : ", HAS GAPS") + gap);
+				}
+				if (climbStart[0] == null && unbroken && fromWaterToTop) {
+					// The middle block of the bottom row
+					List<BlockPos> bottom = column.stream().filter(pos -> pos.getY() == low).sorted(
+							java.util.Comparator.<BlockPos>comparingInt(pos -> pos.getX()).thenComparingInt(pos -> pos.getZ())).toList();
+					climbStart[0] = bottom.get(bottom.size() / 2);
+					climbFacing[0] = umbral.getBlockState(climbStart[0]).getValue(net.minecraft.world.level.block.HorizontalDirectionalBlock.FACING);
+				}
+			}
+			// The median, so two columns that happen to grow into each other don't skew it
+			stats[9] = widths.isEmpty() ? 0 : widths.stream().sorted().toList().get(widths.size() / 2);
+			for (List<BlockPos> vein : groups(ores)) {
+				stats[6]++;
+				if (oreSpot[0] == null) {
+					oreSpot[0] = vein.getFirst();
+				}
+			}
+			stats[5] = ores.size();
+			for (BlockPos ore : ores) {
+				boolean wet = false;
+				for (Direction side : Direction.values()) {
+					wet |= umbral.getFluidState(ore.relative(side)).is(net.minecraft.tags.FluidTags.WATER);
+				}
+				if (wet) {
+					stats[7]++;
+				}
+				if (ore.getY() < seaLevel) {
+					stats[8]++;
+				}
+			}
+			return found;
+		});
+		check("found a spot deep inside a Chasm", centre != null);
+		if (centre == null) {
+			return;
+		}
+		report.add("INFO  " + (2 * radius + 1) * (2 * radius + 1) + " chunks around " + centre.toShortString() + "; the inner "
+				+ (2 * radius - 1) * (2 * radius - 1) + " (where Finger Weeds are judged) have " + stats[4] + " Chasm chunks");
+		report.add("INFO  Finger Weeds: " + stats[0] + " blocks in " + stats[1] + " columns (median width " + stats[9] / 10.0 + "); first few: " + notes);
+		report.add("INFO  Cinderite Ore: " + stats[5] + " blocks in " + stats[6] + " veins");
+		check("Finger Weeds columns generate (" + stats[1] + " whole columns in " + stats[4] + " Chasm chunks)", stats[1] > 0);
+		check("every column is unbroken from bottom to top (" + stats[3] + " of " + stats[1] + ")", stats[3] == stats[1]);
+		check("columns run from the water to the top of the wall (" + stats[2] + " of " + stats[1] + "; 90%+)", stats[2] * 10 >= stats[1] * 9);
+		check("columns are 3-4 blocks wide (median " + stats[9] / 10.0 + ")", stats[9] >= 25 && stats[9] <= 45);
+		check("Cinderite Ore generates (" + stats[5] + " blocks, " + stats[6] + " veins)", stats[5] > 0);
+		check("every Cinderite Ore touches water (" + stats[7] + " of " + stats[5] + ")", stats[7] == stats[5]);
+		check("every Cinderite Ore is under the water line (" + stats[8] + " of " + stats[5] + ")", stats[8] == stats[5]);
+
+		// Drops and smelting
+		double raw = onServer(server -> {
+			ServerLevel level = server.overworld();
+			LootTable loot = server.reloadableRegistries().getLootTable(ResourceKey.create(Registries.LOOT_TABLE, UmbralWorld.id("blocks/cinderite_ore")));
+			LootParams params = new LootParams.Builder(level)
+					.withParameter(LootContextParams.BLOCK_STATE, ModBlocks.CINDERITE_ORE.defaultBlockState())
+					.withParameter(LootContextParams.ORIGIN, Vec3.ZERO)
+					.withParameter(LootContextParams.TOOL, new ItemStack(net.minecraft.world.item.Items.DIAMOND_PICKAXE))
+					.create(LootContextParamSets.BLOCK);
+			int count = 0;
+			for (int i = 0; i < 200; i++) {
+				for (ItemStack stack : loot.getRandomItems(params)) {
+					if (stack.is(ModItems.RAW_CINDERITE)) {
+						count += stack.getCount();
+					}
+				}
+			}
+			return count / 200.0;
+		});
+		check("mined with a pickaxe, Cinderite Ore drops 1 Raw Cinderite (average " + raw + ")", raw == 1.0);
+		boolean smelts = onServer(server -> server.getRecipeManager().getRecipeFor(net.minecraft.world.item.crafting.RecipeType.SMELTING,
+				new net.minecraft.world.item.crafting.SingleRecipeInput(new ItemStack(ModItems.RAW_CINDERITE)), server.overworld())
+				.map(recipe -> recipe.id().identifier().equals(UmbralWorld.id("cinderite_ingot_from_smelting"))).orElse(false));
+		check("Raw Cinderite smelts into a Cinderite Ingot", smelts);
+
+		// Climb: from the water at the foot of a column, face the wall and hold forward
+		command("effect give @a minecraft:night_vision infinite 0 true");
+		if (climbStart[0] != null) {
+			BlockPos start = climbStart[0];
+			Direction facing = climbFacing[0];
+			String standThere = String.format(java.util.Locale.ROOT, "execute in umbral_world:umbral_world run tp @a %.2f %.2f %.2f %.1f -10",
+					start.getX() + 0.5 + facing.getStepX() * 0.2, start.getY() + 0.2, start.getZ() + 0.5 + facing.getStepZ() * 0.2,
+					facing.getOpposite().toYRot());
+			command(standThere);
+			world.getConnection().waitForChunksRender();
+			context.waitTicks(20);
+			context.takeScreenshot("finger_weeds_close_up");
+			command(standThere);
+			double before = playerPosition().y;
+			// Forward and jump, like climbing vines
+			context.getInput().holdKey(options -> options.keyUp);
+			context.getInput().holdKey(options -> options.keyJump);
+			context.waitTicks(60);
+			context.getInput().releaseKey(options -> options.keyJump);
+			context.getInput().releaseKey(options -> options.keyUp);
+			double after = playerPosition().y;
+			check(String.format(java.util.Locale.ROOT, "holding forward and jump against a column climbs it (y %.1f -> %.1f in 3 seconds)", before, after),
+					after - before >= 3.0);
+			// A look at the column from across the fissure, looking a little down
+			BlockPos across = start.relative(facing, 6).above(12);
+			command(String.format(java.util.Locale.ROOT, "execute in umbral_world:umbral_world run tp @a %d.5 %d %d.5 %.1f 30",
+					across.getX(), across.getY(), across.getZ(), facing.getOpposite().toYRot()));
+			world.getConnection().waitForChunksRender();
+			context.waitTicks(20);
+			context.takeScreenshot("finger_weeds_from_across");
+		}
+		if (oreSpot[0] != null) {
+			BlockPos above = oreSpot[0].above(3);
+			command(String.format(java.util.Locale.ROOT, "execute in umbral_world:umbral_world run tp @a %d.5 %d %d.5 0 70",
+					above.getX(), above.getY(), above.getZ()));
+			world.getConnection().waitForChunksRender();
+			context.waitTicks(40);
+			context.takeScreenshot("cinderite_ore_underwater");
+		}
+		command("effect clear @a minecraft:night_vision");
+
+		// The Umbral fog hides everything down there, so also show them in Overworld daylight:
+		// a stone wall with a patch of Finger Weeds, and Cinderite Ore in a pool
+		onServer(server -> {
+			ServerLevel level = server.overworld();
+			fill(level, new BlockPos(600, FEET, 10), new BlockPos(606, FEET + 6, 10), Blocks.STONE.defaultBlockState());
+			BlockState weeds = ModBlocks.FINGER_WEEDS.defaultBlockState()
+					.setValue(net.minecraft.world.level.block.HorizontalDirectionalBlock.FACING, Direction.NORTH);
+			for (int x = 601; x <= 605; x++) {
+				for (int y = FEET; y <= FEET + 5; y++) {
+					if (Math.abs(x - 603) + (y == FEET + 5 ? 1 : 0) <= 1 || (x - 601 + y) % 2 == 0) {
+						level.setBlockAndUpdate(new BlockPos(x, y, 9), weeds);
+					}
+				}
+			}
+			fill(level, new BlockPos(608, GROUND - 2, 4), new BlockPos(612, GROUND, 8), Blocks.STONE.defaultBlockState());
+			fill(level, new BlockPos(609, GROUND - 1, 5), new BlockPos(611, GROUND, 7), Blocks.WATER.defaultBlockState());
+			level.setBlockAndUpdate(new BlockPos(610, GROUND - 2, 6), ModBlocks.CINDERITE_ORE.defaultBlockState());
+			level.setBlockAndUpdate(new BlockPos(612, GROUND - 1, 6), ModBlocks.CINDERITE_ORE.defaultBlockState());
+			return null;
+		});
+		command("time set noon");
+		command("execute in minecraft:overworld run tp @a 603.5 -60 4.5 0 10");
+		world.getConnection().waitForChunksRender();
+		context.waitTicks(30);
+		context.takeScreenshot("finger_weeds_daylight");
+		command("execute in minecraft:overworld run tp @a 610.5 -59 3.5 0 50");
+		world.getConnection().waitForChunksRender();
+		context.waitTicks(40);
+		context.takeScreenshot("cinderite_ore_in_water_daylight");
+		command("execute in minecraft:overworld run tp @a 0.5 -60 0.5");
+		world.getConnection().waitForChunksRender();
+	}
+
+	/** Splits blocks into groups that touch each other (sides, edges or corners). */
+	private static List<List<BlockPos>> groups(java.util.Set<BlockPos> blocks) {
+		List<List<BlockPos>> result = new ArrayList<>();
+		java.util.Set<BlockPos> left = new java.util.HashSet<>(blocks);
+		while (!left.isEmpty()) {
+			BlockPos first = left.iterator().next();
+			left.remove(first);
+			List<BlockPos> group = new ArrayList<>();
+			java.util.ArrayDeque<BlockPos> queue = new java.util.ArrayDeque<>(List.of(first));
+			while (!queue.isEmpty()) {
+				BlockPos pos = queue.poll();
+				group.add(pos);
+				for (BlockPos near : BlockPos.betweenClosed(pos.offset(-1, -1, -1), pos.offset(1, 1, 1))) {
+					if (left.remove(near)) {
+						queue.add(near.immutable());
+					}
+				}
+			}
+			result.add(group);
+		}
+		return result;
 	}
 
 	// =====================================================================================
