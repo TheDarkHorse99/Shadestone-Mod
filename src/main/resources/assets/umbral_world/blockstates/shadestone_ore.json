@@ -1,5 +1,78 @@
 {
   "variants": {
-    "": { "model": "umbral_world:block/shadestone_ore" }
+    "": [
+      {
+        "model": "umbral_world:block/shadestone_ore"
+      },
+      {
+        "model": "umbral_world:block/shadestone_ore",
+        "x": 90
+      },
+      {
+        "model": "umbral_world:block/shadestone_ore",
+        "x": 180
+      },
+      {
+        "model": "umbral_world:block/shadestone_ore",
+        "x": 270
+      },
+      {
+        "model": "umbral_world:block/shadestone_ore",
+        "y": 90
+      },
+      {
+        "model": "umbral_world:block/shadestone_ore",
+        "x": 90,
+        "y": 90
+      },
+      {
+        "model": "umbral_world:block/shadestone_ore",
+        "x": 180,
+        "y": 90
+      },
+      {
+        "model": "umbral_world:block/shadestone_ore",
+        "x": 270,
+        "y": 90
+      },
+      {
+        "model": "umbral_world:block/shadestone_ore",
+        "y": 180
+      },
+      {
+        "model": "umbral_world:block/shadestone_ore",
+        "x": 90,
+        "y": 180
+      },
+      {
+        "model": "umbral_world:block/shadestone_ore",
+        "x": 180,
+        "y": 180
+      },
+      {
+        "model": "umbral_world:block/shadestone_ore",
+        "x": 270,
+        "y": 180
+      },
+      {
+        "model": "umbral_world:block/shadestone_ore",
+        "y": 270
+      },
+      {
+        "model": "umbral_world:block/shadestone_ore",
+        "x": 90,
+        "y": 270
+      },
+      {
+        "model": "umbral_world:block/shadestone_ore",
+        "x": 180,
+        "y": 270
+      },
+      {
+        "model": "umbral_world:block/shadestone_ore",
+        "x": 270,
+        "y": 270
+      }
+    ]
   }
 }
