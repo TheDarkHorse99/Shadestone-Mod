@@ -80,6 +80,7 @@ Act as a veteran modder: rigorous, honest feedback, no reflexive praise. Point o
 - Density functions were rewritten (package `levelgen.densityfunction`). Types: `noise`, `gradient` (`axis`, `from_coordinate`/`from_value`/`to_coordinate`/`to_value`, clamped), `clamp` (`input`/`min`/`max`), `add`/`sub`/`mul`/`div`/`min`/`max` (`left`/`right`, a plain number is allowed), `abs`/`square`/`negate`..., `range_choice`, `interpolated`, `cache`, `lerp`, `spline`. Reusable pieces go in `worldgen/density_function/` and are referenced by id. y-independent parts are optimised automatically; no `flat_cache` needed. Surface rules are "material rules" (`worldgen/material_rule/`, conditions `stone_depth`, `y_above`, `biome`...), same meaning as the old surface rules.
 - Custom density function types: a record implementing `DensityFunction` (`compileSampler(CompileContext)` returns a `DensitySampler` whose `sampleValue(ctx, x, y, z)` does the work and whose `sampleVolume` can just call `DensitySampler.sampleVolumeNaive`; `domainAxes()` = `AXIS_X | AXIS_Z` if it ignores y; `rewriteChildren` returns `this` if it has no inputs; `context.createRandom(id)` gives a world-seeded random). Register its `MapCodec` in `BuiltInRegistries.DENSITY_FUNCTION_TYPE`. Example: `world/ChasmWebFunction.java`.
 - **Height maps go by a block tag**: a solid block only counts as ground for mob spawning, rain etc. if it's in `#minecraft:blocks_motion_no_leaves` (our additions: `data/minecraft/tags/block/blocks_motion_no_leaves.json`). Add every new solid block there, or the game thinks the ground is lower than it is.
+- Every block change in a real level goes through `Level.setBlock(BlockPos, BlockState, int, int)` (worldgen doesn't); `mixin/LevelMixin` hooks it. Falling out of the world: `Entity.checkBelowWorld()` calls `onBelowWorld()` below `minY - 64` (`LivingEntity` overrides it with void damage). Client-side per-tick work: Fabric `ClientTickEvents.END_LEVEL_TICK`, `level.entitiesForRendering()`. Particles closer than about a block to the camera look like huge blobs.
 - Game tests can read terrain without building chunks: `ServerLevel.getUncachedNoiseBiome(x>>2, y>>2, z>>2)` and `getChunkSource().getGenerator().getBaseHeight(x, z, Heightmap.Types.OCEAN_FLOOR_WG, level, getChunkSource().randomState())`.
 
 ## Current state
@@ -112,17 +113,24 @@ Written, checked by the in-game tests, awaiting Mac's in-game look: **Miasma hil
 
 Written, awaiting Mac's in-game look: **dust in every biome** (Mac's request). The Grave keeps vanilla's grey ash; the Miasma adds `umbral_world:miasma_dust` (pale lavender) to its spores; the Chasm has `umbral_world:chasm_dust` (pale icy blue). Both are vanilla's ash particle recoloured in code (client `TintedAshProvider`; colours set in `UmbralWorldClient`), at the Grave's rate (0.00625).
 
+Written, checked by the in-game tests, awaiting Mac's in-game look: **small things** (2026-10-14).
+- Shadestone Block and Ore are placed in random rotations (16 of them, like Netherrack), so big walls don't show a repeating pattern (`blockstates/shadestone_block.json`, `shadestone_ore.json`).
+- Grave plants come back to life on living soil (`#umbral_world:revives_grave_plants` = vanilla dirt, grass, moss, mud): Withered Tufts become a Rose Bush, Grave Thorns a Lilac, after about 6 minutes on average (`GravePlantBlock.randomTick`, 1 in 5 per random tick). Needs room above. Not on Barrow Dirt.
+- The Umbral World snuffs vanilla flames: a lit candle, candle cake or campfire there goes out after 0.5-1.5 seconds with vanilla's blow-out sound and a puff of smoke (`block/UmbralSnuffing`, hooked by `mixin/LevelMixin`). Torches and lanterns are untouched.
+- Falling out of the bottom of the Overworld drops you into the Umbral World (`world/UmbralVoidFall`, from `LivingEntityMixin`): same x/z, on the ground, fall forgotten. Not while flying in creative, not spectators. Only the Overworld's void (the End's void still kills).
+- Every Shadestone tool smokes like the ore and block (Mac's rule): wisps from the hand holding it (first and third person) and from it lying on the ground (client `ShadestoneToolSmoke`). **Add every new Shadestone tool to `data/umbral_world/tags/item/smoking_shadestone.json`.**
+
 ## To-do
 
 - Test the blade's Deep Blindness on a second player over LAN
 - Draw the Dark Furnace GUI art (background, darkness icon, progress arrow)
-- Random/mirrored orientations for Shadestone blocks
-- Grave plants on vanilla dirt transform: Withered Tufts → rose bush, Grave Thorns → lilac
+- Drops for the Crawler and Cursed Soul (Mac: later)
+- Ghost/Phantom Vapor particles: still vanilla's End Rod (white) and Reverse Portal (purple); offered Mac custom pale blue ones, waiting for his answer
 - A future custom drop for Withered Tufts
 
 ## Planned
 
-Shadestone tools and armor · animated portal · snuffing vanilla candles/campfires · Grave ruins with a spire · the Miasma and Chasm biomes (see below) · a see-in-the-dark item and shadow powers · falling into the void as a way in · license, icon, version 0.1.0
+Shadestone tools and armor (they must smoke, see above) · Cinderite tools and armor · animated portal · Grave ruins with a spire · the Chasm's plant, mobs and ore (see below) · a see-in-the-dark item and shadow powers · license, icon, version 0.1.0
 
 ## Biome designs (decided, partly built)
 
@@ -149,6 +157,8 @@ The dimension will have three biomes, roughly equal in size: the Grave, the Mias
 **Chasm biome**: flat land cut by very deep fissures, too dark to see the bottom. The fissures all connect like a giant web or maze, every one at least 5 blocks wide, with some large gorges (Mac's request; built).
 - A third custom block, **Dead Sea Shale** (Mac's name; built), makes the surface and the first few layers down; below that it's Shadestone. The surface feels cold and empty: grey-blue fog, no particles (Mac's choice)
 - Relatively shallow water at the bottom of the chasms (built: `sea_level` lowered to -46). Landing in water cancels fall damage, so jumping in is survivable
-- The only plant is a climbable vine-like plant growing on the chasm walls
-- A couple of hostile aquatic mobs living in the bottom water
-- The heat ore, the rare resource, is found at the bottom
+- The only plant is **Finger Weeds** (Mac's name; not built): climbable, growing on the chasm walls. Semi-frequent, and they must be a real way for players to climb out of the bottom of a fissure. They spread, but very slowly
+- Two hostile aquatic mobs in the bottom water (not built):
+  - **Murkfiend** (Mac's name): a fiendish merfolk creature with claws and sharp teeth. Fast; chases you down through the water
+  - **Chasm Skate** (Mac's name): a skate that lies hidden on the chasm floor and attacks if you swim over it
+- **Cinderite** (Mac's name; not built), the rare resource and the dimension's diamond equivalent: Cinderite, Cinderite Ore, and more ("etc." — exact list to confirm with Mac). Dark fiery red, animated a little so it looks like it's smouldering, and glows faintly. The ore and blocks give off steam, or at least bubbles, when underwater. Found only underwater at the bottom of the chasms: in the floor, or in the walls below the water line
