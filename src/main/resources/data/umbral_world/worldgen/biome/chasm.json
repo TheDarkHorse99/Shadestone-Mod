@@ -51,10 +51,14 @@
     [],
     [],
     [],
+    [
+      "umbral_world:cinderite_ore"
+    ],
     [],
     [],
-    [],
-    [],
+    [
+      "umbral_world:finger_weeds"
+    ],
     []
   ],
   "has_precipitation": false,

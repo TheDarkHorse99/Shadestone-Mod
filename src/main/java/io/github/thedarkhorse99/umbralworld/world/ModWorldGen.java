@@ -26,6 +26,9 @@ public class ModWorldGen {
 	public static void initialize() {
 		// Lets JSON files use "type": "umbral_world:ghost_tree" (used by both the Ghost and Phantom Trees)
 		Registry.register(BuiltInRegistries.FEATURE_TYPE, UmbralWorld.id("ghost_tree"), GhostTreeFeature.CODEC);
+		// The Chasm: Finger Weeds columns up the fissure walls, and Cinderite Ore in the fissure bottoms
+		Registry.register(BuiltInRegistries.FEATURE_TYPE, UmbralWorld.id("finger_weeds"), FingerWeedsFeature.CODEC);
+		Registry.register(BuiltInRegistries.FEATURE_TYPE, UmbralWorld.id("cinderite_ore"), CinderiteOreFeature.CODEC);
 		// Lets terrain JSON use "type": "umbral_world:chasm_web" (the Chasm's connected fissures)
 		Registry.register(BuiltInRegistries.DENSITY_FUNCTION_TYPE, UmbralWorld.id("chasm_web"), ChasmWebFunction.CODEC);
 

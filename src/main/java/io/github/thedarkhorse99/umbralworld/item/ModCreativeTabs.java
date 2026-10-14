@@ -29,6 +29,8 @@ public final class ModCreativeTabs {
 						output.accept(ModBlocks.BARROW_DIRT);
 						output.accept(ModBlocks.EFFLUVIUM);
 						output.accept(ModBlocks.DEAD_SEA_SHALE);
+						output.accept(ModBlocks.FINGER_WEEDS);
+						output.accept(ModBlocks.CINDERITE_ORE);
 						output.accept(ModBlocks.GHOST_LOG);
 						output.accept(ModBlocks.GHOST_PLANKS);
 						output.accept(ModBlocks.GHOST_SAPLING);
@@ -44,6 +46,8 @@ public final class ModCreativeTabs {
 						output.accept(ModBlocks.SPILE);
 						output.accept(ModBlocks.CORPSE_CANDLE);
 						output.accept(ModItems.SHADESTONE_SHARD);
+						output.accept(ModItems.RAW_CINDERITE);
+						output.accept(ModItems.CINDERITE_INGOT);
 						output.accept(ModItems.SHADESTONE_BLADE);
 						output.accept(ModItems.ECTOPLASM_BOTTLE);
 						output.accept(ModItems.WIGHTS_SHROUD);

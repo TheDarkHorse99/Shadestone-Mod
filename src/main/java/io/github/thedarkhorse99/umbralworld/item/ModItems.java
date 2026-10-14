@@ -37,6 +37,11 @@ public class ModItems {
 
 	public static final Item SHADESTONE_SHARD = register("shadestone_shard", Item::new, new Item.Properties());
 
+	// Cinderite: the Chasm's rare ore drops Raw Cinderite, which smelts into Cinderite Ingots
+	public static final Item RAW_CINDERITE = register("raw_cinderite", Item::new, new Item.Properties());
+
+	public static final Item CINDERITE_INGOT = register("cinderite_ingot", Item::new, new Item.Properties());
+
 	public static final Item SHADESTONE_BLADE = register("shadestone_blade", Item::new,
 			new Item.Properties().sword(SHADESTONE_MATERIAL, 3.0f, -2.4f));
 
@@ -79,7 +84,11 @@ public class ModItems {
 
 	public static void initialize() {
 		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.INGREDIENTS)
-				.register(output -> output.accept(SHADESTONE_SHARD));
+				.register(output -> {
+					output.accept(SHADESTONE_SHARD);
+					output.accept(RAW_CINDERITE);
+					output.accept(CINDERITE_INGOT);
+				});
 		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.INGREDIENTS)
 				.register(output -> output.accept(ECTOPLASM_BOTTLE));
 		CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.COMBAT)

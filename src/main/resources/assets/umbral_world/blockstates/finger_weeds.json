@@ -1,0 +1,57 @@
+{
+  "variants": {
+    "facing=north": [
+      {
+        "model": "umbral_world:block/finger_weeds_1"
+      },
+      {
+        "model": "umbral_world:block/finger_weeds_2"
+      },
+      {
+        "model": "umbral_world:block/finger_weeds_3"
+      }
+    ],
+    "facing=east": [
+      {
+        "model": "umbral_world:block/finger_weeds_1",
+        "y": 90
+      },
+      {
+        "model": "umbral_world:block/finger_weeds_2",
+        "y": 90
+      },
+      {
+        "model": "umbral_world:block/finger_weeds_3",
+        "y": 90
+      }
+    ],
+    "facing=south": [
+      {
+        "model": "umbral_world:block/finger_weeds_1",
+        "y": 180
+      },
+      {
+        "model": "umbral_world:block/finger_weeds_2",
+        "y": 180
+      },
+      {
+        "model": "umbral_world:block/finger_weeds_3",
+        "y": 180
+      }
+    ],
+    "facing=west": [
+      {
+        "model": "umbral_world:block/finger_weeds_1",
+        "y": 270
+      },
+      {
+        "model": "umbral_world:block/finger_weeds_2",
+        "y": 270
+      },
+      {
+        "model": "umbral_world:block/finger_weeds_3",
+        "y": 270
+      }
+    ]
+  }
+}

@@ -1,4 +1,9 @@
 {
   "replace": false,
-  "values": ["umbral_world:shadestone_ore", "umbral_world:shadestone_block", "umbral_world:dark_furnace"]
+  "values": [
+    "umbral_world:shadestone_ore",
+    "umbral_world:shadestone_block",
+    "umbral_world:dark_furnace",
+    "umbral_world:cinderite_ore"
+  ]
 }

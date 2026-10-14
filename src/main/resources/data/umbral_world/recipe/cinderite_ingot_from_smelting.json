@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:smelting",
+  "cookingtime": 200,
+  "experience": 1.0,
+  "group": "cinderite_ingot",
+  "ingredient": "umbral_world:raw_cinderite",
+  "result": {
+    "id": "umbral_world:cinderite_ingot"
+  }
+}

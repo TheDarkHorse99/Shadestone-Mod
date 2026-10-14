@@ -1,0 +1,6 @@
+{
+  "type": "umbral_world:cinderite_ore",
+  "ore": "umbral_world:cinderite_ore",
+  "replaces": "umbral_world:shadestone_block",
+  "max_size": 4
+}

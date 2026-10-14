@@ -1,0 +1,203 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "#roots",
+    "roots": "minecraft:block/pale_oak_log"
+  },
+  "elements": [
+    {
+      "from": [
+        2,
+        0,
+        13
+      ],
+      "to": [
+        5,
+        16,
+        16
+      ],
+      "faces": {
+        "north": {
+          "texture": "#roots"
+        },
+        "east": {
+          "texture": "#roots"
+        },
+        "west": {
+          "texture": "#roots"
+        },
+        "up": {
+          "texture": "#roots"
+        },
+        "down": {
+          "texture": "#roots"
+        },
+        "south": {
+          "texture": "#roots",
+          "cullface": "south"
+        }
+      }
+    },
+    {
+      "from": [
+        10,
+        0,
+        14
+      ],
+      "to": [
+        12,
+        10,
+        16
+      ],
+      "faces": {
+        "north": {
+          "texture": "#roots"
+        },
+        "east": {
+          "texture": "#roots"
+        },
+        "west": {
+          "texture": "#roots"
+        },
+        "up": {
+          "texture": "#roots"
+        },
+        "down": {
+          "texture": "#roots"
+        },
+        "south": {
+          "texture": "#roots",
+          "cullface": "south"
+        }
+      }
+    },
+    {
+      "from": [
+        4,
+        10,
+        9
+      ],
+      "to": [
+        6,
+        12,
+        13
+      ],
+      "faces": {
+        "north": {
+          "texture": "#roots"
+        },
+        "east": {
+          "texture": "#roots"
+        },
+        "west": {
+          "texture": "#roots"
+        },
+        "up": {
+          "texture": "#roots"
+        },
+        "down": {
+          "texture": "#roots"
+        },
+        "south": {
+          "texture": "#roots"
+        }
+      }
+    },
+    {
+      "from": [
+        4,
+        12,
+        9
+      ],
+      "to": [
+        5,
+        15,
+        10
+      ],
+      "faces": {
+        "north": {
+          "texture": "#roots"
+        },
+        "east": {
+          "texture": "#roots"
+        },
+        "west": {
+          "texture": "#roots"
+        },
+        "up": {
+          "texture": "#roots"
+        },
+        "down": {
+          "texture": "#roots"
+        },
+        "south": {
+          "texture": "#roots"
+        }
+      }
+    },
+    {
+      "from": [
+        11,
+        5,
+        10
+      ],
+      "to": [
+        13,
+        7,
+        14
+      ],
+      "faces": {
+        "north": {
+          "texture": "#roots"
+        },
+        "east": {
+          "texture": "#roots"
+        },
+        "west": {
+          "texture": "#roots"
+        },
+        "up": {
+          "texture": "#roots"
+        },
+        "down": {
+          "texture": "#roots"
+        },
+        "south": {
+          "texture": "#roots"
+        }
+      }
+    },
+    {
+      "from": [
+        12,
+        7,
+        10
+      ],
+      "to": [
+        13,
+        9,
+        11
+      ],
+      "faces": {
+        "north": {
+          "texture": "#roots"
+        },
+        "east": {
+          "texture": "#roots"
+        },
+        "west": {
+          "texture": "#roots"
+        },
+        "up": {
+          "texture": "#roots"
+        },
+        "down": {
+          "texture": "#roots"
+        },
+        "south": {
+          "texture": "#roots"
+        }
+      }
+    }
+  ]
+}

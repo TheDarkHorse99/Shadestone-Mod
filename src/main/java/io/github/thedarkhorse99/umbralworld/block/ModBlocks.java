@@ -58,6 +58,30 @@ public class ModBlocks {
 			BlockBehaviour.Properties.ofFullCopy(Blocks.TUFF)
 	);
 
+	// The Chasm's plant: roots and twigs growing out of the fissure walls, climbable like vines
+	public static final Block FINGER_WEEDS = register(
+			"finger_weeds",
+			FingerWeedsBlock::new,
+			BlockBehaviour.Properties.of()
+					.mapColor(MapColor.COLOR_GRAY)
+					.noCollision()
+					.noOcclusion()
+					.randomTicks()
+					.strength(0.2F)
+					.sound(SoundType.HANGING_ROOTS)
+					.pushReaction(PushReaction.POPPED)
+	);
+
+	// The Chasm's rare ore, the dimension's diamond: only underwater, at the bottom of the fissures.
+	// Drops Raw Cinderite. Glows faintly (light 3, like a magma block).
+	public static final Block CINDERITE_ORE = register(
+			"cinderite_ore",
+			CinderiteBlock::new,
+			BlockBehaviour.Properties.ofFullCopy(Blocks.DEEPSLATE_DIAMOND_ORE)
+					.mapColor(MapColor.COLOR_RED)
+					.lightLevel(_ -> 3)
+	);
+
 	// ---- Ghost Tree (Miasma) ----
 
 	public static final Block GHOST_LOG = register(
@@ -249,6 +273,8 @@ public class ModBlocks {
 					output.accept(BARROW_DIRT);
 					output.accept(EFFLUVIUM);
 					output.accept(DEAD_SEA_SHALE);
+					output.accept(FINGER_WEEDS);
+					output.accept(CINDERITE_ORE);
 					output.accept(GHOST_LOG);
 					output.accept(GHOST_SAPLING);
 					output.accept(PHANTOM_LOG);
