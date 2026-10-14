@@ -55,6 +55,8 @@ public final class ModCreativeTabs {
 						output.accept(ModItems.GHOUL_SPAWN_EGG);
 						output.accept(ModItems.CRAWLER_SPAWN_EGG);
 						output.accept(ModItems.CURSED_SOUL_SPAWN_EGG);
+						output.accept(ModItems.MURKFIEND_SPAWN_EGG);
+						output.accept(ModItems.CHASM_SKATE_SPAWN_EGG);
 					})
 					.build());
 

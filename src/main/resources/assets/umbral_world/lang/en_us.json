@@ -50,5 +50,9 @@
   "block.umbral_world.finger_weeds": "Finger Weeds",
   "block.umbral_world.cinderite_ore": "Cinderite Ore",
   "item.umbral_world.raw_cinderite": "Raw Cinderite",
-  "item.umbral_world.cinderite_ingot": "Cinderite Ingot"
+  "item.umbral_world.cinderite_ingot": "Cinderite Ingot",
+  "entity.umbral_world.murkfiend": "Murkfiend",
+  "entity.umbral_world.chasm_skate": "Chasm Skate",
+  "item.umbral_world.murkfiend_spawn_egg": "Murkfiend Spawn Egg",
+  "item.umbral_world.chasm_skate_spawn_egg": "Chasm Skate Spawn Egg"
 }

@@ -68,6 +68,33 @@ public final class ModEntities {
 					.notInPeaceful()
 					.build(CURSED_SOUL_KEY));
 
+	public static final ResourceKey<EntityType<?>> MURKFIEND_KEY =
+			ResourceKey.create(Registries.ENTITY_TYPE, UmbralWorld.id("murkfiend"));
+
+	// Swims lying flat, like a dolphin, so its hitbox is as wide as it is tall
+	public static final EntityType<Murkfiend> MURKFIEND = Registry.register(
+			BuiltInRegistries.ENTITY_TYPE,
+			MURKFIEND_KEY,
+			EntityType.Builder.of(Murkfiend::new, MobCategory.MONSTER)
+					.sized(0.9f, 0.9f)
+					.eyeHeight(0.5f)
+					.clientTrackingRange(8)
+					.notInPeaceful()
+					.build(MURKFIEND_KEY));
+
+	public static final ResourceKey<EntityType<?>> CHASM_SKATE_KEY =
+			ResourceKey.create(Registries.ENTITY_TYPE, UmbralWorld.id("chasm_skate"));
+
+	public static final EntityType<ChasmSkate> CHASM_SKATE = Registry.register(
+			BuiltInRegistries.ENTITY_TYPE,
+			CHASM_SKATE_KEY,
+			EntityType.Builder.of(ChasmSkate::new, MobCategory.MONSTER)
+					.sized(1.2f, 0.35f)    // wide and flat, lying on the bottom
+					.eyeHeight(0.25f)
+					.clientTrackingRange(8)
+					.notInPeaceful()
+					.build(CHASM_SKATE_KEY));
+
 	private ModEntities() {
 	}
 
@@ -93,5 +120,15 @@ public final class ModEntities {
 		// In mid-air is fine (it flies), but only near Ghost or Phantom Vapor
 		SpawnPlacements.register(CURSED_SOUL, SpawnPlacementTypes.NO_RESTRICTIONS,
 				Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CursedSoul::checkCursedSoulSpawnRules);
+
+		// The Chasm's water monsters: only in the water at the bottom of the fissures, in the dark
+		FabricDefaultAttributeRegistry.register(MURKFIEND, Murkfiend.createAttributes());
+		SpawnPlacements.register(MURKFIEND, SpawnPlacementTypes.IN_WATER,
+				Heightmap.Types.OCEAN_FLOOR, ChasmSwimmer::checkChasmWaterSpawnRules);
+
+		FabricDefaultAttributeRegistry.register(CHASM_SKATE, ChasmSkate.createAttributes());
+		// On the floor of the water
+		SpawnPlacements.register(CHASM_SKATE, SpawnPlacementTypes.IN_WATER,
+				Heightmap.Types.OCEAN_FLOOR, ChasmSkate::checkChasmSkateSpawnRules);
 	}
 }

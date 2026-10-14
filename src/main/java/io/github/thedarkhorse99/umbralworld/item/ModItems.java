@@ -75,6 +75,12 @@ public class ModItems {
 	public static final Item CURSED_SOUL_SPAWN_EGG = register("cursed_soul_spawn_egg", SpawnEggItem::new,
 			new Item.Properties().spawnEgg(ModEntities.CURSED_SOUL));
 
+	public static final Item MURKFIEND_SPAWN_EGG = register("murkfiend_spawn_egg", SpawnEggItem::new,
+			new Item.Properties().spawnEgg(ModEntities.MURKFIEND));
+
+	public static final Item CHASM_SKATE_SPAWN_EGG = register("chasm_skate_spawn_egg", SpawnEggItem::new,
+			new Item.Properties().spawnEgg(ModEntities.CHASM_SKATE));
+
 	public static Item register(String name, Function<Item.Properties, Item> factory, Item.Properties properties) {
 		ResourceKey<Item> key = ResourceKey.create(Registries.ITEM, UmbralWorld.id(name));
 		Item item = factory.apply(properties.setId(key));
@@ -102,6 +108,8 @@ public class ModItems {
 					output.accept(GHOUL_SPAWN_EGG);
 					output.accept(CRAWLER_SPAWN_EGG);
 					output.accept(CURSED_SOUL_SPAWN_EGG);
+					output.accept(MURKFIEND_SPAWN_EGG);
+					output.accept(CHASM_SKATE_SPAWN_EGG);
 				});
 		ShadestoneBladeEvents.initialize();
 		WightsShroud.initialize();
