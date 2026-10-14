@@ -91,6 +91,7 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			section("Twin suns", this::testTwinSuns);
 			section("Chasm terrain", this::testChasm);
 			section("Miasma terrain", this::testMiasmaHills);
+			section("Small things", this::testSmallThings);
 		}
 		writeReport();
 		if (failures > 0) {
@@ -305,10 +306,12 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		context.getInput().holdKey(options -> options.keyUp);
 		context.waitTicks(60);
 		context.getInput().releaseKey(options -> options.keyUp);
+		// Keep sneaking until the player has stopped sliding: letting go of sneak while still
+		// moving counts as walking, which the Ghoul is meant to hear this close
+		context.waitTicks(10);
 		double sneakDistance = distanceToPlayer(ghoul);
-		context.getInput().releaseKey(options -> options.keyShift);
-		context.waitTicks(5);
 		check(String.format("sneaking up to %.1f blocks away doesn't scare it", sneakDistance), !ghoulScared(ghoul));
+		context.getInput().releaseKey(options -> options.keyShift);
 
 		// Walk towards it until it notices (or 3 seconds)
 		facePosition(ghoul);
@@ -1007,6 +1010,115 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		world.getConnection().waitForChunksRender();
 		context.waitTicks(40);
 		context.takeScreenshot("miasma_hills_and_trees");
+		command("execute in minecraft:overworld run tp @a 0.5 -60 0.5");
+		world.getConnection().waitForChunksRender();
+	}
+
+	// =====================================================================================
+	// Small things: Grave plants coming back to life, snuffed flames, the void, smoking tools
+	// =====================================================================================
+
+	private void testSmallThings() {
+		// 1. Grave plants on grass turn into tall vanilla flowers; on Barrow Dirt they don't
+		String revived = onServer(server -> {
+			ServerLevel level = server.overworld();
+			RandomSource random = level.getRandom();
+			StringBuilder result = new StringBuilder();
+			Object[][] plants = {
+					{ModBlocks.WITHERED_TUFTS, Blocks.ROSE_BUSH, Blocks.GRASS_BLOCK},
+					{ModBlocks.GRAVE_THORNS, Blocks.LILAC, Blocks.GRASS_BLOCK},
+					{ModBlocks.WITHERED_TUFTS, ModBlocks.WITHERED_TUFTS, ModBlocks.BARROW_DIRT},
+			};
+			int x = 400;
+			for (Object[] plant : plants) {
+				BlockPos pos = new BlockPos(x, FEET, 0);
+				x += 3;
+				level.setBlockAndUpdate(pos.below(), ((net.minecraft.world.level.block.Block) plant[2]).defaultBlockState());
+				level.setBlockAndUpdate(pos, ((net.minecraft.world.level.block.Block) plant[0]).defaultBlockState());
+				int ticks = 0;
+				while (ticks < 200 && level.getBlockState(pos).is((net.minecraft.world.level.block.Block) plant[0])) {
+					level.getBlockState(pos).randomTick(level, pos, random);
+					ticks++;
+				}
+				BlockState bottom = level.getBlockState(pos);
+				BlockState top = level.getBlockState(pos.above());
+				boolean ok = plant[0] == plant[1]
+						? bottom.is((net.minecraft.world.level.block.Block) plant[0])
+						: bottom.is((net.minecraft.world.level.block.Block) plant[1]) && top.is((net.minecraft.world.level.block.Block) plant[1]);
+				result.append(ok ? "ok" : "WRONG").append(" (").append(ticks).append(" random ticks); ");
+			}
+			return result.toString();
+		});
+		check("Withered Tufts -> Rose Bush and Grave Thorns -> Lilac on grass, nothing on Barrow Dirt (" + revived + ")",
+				!revived.contains("WRONG"));
+
+		// 2. Lit candles and campfires go out in the Umbral World, but not in the Overworld
+		BlockPos platform = new BlockPos(2000, 250, 2000);
+		onServer(server -> {
+			ServerLevel umbral = server.getLevel(ModDimensions.UMBRAL_WORLD);
+			fill(umbral, platform.offset(-3, 0, -3), platform.offset(3, 0, 3), Blocks.STONE.defaultBlockState());
+			return null;
+		});
+		command("execute in umbral_world:umbral_world run tp @a 2000.5 251 2000.5");
+		world.getConnection().waitForChunksRender();
+		onServer(server -> {
+			ServerLevel umbral = server.getLevel(ModDimensions.UMBRAL_WORLD);
+			umbral.setBlockAndUpdate(platform.offset(2, 1, 0), Blocks.CAMPFIRE.defaultBlockState().setValue(net.minecraft.world.level.block.CampfireBlock.LIT, true));
+			umbral.setBlockAndUpdate(platform.offset(-2, 1, 0), Blocks.CANDLE.defaultBlockState().setValue(net.minecraft.world.level.block.CandleBlock.LIT, true));
+			ServerLevel overworld = server.overworld();
+			overworld.setBlockAndUpdate(new BlockPos(410, FEET, 0), Blocks.CAMPFIRE.defaultBlockState().setValue(net.minecraft.world.level.block.CampfireBlock.LIT, true));
+			return null;
+		});
+		boolean litAtFirst = onServer(server -> server.getLevel(ModDimensions.UMBRAL_WORLD)
+				.getBlockState(platform.offset(2, 1, 0)).getValue(net.minecraft.world.level.block.CampfireBlock.LIT));
+		context.waitTicks(40);
+		boolean[] out = onServer(server -> {
+			ServerLevel umbral = server.getLevel(ModDimensions.UMBRAL_WORLD);
+			return new boolean[]{
+					!umbral.getBlockState(platform.offset(2, 1, 0)).getValue(net.minecraft.world.level.block.CampfireBlock.LIT),
+					!umbral.getBlockState(platform.offset(-2, 1, 0)).getValue(net.minecraft.world.level.block.CandleBlock.LIT),
+					server.overworld().getBlockState(new BlockPos(410, FEET, 0)).getValue(net.minecraft.world.level.block.CampfireBlock.LIT)
+			};
+		});
+		check("a campfire lit in the Umbral World starts lit...", litAtFirst);
+		check("... and is snuffed within 2 seconds", out[0]);
+		check("a candle lit in the Umbral World is snuffed within 2 seconds", out[1]);
+		check("a campfire in the Overworld stays lit", out[2]);
+
+		// 3. Smoke from a held Shadestone Blade (screenshots only: smoke is client-side)
+		onServer(server -> {
+			player(server).setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ModItems.SHADESTONE_BLADE));
+			return null;
+		});
+		command("execute in umbral_world:umbral_world run tp @a 2000.5 251 2000.5 0 0");
+		context.waitTicks(40);
+		context.takeScreenshot("blade_smoke_first_person");
+		context.runOnClient(client -> client.options.setCameraType(CameraType.THIRD_PERSON_FRONT));
+		context.waitTicks(40);
+		context.takeScreenshot("blade_smoke_third_person");
+		context.runOnClient(client -> client.options.setCameraType(CameraType.FIRST_PERSON));
+		onServer(server -> {
+			player(server).setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+			return null;
+		});
+
+		// 4. Falling out of the bottom of the Overworld lands you in the Umbral World
+		command("execute in minecraft:overworld run tp @a 500.5 -130 0.5");
+		context.waitTicks(60);
+		String landed = onServer(server -> {
+			ServerPlayer player = player(server);
+			ServerLevel level = (ServerLevel) player.level();
+			int ground = level.getHeight(Heightmap.Types.MOTION_BLOCKING, player.getBlockX(), player.getBlockZ());
+			return level.dimension().identifier() + " y=" + String.format(java.util.Locale.ROOT, "%.1f", player.getY())
+					+ " ground=" + ground + " health=" + player.getHealth();
+		});
+		boolean safe = onServer(server -> {
+			ServerPlayer player = player(server);
+			return player.level().dimension() == ModDimensions.UMBRAL_WORLD
+					&& player.isAlive() && player.getHealth() >= player.getMaxHealth() - 1.0f;
+		});
+		check("falling into the Overworld's void lands you safely in the Umbral World (" + landed + ")", safe);
+		context.takeScreenshot("void_fall_arrival");
 		command("execute in minecraft:overworld run tp @a 0.5 -60 0.5");
 		world.getConnection().waitForChunksRender();
 	}
