@@ -13,6 +13,7 @@ public class UmbralWorldClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 		ModRenderPipelines.initialize();
+		ShadestoneToolSmoke.initialize();
 		ParticleProviderRegistry.getInstance().register(ModParticles.CORPSE_FLAME, CorpseFlameParticle.Provider::new);
 		// Each biome's drifting dust: vanilla's ash, recoloured (the Grave keeps vanilla's grey ash)
 		ParticleProviderRegistry.getInstance().register(ModParticles.MIASMA_DUST, sprites -> new TintedAshProvider(sprites, 0.80f, 0.66f, 0.95f));
