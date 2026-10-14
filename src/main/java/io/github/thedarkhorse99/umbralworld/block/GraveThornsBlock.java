@@ -13,6 +13,7 @@ import net.minecraft.world.entity.InsideBlockEffectApplier;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -31,7 +32,7 @@ public class GraveThornsBlock extends GravePlantBlock {
     private static final int POISON_TICKS = 60;     // 3 seconds of Poison I (about half a heart to one heart)
 
     public GraveThornsBlock(BlockBehaviour.Properties properties) {
-        super(Block.column(14.0, 0.0, 13.0), properties);
+        super(Block.column(14.0, 0.0, 13.0), Blocks.LILAC, properties);
     }
 
     @Override

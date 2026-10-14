@@ -203,8 +203,9 @@ public class ModBlocks {
 
 	public static final Block WITHERED_TUFTS = register(
 			"withered_tufts",
-			properties -> new GravePlantBlock(Block.column(12.0, 0.0, 13.0), properties),
+			properties -> new GravePlantBlock(Block.column(12.0, 0.0, 13.0), Blocks.ROSE_BUSH, properties),
 			BlockBehaviour.Properties.ofFullCopy(Blocks.DEAD_BUSH)
+					.randomTicks() // to come back to life on vanilla soil
 	);
 
 	public static final Block GRAVE_THORNS = register(
@@ -213,6 +214,7 @@ public class ModBlocks {
 			BlockBehaviour.Properties.of()
 					.mapColor(MapColor.COLOR_BLACK)
 					.noCollision()
+					.randomTicks() // to come back to life on vanilla soil
 					.sound(SoundType.SWEET_BERRY_BUSH)
 					.pushReaction(PushReaction.POPPED)
 	);
