@@ -90,6 +90,7 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			section("Cursed Soul", this::testCursedSoul);
 			section("Twin suns", this::testTwinSuns);
 			section("Chasm terrain", this::testChasm);
+			section("Miasma terrain", this::testMiasmaHills);
 		}
 		writeReport();
 		if (failures > 0) {
@@ -739,8 +740,15 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		int median = widths.get(widths.size() / 2);
 		check("the land between fissures is flat (top varies by " + (plateau[1] - plateau[0]) + " blocks; under 16)", plateau[1] - plateau[0] < 16);
 		check("fissure floors sit just under the water (y=" + floorLow + " to " + floorHigh + "; between -60 and -47)", floorLow >= -60 && floorHigh <= -47);
-		check("most fissures are thin (median width " + median + "; 2-12 blocks)", median >= 2 && median <= 12);
+		check("most fissures are thin (median width " + median + "; 5-12 blocks)", median >= 5 && median <= 12);
 		check("some gorges are wide (widest " + widths.getLast() + "; 20+ blocks)", widths.getLast() >= 20);
+
+		// Every block of every fissure, in a 321 x 321 square: how narrow is the narrowest spot, and does it all join up?
+		int[] web = onServer(server -> chasmWeb(server.getLevel(ModDimensions.UMBRAL_WORLD), centre, 160));
+		report.add("INFO  fissure web in 321 x 321 blocks: " + web[0] + " fissure columns, narrowest spot " + web[1]
+				+ " blocks across, " + web[2] + " pieces cut off from the rest");
+		check("no fissure is narrower than 5 blocks (narrowest " + web[1] + ")", web[1] >= 5);
+		check("all fissures join up into one web (" + web[2] + " pieces cut off)", web[2] == 0);
 
 		// 3. Look at a typical fissure and the widest gorge from their edges, then check the blocks of the first one
 		Fissure thin = fissures.stream().filter(f -> f.width() >= 4 && f.width() <= 10).findFirst().orElse(fissures.getFirst());
@@ -769,6 +777,7 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			int columns = 0;
 			int wrong = 0;
 			int shaleTops = 0;
+			int landColumns = 0;
 			for (int dx = -24; dx <= -3; dx++) {
 				for (int dz = -12; dz <= 12; dz++) {
 					BlockPos pos = new BlockPos(thin.startX() + dx, 0, thin.z() + dz);
@@ -777,18 +786,27 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 						y--;
 					}
 					columns++;
-					if (umbral.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, pos.getX(), pos.getZ()) - 1 != y) {
+					int mapTop = umbral.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, pos.getX(), pos.getZ()) - 1;
+					if (mapTop != y) {
 						wrong++;
+						if (wrong <= 3) {
+							report.add("INFO  height map wrong at " + pos.getX() + ", " + pos.getZ() + ": map says y=" + mapTop + " ("
+									+ umbral.getBlockState(pos.atY(mapTop)) + "), real top y=" + y + " (" + umbral.getBlockState(pos.atY(y)) + ")");
+						}
 					}
-					if (umbral.getBlockState(pos.atY(y)).is(ModBlocks.DEAD_SEA_SHALE)) {
-						shaleTops++;
+					// Only the flat land counts for the shale (some columns here are other fissures)
+					if (y > 50) {
+						landColumns++;
+						if (umbral.getBlockState(pos.atY(y)).is(ModBlocks.DEAD_SEA_SHALE)) {
+							shaleTops++;
+						}
 					}
 				}
 			}
-			return new int[]{columns, wrong, shaleTops};
+			return new int[]{columns, wrong, shaleTops, landColumns};
 		});
 		check("the height map matches the real ground beside the fissure (" + heights[1] + " of " + heights[0] + " columns wrong)", heights[1] == 0);
-		check("the ground beside the fissure is Dead Sea Shale (" + heights[2] + " of " + heights[0] + " columns; 90%+)", heights[2] * 10 >= heights[0] * 9);
+		check("the flat land beside the fissure is Dead Sea Shale (" + heights[2] + " of " + heights[3] + " columns; 90%+)", heights[2] * 10 >= heights[3] * 9);
 		check("the Chasm's surface is Dead Sea Shale", Boolean.parseBoolean(column[0]));
 		check("Shadestone lies under the shale", Boolean.parseBoolean(column[1]));
 		check("water fills the bottom of the fissure", Boolean.parseBoolean(column[2]));
@@ -800,6 +818,97 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		context.takeScreenshot("chasm_from_the_water_looking_up");
 		command("execute in minecraft:overworld run tp @a 0.5 -60 0.5");
 		world.getConnection().waitForChunksRender();
+	}
+
+	/**
+	 * Looks at every column in a square around the centre. Returns {fissure columns, the narrowest
+	 * fissure width, pieces of fissure that don't connect to the edge of the square}. A piece that
+	 * reaches the square's edge may join the rest outside it, so only fully enclosed pieces count
+	 * as cut off. Spots near another biome are left out (fissures fade out at the Chasm's edge).
+	 */
+	private static int[] chasmWeb(ServerLevel umbral, BlockPos centre, int radius) {
+		ChunkGenerator generator = umbral.getChunkSource().getGenerator();
+		RandomState random = umbral.getChunkSource().randomState();
+		int size = radius * 2 + 1;
+		boolean[][] low = new boolean[size][size];
+		boolean[][] interior = new boolean[size][size];
+		int fissureColumns = 0;
+		for (int i = 0; i < size; i++) {
+			for (int j = 0; j < size; j++) {
+				int x = centre.getX() - radius + i;
+				int z = centre.getZ() - radius + j;
+				interior[i][j] = isChasm(umbral, x, z) && isChasm(umbral, x + 24, z) && isChasm(umbral, x - 24, z)
+						&& isChasm(umbral, x, z + 24) && isChasm(umbral, x, z - 24);
+				low[i][j] = isChasm(umbral, x, z) && generator.getBaseHeight(x, z, Heightmap.Types.OCEAN_FLOOR_WG, umbral, random) < 20;
+				if (low[i][j]) {
+					fissureColumns++;
+				}
+			}
+		}
+		// Narrowest: for each fissure column, the shorter of its east-west and north-south runs
+		// (never less than the true width; only counted where the run doesn't reach the square's edge)
+		int narrowest = Integer.MAX_VALUE;
+		for (int i = 0; i < size; i++) {
+			for (int j = 0; j < size; j++) {
+				if (!low[i][j] || !interior[i][j]) {
+					continue;
+				}
+				int west = i;
+				while (west > 0 && low[west - 1][j]) {
+					west--;
+				}
+				int east = i;
+				while (east < size - 1 && low[east + 1][j]) {
+					east++;
+				}
+				int north = j;
+				while (north > 0 && low[i][north - 1]) {
+					north--;
+				}
+				int south = j;
+				while (south < size - 1 && low[i][south + 1]) {
+					south++;
+				}
+				boolean xOpen = west > 0 && east < size - 1;
+				boolean zOpen = north > 0 && south < size - 1;
+				int across = Math.min(xOpen ? east - west + 1 : Integer.MAX_VALUE, zOpen ? south - north + 1 : Integer.MAX_VALUE);
+				narrowest = Math.min(narrowest, across);
+			}
+		}
+		// Cut-off pieces: flood-fill each piece of fissure (corners count as touching)
+		boolean[][] seen = new boolean[size][size];
+		int cutOff = 0;
+		for (int i = 0; i < size; i++) {
+			for (int j = 0; j < size; j++) {
+				if (!low[i][j] || seen[i][j]) {
+					continue;
+				}
+				boolean reachesOut = false;
+				java.util.ArrayDeque<int[]> queue = new java.util.ArrayDeque<>();
+				queue.add(new int[]{i, j});
+				seen[i][j] = true;
+				while (!queue.isEmpty()) {
+					int[] cell = queue.poll();
+					if (cell[0] == 0 || cell[1] == 0 || cell[0] == size - 1 || cell[1] == size - 1 || !interior[cell[0]][cell[1]]) {
+						reachesOut = true;
+					}
+					for (int di = -1; di <= 1; di++) {
+						for (int dj = -1; dj <= 1; dj++) {
+							int ni = cell[0] + di;
+							int nj = cell[1] + dj;
+							if (ni >= 0 && nj >= 0 && ni < size && nj < size && low[ni][nj] && !seen[ni][nj]) {
+								seen[ni][nj] = true;
+								queue.add(new int[]{ni, nj});
+							}
+						}
+					}
+				}
+				if (!reachesOut) {
+					cutOff++;
+				}
+			}
+		}
+		return new int[]{fissureColumns, narrowest == Integer.MAX_VALUE ? 0 : narrowest, cutOff};
 	}
 
 	/** Stands 2 blocks back from a fissure's west edge, facing east and looking down into it. */
@@ -817,7 +926,89 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 	}
 
 	private static boolean isChasm(ServerLevel level, int x, int z) {
-		return level.getUncachedNoiseBiome(x >> 2, 16, z >> 2).is(ResourceKey.create(Registries.BIOME, UmbralWorld.id("chasm")));
+		return isBiome(level, "chasm", x, z);
+	}
+
+	private static boolean isBiome(ServerLevel level, String biome, int x, int z) {
+		return level.getUncachedNoiseBiome(x >> 2, 16, z >> 2).is(ResourceKey.create(Registries.BIOME, UmbralWorld.id(biome)));
+	}
+
+	// =====================================================================================
+	// Miasma terrain
+	// =====================================================================================
+
+	private void testMiasmaHills() {
+		// How hilly each biome is: heights on a grid 256 blocks across, deep inside each biome
+		String[] biomes = {"grave", "miasma"};
+		double[] spread = new double[2];
+		BlockPos[] centres = new BlockPos[2];
+		for (int b = 0; b < 2; b++) {
+			String biome = biomes[b];
+			Object[] result = onServer(server -> {
+				ServerLevel umbral = server.getLevel(ModDimensions.UMBRAL_WORLD);
+				ChunkGenerator generator = umbral.getChunkSource().getGenerator();
+				RandomState random = umbral.getChunkSource().randomState();
+				for (int r = 0; r < 4096; r += 64) {
+					for (int x = -r; x <= r; x += 64) {
+						for (int z : new int[]{-r, r}) {
+							if (isBiome(umbral, biome, x, z) && isBiome(umbral, biome, x + 160, z) && isBiome(umbral, biome, x - 160, z)
+									&& isBiome(umbral, biome, x, z + 160) && isBiome(umbral, biome, x, z - 160)) {
+								List<Integer> heights = new ArrayList<>();
+								for (int dx = -128; dx <= 128; dx += 8) {
+									for (int dz = -128; dz <= 128; dz += 8) {
+										if (isBiome(umbral, biome, x + dx, z + dz)) {
+											heights.add(generator.getBaseHeight(x + dx, z + dz, Heightmap.Types.OCEAN_FLOOR_WG, umbral, random));
+										}
+									}
+								}
+								double mean = heights.stream().mapToInt(Integer::intValue).average().orElse(0);
+								double deviation = Math.sqrt(heights.stream().mapToDouble(h -> (h - mean) * (h - mean)).average().orElse(0));
+								int low = heights.stream().mapToInt(Integer::intValue).min().orElse(0);
+								int high = heights.stream().mapToInt(Integer::intValue).max().orElse(0);
+								return new Object[]{new BlockPos(x, 0, z), deviation,
+										String.format(java.util.Locale.ROOT, "%s around %d, %d: height y=%d to %d, average %.1f, typical rise and fall %.1f blocks",
+												biome, x, z, low, high, mean, deviation)};
+							}
+						}
+					}
+				}
+				return null;
+			});
+			check("found a spot deep inside the " + biome, result != null);
+			if (result == null) {
+				return;
+			}
+			centres[b] = (BlockPos) result[0];
+			spread[b] = (double) result[1];
+			report.add("INFO  " + result[2]);
+		}
+		check(String.format(java.util.Locale.ROOT, "the Miasma is clearly hillier than the Grave (%.1f vs %.1f blocks; 2x+)", spread[1], spread[0]),
+				spread[1] >= spread[0] * 2.0);
+
+		// The forest: count Ghost and Phantom Tree logs around the Miasma spot, then look at it
+		BlockPos miasma = centres[1];
+		int logs = onServer(server -> {
+			ServerLevel umbral = server.getLevel(ModDimensions.UMBRAL_WORLD);
+			int count = 0;
+			for (BlockPos pos : BlockPos.betweenClosed(miasma.offset(-24, 30, -24), miasma.offset(24, 140, 24))) {
+				BlockState state = umbral.getBlockState(pos);
+				if (state.is(ModBlocks.GHOST_LOG) || state.is(ModBlocks.PHANTOM_LOG)) {
+					count++;
+				}
+			}
+			return count;
+		});
+		report.add("INFO  Ghost/Phantom log blocks in a 49 x 49 area of the Miasma: " + logs);
+		check("the Miasma has trees (" + logs + " log blocks in 49 x 49)", logs > 0);
+		int ground = onServer(server -> server.getLevel(ModDimensions.UMBRAL_WORLD)
+				.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, miasma.getX(), miasma.getZ()));
+		command(String.format(java.util.Locale.ROOT, "execute in umbral_world:umbral_world run tp @a %d.5 %d %d.5 0 10",
+				miasma.getX(), ground + 1, miasma.getZ()));
+		world.getConnection().waitForChunksRender();
+		context.waitTicks(40);
+		context.takeScreenshot("miasma_hills_and_trees");
+		command("execute in minecraft:overworld run tp @a 0.5 -60 0.5");
+		world.getConnection().waitForChunksRender();
 	}
 
 	// =====================================================================================
