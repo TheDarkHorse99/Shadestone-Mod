@@ -39,6 +39,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.ChunkGenerator;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.levelgen.RandomState;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
@@ -86,6 +89,7 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			section("Crawler", this::testCrawler);
 			section("Cursed Soul", this::testCursedSoul);
 			section("Twin suns", this::testTwinSuns);
+			section("Chasm terrain", this::testChasm);
 		}
 		writeReport();
 		if (failures > 0) {
@@ -616,6 +620,204 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		report.add("INFO  Umbral World time after setting red sunrise: " + umbralTime);
 		command("execute in minecraft:overworld run tp @a 0.5 -60 0.5");
 		world.getConnection().waitForChunksRender();
+	}
+
+	// =====================================================================================
+	// Chasm terrain
+	// =====================================================================================
+
+	/** A fissure found while scanning: the run of low columns from startX to endX (inclusive) along row z. */
+	private record Fissure(int startX, int endX, int z, int floor) {
+		int width() {
+			return endX - startX + 1;
+		}
+	}
+
+	private void testChasm() {
+		// 1. How much of the world each biome takes: 128 x 128 samples over a 4096-block square, straight from the noise
+		java.util.Map<String, Integer> shares = onServer(server -> {
+			ServerLevel umbral = server.getLevel(ModDimensions.UMBRAL_WORLD);
+			java.util.Map<String, Integer> counts = new java.util.TreeMap<>();
+			for (int x = -2048; x < 2048; x += 32) {
+				for (int z = -2048; z < 2048; z += 32) {
+					String biome = umbral.getUncachedNoiseBiome(x >> 2, 16, z >> 2).unwrapKey().orElseThrow().identifier().getPath();
+					counts.merge(biome, 1, Integer::sum);
+				}
+			}
+			counts.replaceAll((biome, n) -> (int) Math.round(n * 100.0 / (128 * 128)));
+			return counts;
+		});
+		report.add("INFO  biome shares (%): " + shares);
+		int chasmShare = shares.getOrDefault("chasm", 0);
+		check("the Chasm covers roughly a third of the world (25-42%; measured " + chasmShare + "%)", chasmShare >= 25 && chasmShare <= 42);
+
+		// 2. Scan the terrain deep inside a Chasm: heights from the generator itself, without building chunks
+		List<Fissure> fissures = new ArrayList<>();
+		int[] plateau = {Integer.MAX_VALUE, Integer.MIN_VALUE};
+		int[] scanned = {0, 0}; // Chasm columns, fissure columns
+		BlockPos centre = onServer(server -> {
+			ServerLevel umbral = server.getLevel(ModDimensions.UMBRAL_WORLD);
+			ChunkGenerator generator = umbral.getChunkSource().getGenerator();
+			RandomState random = umbral.getChunkSource().randomState();
+			BlockPos found = null;
+			search:
+			for (int r = 0; r < 4096; r += 64) {
+				for (int x = -r; x <= r; x += 64) {
+					for (int z : new int[]{-r, r}) {
+						if (isChasm(umbral, x, z) && isChasm(umbral, x + 256, z) && isChasm(umbral, x - 256, z)
+								&& isChasm(umbral, x, z + 256) && isChasm(umbral, x, z - 256)) {
+							found = new BlockPos(x, 0, z);
+							break search;
+						}
+					}
+				}
+			}
+			if (found == null) {
+				return null;
+			}
+			for (int row = 0; row < 32; row++) {
+				int z = found.getZ() - 256 + row * 16;
+				int runStart = Integer.MIN_VALUE;
+				int runFloor = Integer.MAX_VALUE;
+				for (int x = found.getX() - 256; x <= found.getX() + 256; x++) {
+					boolean chasm = isChasm(umbral, x, z);
+					int height = chasm ? generator.getBaseHeight(x, z, Heightmap.Types.OCEAN_FLOOR_WG, umbral, random) : Integer.MAX_VALUE;
+					boolean low = chasm && height < 20;
+					if (chasm) {
+						scanned[0]++;
+						if (low) {
+							scanned[1]++;
+						} else {
+							plateau[0] = Math.min(plateau[0], height);
+							plateau[1] = Math.max(plateau[1], height);
+						}
+					}
+					if (low) {
+						if (runStart == Integer.MIN_VALUE) {
+							runStart = x;
+						}
+						runFloor = Math.min(runFloor, height);
+					} else if (runStart != Integer.MIN_VALUE) {
+						fissures.add(new Fissure(runStart, x - 1, z, runFloor));
+						runStart = Integer.MIN_VALUE;
+						runFloor = Integer.MAX_VALUE;
+					}
+				}
+			}
+			// A map seen from above, 4 blocks per letter: ' ' another biome, '.' fissure bottom,
+			// 'o' halfway down (y 20-50), '-' lower than the land (y 50-62), '#' the flat land
+			report.add("INFO  map of 512 x 512 blocks around " + found.toShortString() + " (north at the top):");
+			for (int z = found.getZ() - 256; z < found.getZ() + 256; z += 8) {
+				StringBuilder line = new StringBuilder("      ");
+				for (int x = found.getX() - 256; x < found.getX() + 256; x += 4) {
+					if (!isChasm(umbral, x, z)) {
+						line.append(' ');
+						continue;
+					}
+					int height = generator.getBaseHeight(x, z, Heightmap.Types.OCEAN_FLOOR_WG, umbral, random);
+					line.append(height < 20 ? '.' : height < 50 ? 'o' : height < 62 ? '-' : '#');
+				}
+				report.add(line.toString());
+			}
+			return found;
+		});
+		check("found a spot deep inside a Chasm", centre != null);
+		if (centre == null) {
+			return;
+		}
+		List<Integer> widths = fissures.stream().map(Fissure::width).sorted().toList();
+		int floorLow = fissures.stream().mapToInt(Fissure::floor).min().orElse(0);
+		int floorHigh = fissures.stream().mapToInt(Fissure::floor).max().orElse(0);
+		report.add("INFO  scanned 32 rows of 513 blocks around " + centre.toShortString() + ": " + scanned[0] + " Chasm columns, "
+				+ scanned[1] + " in fissures (" + Math.round(scanned[1] * 100.0 / Math.max(1, scanned[0])) + "%)");
+		report.add("INFO  fissure crossings: " + widths.size() + ", widths (blocks, sorted): " + widths);
+		report.add("INFO  plateau top between y=" + plateau[0] + " and y=" + plateau[1] + "; fissure floors between y=" + floorLow + " and y=" + floorHigh);
+		check("the scan crossed fissures (" + widths.size() + ")", widths.size() >= 4);
+		if (widths.isEmpty()) {
+			return;
+		}
+		int median = widths.get(widths.size() / 2);
+		check("the land between fissures is flat (top varies by " + (plateau[1] - plateau[0]) + " blocks; under 16)", plateau[1] - plateau[0] < 16);
+		check("fissure floors sit just under the water (y=" + floorLow + " to " + floorHigh + "; between -60 and -47)", floorLow >= -60 && floorHigh <= -47);
+		check("most fissures are thin (median width " + median + "; 2-12 blocks)", median >= 2 && median <= 12);
+		check("some gorges are wide (widest " + widths.getLast() + "; 20+ blocks)", widths.getLast() >= 20);
+
+		// 3. Look at a typical fissure and the widest gorge from their edges, then check the blocks of the first one
+		Fissure thin = fissures.stream().filter(f -> f.width() >= 4 && f.width() <= 10).findFirst().orElse(fissures.getFirst());
+		Fissure gorge = fissures.stream().max(java.util.Comparator.comparingInt(Fissure::width)).orElseThrow();
+		lookIntoFissure(gorge, "chasm_widest_gorge_from_edge");
+		lookIntoFissure(thin, "chasm_thin_fissure_from_edge");
+		String[] column = onServer(server -> {
+			ServerLevel umbral = server.getLevel(ModDimensions.UMBRAL_WORLD);
+			int x = (thin.startX() + thin.endX()) / 2;
+			BlockPos edge = new BlockPos(thin.startX() - 2, 0, thin.z());
+			int top = umbral.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, edge.getX(), edge.getZ()) - 1;
+			BlockState surface = umbral.getBlockState(edge.atY(top));
+			BlockState deep = umbral.getBlockState(edge.atY(top - 12));
+			BlockState water = umbral.getBlockState(new BlockPos(x, -47, thin.z()));
+			BlockState middle = umbral.getBlockState(new BlockPos(x, 10, thin.z()));
+			return new String[]{
+					String.valueOf(surface.is(ModBlocks.DEAD_SEA_SHALE)), String.valueOf(deep.is(ModBlocks.SHADESTONE_BLOCK)),
+					String.valueOf(water.is(Blocks.WATER)), String.valueOf(middle.isAir()),
+					"y=" + top + " " + surface + " / " + deep + " / " + water + " / " + middle};
+		});
+		report.add("INFO  edge surface / 12 below it / fissure at y=-47 / fissure at y=10: " + column[4]);
+		// The height map (used for mob spawning, rain and more) must see the real ground: a solid block
+		// only counts if it's in the #minecraft:blocks_motion_no_leaves tag
+		int[] heights = onServer(server -> {
+			ServerLevel umbral = server.getLevel(ModDimensions.UMBRAL_WORLD);
+			int columns = 0;
+			int wrong = 0;
+			int shaleTops = 0;
+			for (int dx = -24; dx <= -3; dx++) {
+				for (int dz = -12; dz <= 12; dz++) {
+					BlockPos pos = new BlockPos(thin.startX() + dx, 0, thin.z() + dz);
+					int y = 120;
+					while (y > -64 && umbral.getBlockState(pos.atY(y)).isAir()) {
+						y--;
+					}
+					columns++;
+					if (umbral.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, pos.getX(), pos.getZ()) - 1 != y) {
+						wrong++;
+					}
+					if (umbral.getBlockState(pos.atY(y)).is(ModBlocks.DEAD_SEA_SHALE)) {
+						shaleTops++;
+					}
+				}
+			}
+			return new int[]{columns, wrong, shaleTops};
+		});
+		check("the height map matches the real ground beside the fissure (" + heights[1] + " of " + heights[0] + " columns wrong)", heights[1] == 0);
+		check("the ground beside the fissure is Dead Sea Shale (" + heights[2] + " of " + heights[0] + " columns; 90%+)", heights[2] * 10 >= heights[0] * 9);
+		check("the Chasm's surface is Dead Sea Shale", Boolean.parseBoolean(column[0]));
+		check("Shadestone lies under the shale", Boolean.parseBoolean(column[1]));
+		check("water fills the bottom of the fissure", Boolean.parseBoolean(column[2]));
+		check("the fissure is open air halfway down", Boolean.parseBoolean(column[3]));
+		int bottomX = (thin.startX() + thin.endX()) / 2;
+		command(String.format(java.util.Locale.ROOT, "execute in umbral_world:umbral_world run tp @a %d.5 -46 %d.5 0 -70", bottomX, thin.z()));
+		world.getConnection().waitForChunksRender();
+		context.waitTicks(20);
+		context.takeScreenshot("chasm_from_the_water_looking_up");
+		command("execute in minecraft:overworld run tp @a 0.5 -60 0.5");
+		world.getConnection().waitForChunksRender();
+	}
+
+	/** Stands 2 blocks back from a fissure's west edge, facing east and looking down into it. */
+	private void lookIntoFissure(Fissure fissure, String screenshot) {
+		int height = onServer(server -> {
+			ServerLevel umbral = server.getLevel(ModDimensions.UMBRAL_WORLD);
+			return umbral.getChunkSource().getGenerator().getBaseHeight(fissure.startX() - 2, fissure.z(), Heightmap.Types.OCEAN_FLOOR_WG,
+					umbral, umbral.getChunkSource().randomState());
+		});
+		command(String.format(java.util.Locale.ROOT, "execute in umbral_world:umbral_world run tp @a %d.5 %d %d.5 -90 35",
+				fissure.startX() - 2, height, fissure.z()));
+		world.getConnection().waitForChunksRender();
+		context.waitTicks(20);
+		context.takeScreenshot(screenshot + "_" + fissure.width() + "_wide");
+	}
+
+	private static boolean isChasm(ServerLevel level, int x, int z) {
+		return level.getUncachedNoiseBiome(x >> 2, 16, z >> 2).is(ResourceKey.create(Registries.BIOME, UmbralWorld.id("chasm")));
 	}
 
 	// =====================================================================================

@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:add",
+  "left": {
+    "type": "minecraft:gradient",
+    "axis": "y",
+    "from_coordinate": -58,
+    "from_value": 1.0,
+    "to_coordinate": -46,
+    "to_value": -1.0
+  },
+  "right": {
+    "type": "minecraft:mul",
+    "left": {
+      "type": "minecraft:noise",
+      "noise": "umbral_world:chasm_floor",
+      "xz_scale": 1.0,
+      "y_scale": 0.0
+    },
+    "right": 0.3
+  }
+}

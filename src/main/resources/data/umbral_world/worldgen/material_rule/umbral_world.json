@@ -10,6 +10,14 @@
       },
       "then_run": "umbral_world:miasma_surface"
     },
+    {
+      "type": "minecraft:condition",
+      "if_true": {
+        "type": "minecraft:biome",
+        "biome_is": "umbral_world:chasm"
+      },
+      "then_run": "umbral_world:chasm_surface"
+    },
     "umbral_world:grave_surface"
   ]
 }

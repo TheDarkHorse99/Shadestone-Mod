@@ -28,6 +28,7 @@ public final class ModCreativeTabs {
 						output.accept(ModBlocks.SHADESTONE_ORE);
 						output.accept(ModBlocks.BARROW_DIRT);
 						output.accept(ModBlocks.EFFLUVIUM);
+						output.accept(ModBlocks.DEAD_SEA_SHALE);
 						output.accept(ModBlocks.GHOST_LOG);
 						output.accept(ModBlocks.GHOST_PLANKS);
 						output.accept(ModBlocks.GHOST_SAPLING);

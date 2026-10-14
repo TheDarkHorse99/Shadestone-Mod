@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "condition": {
+        "type": "minecraft:survives_explosion"
+      },
+      "entries": [
+        { "type": "minecraft:item", "name": "umbral_world:dead_sea_shale" }
+      ],
+      "rolls": 1
+    }
+  ]
+}

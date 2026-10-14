@@ -1,0 +1,51 @@
+{
+  "type": "minecraft:add",
+  "left": {
+    "type": "minecraft:abs",
+    "input": {
+      "type": "minecraft:noise",
+      "noise": "umbral_world:chasm_fissures",
+      "xz_scale": 1.0,
+      "y_scale": 0.0
+    }
+  },
+  "right": {
+    "type": "minecraft:sub",
+    "left": {
+      "type": "minecraft:mul",
+      "left": {
+        "type": "minecraft:sub",
+        "left": 1.0,
+        "right": "umbral_world:chasm/mask"
+      },
+      "right": 2.0
+    },
+    "right": {
+      "type": "minecraft:add",
+      "left": 0.015,
+      "right": {
+        "type": "minecraft:mul",
+        "left": {
+          "type": "minecraft:clamp",
+          "input": {
+            "type": "minecraft:mul",
+            "left": {
+              "type": "minecraft:add",
+              "left": {
+                "type": "minecraft:noise",
+                "noise": "umbral_world:chasm_gorges",
+                "xz_scale": 1.0,
+                "y_scale": 0.0
+              },
+              "right": -0.4
+            },
+            "right": 4.0
+          },
+          "min": 0.0,
+          "max": 1.0
+        },
+        "right": 0.04
+      }
+    }
+  }
+}

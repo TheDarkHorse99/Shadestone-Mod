@@ -51,6 +51,13 @@ public class ModBlocks {
 					.sound(SoundType.GRASS)
 	);
 
+	// The Chasm's rock: its flat land and the first few layers down. Below it is Shadestone.
+	public static final Block DEAD_SEA_SHALE = register(
+			"dead_sea_shale",
+			Block::new,
+			BlockBehaviour.Properties.ofFullCopy(Blocks.TUFF)
+	);
+
 	// ---- Ghost Tree (Miasma) ----
 
 	public static final Block GHOST_LOG = register(
@@ -239,6 +246,7 @@ public class ModBlocks {
 				.register(output -> {
 					output.accept(BARROW_DIRT);
 					output.accept(EFFLUVIUM);
+					output.accept(DEAD_SEA_SHALE);
 					output.accept(GHOST_LOG);
 					output.accept(GHOST_SAPLING);
 					output.accept(PHANTOM_LOG);
