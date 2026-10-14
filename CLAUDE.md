@@ -16,7 +16,7 @@ Act as a veteran modder: rigorous, honest feedback, no reflexive praise. Point o
 4. **Always give full paths** for every package, file, and folder you create or reference (e.g. `src/main/java/io/github/thedarkhorse99/umbralworld/block/ModBlocks.java`).
 5. **Verify against 26.3, never write from memory.** Minecraft changes names and formats often. Check classes, method signatures, and data formats against the real 26.3 jars before using them. Loom keeps them in the Gradle cache (search `%USERPROFILE%\.gradle\caches` for `minecraft-common-*-26_3.jar` / `minecraft-client-*-26_3.jar`); compare data files with vanilla's own JSON in those jars.
 6. **Vanilla flavor.** Content and art should feel like Mojang could have made it. Item art is sized like diamonds/emeralds.
-7. **Balance:** basic Umbral gear is diamond-tier; Umbral mobs are scaled so diamond gear is the baseline (as dangerous to a diamond player as a zombie/skeleton is to an iron-ish one).
+7. **Balance:** basic Umbral gear is diamond-tier, but it's the dimension's "stone tier": cheap and short-lived. The dimension's terrain is the Shadestone block itself, so shards are effectively unlimited once you're there; that's intended. Shadestone gear keeps low durability on purpose (Blade: 150). Better ores, tools and armor come later. The free Shadestone frame the game builds when you arrive somewhere new is also intended (like vanilla's obsidian portals). Mac decided all of this on 2026-10-14; Umbral mobs are scaled so diamond gear is the baseline (as dangerous to a diamond player as a zombie/skeleton is to an iron-ish one).
 8. **Mac tests in-game himself.** End each change with a short numbered test list. Compile with `.\gradlew.bat build` (Windows) before handing over.
 9. **Keep this file current.** Whenever Mac decides something new about the mod (a to-do item, a design decision, or a new rule), update CLAUDE.md in the same session and tell him exactly what changed (which section, what was added, edited, or removed).
 
@@ -109,7 +109,6 @@ Written, checked by the in-game tests (screenshots), awaiting Mac's in-game look
 - Random/mirrored orientations for Shadestone blocks
 - Grave plants on vanilla dirt transform: Withered Tufts → rose bush, Grave Thorns → lilac
 - A future custom drop for Withered Tufts
-- Known issues: infinite shards from terrain, blade durability (150) is low, portal frame duplication exploit
 
 ## Planned
 
