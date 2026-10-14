@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * "visibility"). Invisibility shrinks visibility; Nightstalker makes it bigger, so
  * mobs notice you from further away. That's the price of the power.
  *
- * Also: a player falling out of the bottom of the Overworld lands in the Umbral World
+ * Also: a player falling out of the bottom of the Overworld or the End lands in the Umbral World
  * instead of dying in the void (see UmbralVoidFall).
  */
 @Mixin(LivingEntity.class)

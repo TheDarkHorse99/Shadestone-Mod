@@ -8,8 +8,8 @@ import net.minecraft.world.level.portal.TeleportTransition;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * The darkness beneath the bedrock: a player who falls out of the bottom of the Overworld
- * lands in the Umbral World instead of dying in the void. They arrive on the ground at the
+ * The darkness beneath the world: a player who falls out of the bottom of the Overworld
+ * or the End lands in the Umbral World instead of dying in the void. They arrive on the ground at the
  * same x and z, with their fall forgotten. Called from mixin/LivingEntityMixin.
  */
 public final class UmbralVoidFall {
@@ -18,7 +18,7 @@ public final class UmbralVoidFall {
 
     /** Returns true if the player was caught (so the void doesn't hurt them). */
     public static boolean tryCatch(ServerPlayer player) {
-        if (player.level().dimension() != Level.OVERWORLD
+        if ((player.level().dimension() != Level.OVERWORLD && player.level().dimension() != Level.END)
                 || player.isSpectator()
                 || player.getAbilities().flying // a creative player flying about down there isn't falling
                 || !player.isAlive()) {
