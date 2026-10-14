@@ -3,10 +3,13 @@ package io.github.thedarkhorse99.umbralworld.test;
 import io.github.thedarkhorse99.umbralworld.UmbralWorld;
 import io.github.thedarkhorse99.umbralworld.block.ModBlocks;
 import io.github.thedarkhorse99.umbralworld.block.entity.CorpseCandleBlockEntity;
+import io.github.thedarkhorse99.umbralworld.entity.ChasmSkate;
+import io.github.thedarkhorse99.umbralworld.entity.ChasmSwimmer;
 import io.github.thedarkhorse99.umbralworld.entity.Crawler;
 import io.github.thedarkhorse99.umbralworld.entity.CursedSoul;
 import io.github.thedarkhorse99.umbralworld.entity.Ghoul;
 import io.github.thedarkhorse99.umbralworld.entity.ModEntities;
+import io.github.thedarkhorse99.umbralworld.entity.Murkfiend;
 import io.github.thedarkhorse99.umbralworld.item.ModItems;
 import io.github.thedarkhorse99.umbralworld.world.ModDimensions;
 import java.io.IOException;
@@ -94,6 +97,7 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			section("Miasma terrain", this::testMiasmaHills);
 			section("Small things", this::testSmallThings);
 			section("Chasm life", this::testChasmLife);
+			section("Chasm mobs", this::testChasmMobs);
 		}
 		writeReport();
 		if (failures > 0) {
@@ -1375,6 +1379,47 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		world.getConnection().waitForChunksRender();
 	}
 
+	/**
+	 * Watches a mob for the given number of ticks and returns its best speed over any stretch
+	 * of "window" ticks, in blocks per second: its top speed, not counting turning and speeding up.
+	 */
+	/** A real player's top swimming speed (blocks per second): holding forward, and sprint too if asked. */
+	private double playerPeakSpeed(boolean sprint) {
+		context.getInput().holdKey(options -> options.keyUp);
+		if (sprint) {
+			context.getInput().holdKey(options -> options.keySprint);
+		}
+		List<Vec3> positions = new ArrayList<>();
+		for (int i = 0; i <= 40; i++) {
+			positions.add(playerPosition());
+			context.waitTicks(1);
+		}
+		context.getInput().releaseKey(options -> options.keyUp);
+		if (sprint) {
+			context.getInput().releaseKey(options -> options.keySprint);
+		}
+		double best = 0.0;
+		for (int i = 10; i < positions.size(); i++) {
+			Vec3 a = positions.get(i - 10);
+			Vec3 b = positions.get(i);
+			best = Math.max(best, Math.sqrt((b.x - a.x) * (b.x - a.x) + (b.z - a.z) * (b.z - a.z)) * 2.0);
+		}
+		return best;
+	}
+
+	private double peakSpeed(UUID id, int ticks, int window) {
+		List<Vec3> positions = new ArrayList<>();
+		for (int i = 0; i <= ticks; i++) {
+			positions.add(entityPosition(id));
+			context.waitTicks(1);
+		}
+		double best = 0.0;
+		for (int i = window; i < positions.size(); i++) {
+			best = Math.max(best, positions.get(i).distanceTo(positions.get(i - window)) * 20.0 / window);
+		}
+		return best;
+	}
+
 	/** Splits blocks into groups that touch each other (sides, edges or corners). */
 	private static List<List<BlockPos>> groups(java.util.Set<BlockPos> blocks) {
 		List<List<BlockPos>> result = new ArrayList<>();
@@ -1396,6 +1441,137 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			result.add(group);
 		}
 		return result;
+	}
+
+	// =====================================================================================
+	// Chasm mobs: the Murkfiend and the Chasm Skate, in a glass pool
+	// =====================================================================================
+
+	private void testChasmMobs() {
+		// A pool 31 x 13, 6 deep, on the flat world's grass, with glass walls
+		onServer(server -> {
+			ServerLevel level = server.overworld();
+			fill(level, new BlockPos(699, FEET, -7), new BlockPos(731, FEET + 5, 7), Blocks.GLASS.defaultBlockState());
+			fill(level, new BlockPos(700, FEET, -6), new BlockPos(730, FEET + 5, 6), Blocks.WATER.defaultBlockState());
+			return null;
+		});
+		command("time set noon");
+
+		// 0. How fast a player swims, for comparison: holding forward, then sprinting too
+		command("execute in minecraft:overworld run tp @a 702.5 -57 0.5 -90 0");
+		world.getConnection().waitForChunksRender();
+		context.waitTicks(10);
+		double swim = playerPeakSpeed(false);
+		command("execute in minecraft:overworld run tp @a 702.5 -57 0.5 -90 0");
+		context.waitTicks(10);
+		double sprintSwim = playerPeakSpeed(true);
+		report.add(String.format(java.util.Locale.ROOT, "INFO  a player swims at %.1f blocks/second, %.1f sprint-swimming", swim, sprintSwim));
+
+		// 1. The Murkfiend chases a swimmer down and bites
+		command("execute in minecraft:overworld run tp @a 702.5 -57 0.5 -90 0");
+		world.getConnection().waitForChunksRender();
+		UUID murkfiend = spawn(ModEntities.MURKFIEND, new BlockPos(726, -57, 0));
+		double chaseSpeed = peakSpeed(murkfiend, 80, 20); // 24 blocks away: plenty of room to reach full speed
+		boolean chasing = onServer(server -> ((Mob) server.overworld().getEntity(murkfiend)).getTarget() instanceof ServerPlayer);
+		check("the Murkfiend goes after a swimming player", chasing);
+		check(String.format(java.util.Locale.ROOT, "it's faster than a swimming player but slower than sprint-swimming (%.1f vs %.1f and %.1f blocks/second)",
+				chaseSpeed, swim, sprintSwim), chaseSpeed > swim && chaseSpeed < sprintSwim);
+		int[] waited = {0};
+		while (waited[0] < 100 && !onServer(server -> player(server).getLastHurtByMob() instanceof Murkfiend)) {
+			context.waitTicks(5);
+			waited[0] += 5;
+		}
+		check(String.format(java.util.Locale.ROOT, "it bites (after %.1f more seconds)", waited[0] / 20.0),
+				onServer(server -> player(server).getLastHurtByMob() instanceof Murkfiend));
+
+		// 2. Climb out and it gives up
+		command("execute in minecraft:overworld run tp @a 703.5 -60 10.5");
+		context.waitTicks(30);
+		check("when you climb out of the water it gives up on you",
+				onServer(server -> ((Mob) server.overworld().getEntity(murkfiend)).getTarget() == null));
+		check("... and it stays in the water", onServer(server -> server.overworld().getEntity(murkfiend).isInWater()));
+
+		// 3. On land it dries out and dies
+		UUID beached = spawn(ModEntities.MURKFIEND, new BlockPos(708, FEET, 12));
+		context.waitTicks(200);
+		check("a Murkfiend on land dies within 10 seconds", onServer(server -> {
+			Entity entity = server.overworld().getEntity(beached);
+			return entity == null || !entity.isAlive();
+		}));
+		command("kill @e[type=umbral_world:murkfiend]");
+
+		// 4. The Chasm Skate lies still until you swim close
+		command("execute in minecraft:overworld run tp @a 705.5 -57 0.5 90 0");
+		world.getConnection().waitForChunksRender();
+		UUID skate = spawn(ModEntities.CHASM_SKATE, new BlockPos(720, FEET, 0));
+		context.waitTicks(20);
+		Vec3 restStart = entityPosition(skate);
+		context.waitTicks(40);
+		double restMoved = entityPosition(skate).distanceTo(restStart);
+		check(String.format(java.util.Locale.ROOT, "the Skate lies still while you swim 15 blocks away (moved %.2f blocks in 2 seconds)", restMoved),
+				restMoved < 0.3 && onServer(server -> ((Mob) server.overworld().getEntity(skate)).getTarget() == null));
+
+		// Swim close: 4 blocks to the side, 3 up
+		command("execute in minecraft:overworld run tp @a 716.5 -57 0.5");
+		double burstSpeed = peakSpeed(skate, 30, 5);
+		check("swim close to it and it attacks in a burst of speed", onServer(server -> {
+			ChasmSkate entity = (ChasmSkate) server.overworld().getEntity(skate);
+			return entity.getTarget() instanceof ServerPlayer;
+		}));
+		// After the burst: back off 10 blocks and time how fast it follows
+		context.waitTicks(20);
+		Vec3 here = entityPosition(skate);
+		command(String.format(java.util.Locale.ROOT, "execute in minecraft:overworld run tp @a %.2f -57 %.2f", here.x - 10.0, here.z));
+		context.waitTicks(20);
+		double slowSpeed = peakSpeed(skate, 40, 20);
+		check(String.format(java.util.Locale.ROOT, "the burst is much faster than a swimming player (%.1f vs %.1f blocks/second)", burstSpeed, swim),
+				burstSpeed >= swim * 1.75);
+		check(String.format(java.util.Locale.ROOT, "after the burst it's slower than a swimming player (%.1f vs %.1f blocks/second)", slowSpeed, swim),
+				slowSpeed >= 0.5 && slowSpeed < swim);
+		// Let it reach you
+		command("execute in minecraft:overworld run tp @a " + String.format(java.util.Locale.ROOT, "%.2f -58 %.2f",
+				entityPosition(skate).x + 1.0, entityPosition(skate).z));
+		waited[0] = 0;
+		while (waited[0] < 100 && !onServer(server -> player(server).getLastHurtByMob() instanceof ChasmSkate)) {
+			context.waitTicks(5);
+			waited[0] += 5;
+		}
+		check(String.format(java.util.Locale.ROOT, "it stings (after %.1f seconds next to it)", waited[0] / 20.0),
+				onServer(server -> player(server).getLastHurtByMob() instanceof ChasmSkate));
+		command("kill @e[type=umbral_world:chasm_skate]");
+
+		// 5. Spawn rules
+		boolean[] rules = onServer(server -> {
+			ServerLevel level = server.overworld();
+			RandomSource random = level.getRandom();
+			return new boolean[]{
+					ChasmSwimmer.checkChasmWaterSpawnRules(ModEntities.MURKFIEND, level, EntitySpawnReason.SPAWNER, new BlockPos(710, FEET + 2, 0), random),
+					ChasmSwimmer.checkChasmWaterSpawnRules(ModEntities.MURKFIEND, level, EntitySpawnReason.SPAWNER, new BlockPos(710, FEET, 12), random),
+					ChasmSwimmer.checkChasmWaterSpawnRules(ModEntities.MURKFIEND, level, EntitySpawnReason.NATURAL, new BlockPos(710, FEET + 2, 0), random),
+					ChasmSkate.checkChasmSkateSpawnRules(ModEntities.CHASM_SKATE, level, EntitySpawnReason.SPAWNER, new BlockPos(710, FEET, 0), random),
+					ChasmSkate.checkChasmSkateSpawnRules(ModEntities.CHASM_SKATE, level, EntitySpawnReason.SPAWNER, new BlockPos(710, FEET + 3, 0), random),
+			};
+		});
+		check("Murkfiends may spawn in water", rules[0]);
+		check("... not on land", !rules[1]);
+		check("... not in daylight", !rules[2]);
+		check("Skates may spawn on the floor under water", rules[3]);
+		check("... not in mid-water", !rules[4]);
+
+		// 6. Looks (with the texture guides standing in for Mac's art)
+		command("summon umbral_world:murkfiend 712.5 -57.5 0.5 {NoAI:1b,Rotation:[0f,0f]}");
+		command("summon umbral_world:chasm_skate 712.5 -60 4.5 {NoAI:1b,Rotation:[30f,0f]}");
+		command("execute in minecraft:overworld run tp @a 708.5 -57 0.5 -90 10");
+		world.getConnection().waitForChunksRender();
+		context.waitTicks(30);
+		context.takeScreenshot("murkfiend_side_view");
+		command("execute in minecraft:overworld run tp @a 712.5 -56 1.5 0 60");
+		context.waitTicks(30);
+		context.takeScreenshot("chasm_skate_from_above");
+		command("kill @e[type=umbral_world:murkfiend]");
+		command("kill @e[type=umbral_world:chasm_skate]");
+		command("execute in minecraft:overworld run tp @a 0.5 -60 0.5");
+		world.getConnection().waitForChunksRender();
 	}
 
 	// =====================================================================================
