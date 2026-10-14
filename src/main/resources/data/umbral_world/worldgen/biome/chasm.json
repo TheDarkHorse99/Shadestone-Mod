@@ -26,7 +26,18 @@
     },
     "minecraft:visual/water_fog_color": "#08121a",
     "minecraft:visual/water_fog_end_distance": 24.0,
-    "minecraft:visual/fog_color": "#0d1219"
+    "minecraft:visual/fog_color": "#0d1219",
+    "minecraft:visual/ambient_particles": {
+      "argument": [
+        {
+          "particle": {
+            "type": "umbral_world:chasm_dust"
+          },
+          "probability": 0.00625
+        }
+      ],
+      "modifier": "append"
+    }
   },
   "carvers": [],
   "downfall": 0.5,

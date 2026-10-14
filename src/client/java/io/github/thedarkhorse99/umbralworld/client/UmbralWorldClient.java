@@ -14,6 +14,9 @@ public class UmbralWorldClient implements ClientModInitializer {
 	public void onInitializeClient() {
 		ModRenderPipelines.initialize();
 		ParticleProviderRegistry.getInstance().register(ModParticles.CORPSE_FLAME, CorpseFlameParticle.Provider::new);
+		// Each biome's drifting dust: vanilla's ash, recoloured (the Grave keeps vanilla's grey ash)
+		ParticleProviderRegistry.getInstance().register(ModParticles.MIASMA_DUST, sprites -> new TintedAshProvider(sprites, 0.80f, 0.66f, 0.95f));
+		ParticleProviderRegistry.getInstance().register(ModParticles.CHASM_DUST, sprites -> new TintedAshProvider(sprites, 0.74f, 0.84f, 0.95f));
 		MenuScreens.register(ModMenus.DARK_FURNACE, DarkFurnaceScreen::new);
 		EntityRenderers.register(ModEntities.WIGHT, WightRenderer::new);
 		ModelLayerRegistry.registerModelLayer(GhoulModel.LAYER, GhoulModel::createBodyLayer);

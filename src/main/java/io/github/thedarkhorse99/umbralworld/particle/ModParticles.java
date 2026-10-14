@@ -16,6 +16,14 @@ public final class ModParticles {
 	public static final SimpleParticleType CORPSE_FLAME = Registry.register(
 			BuiltInRegistries.PARTICLE_TYPE, UmbralWorld.id("corpse_flame"), FabricParticleTypes.simple());
 
+	/** Drifting dust in the Miasma's air, like the Grave's ash but pale lavender. */
+	public static final SimpleParticleType MIASMA_DUST = Registry.register(
+			BuiltInRegistries.PARTICLE_TYPE, UmbralWorld.id("miasma_dust"), FabricParticleTypes.simple());
+
+	/** Drifting dust in the Chasm's air, like the Grave's ash but pale icy blue. */
+	public static final SimpleParticleType CHASM_DUST = Registry.register(
+			BuiltInRegistries.PARTICLE_TYPE, UmbralWorld.id("chasm_dust"), FabricParticleTypes.simple());
+
 	private ModParticles() {
 	}
 

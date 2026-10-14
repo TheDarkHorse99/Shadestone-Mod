@@ -24,12 +24,20 @@
           "monster": [
             {
               "type": "umbral_world:cursed_soul",
-              "count": { "type": "minecraft:uniform", "min_inclusive": 1, "max_inclusive": 2 },
+              "count": {
+                "type": "minecraft:uniform",
+                "min_inclusive": 1,
+                "max_inclusive": 2
+              },
               "weight": 100
             },
             {
               "type": "umbral_world:crawler",
-              "count": { "type": "minecraft:uniform", "min_inclusive": 1, "max_inclusive": 2 },
+              "count": {
+                "type": "minecraft:uniform",
+                "min_inclusive": 1,
+                "max_inclusive": 2
+              },
               "weight": 100
             }
           ],
@@ -53,6 +61,12 @@
             "type": "minecraft:crimson_spore"
           },
           "probability": 0.008
+        },
+        {
+          "particle": {
+            "type": "umbral_world:miasma_dust"
+          },
+          "probability": 0.00625
         }
       ],
       "modifier": "append"
