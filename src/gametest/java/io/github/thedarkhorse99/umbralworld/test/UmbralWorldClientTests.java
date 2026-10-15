@@ -390,6 +390,14 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		command("time set midnight");
 		context.waitTicks(40);
 		context.takeScreenshot("ghoul_overworld_night_4_blocks");
+		// Its side and back, in daylight
+		command("time set noon");
+		command("tp @e[type=umbral_world:ghoul,x=150.5,y=-60,z=4.5,distance=..1] 150.5 -60 4.5 90 0");
+		context.waitTicks(20);
+		context.takeScreenshot("ghoul_overworld_day_side");
+		command("tp @e[type=umbral_world:ghoul,x=150.5,y=-60,z=4.5,distance=..1] 150.5 -60 4.5 0 0");
+		context.waitTicks(20);
+		context.takeScreenshot("ghoul_overworld_day_back");
 
 		// The eyes through the fog: on a platform high in the Umbral World, Ghouls 12 to 30 blocks away (frozen in place).
 		// Built in code, which loads the area first (a /fill command fails on areas that haven't loaded yet).
