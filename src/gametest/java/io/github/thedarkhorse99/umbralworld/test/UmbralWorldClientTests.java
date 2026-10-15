@@ -409,6 +409,9 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			for (double[] spot : spots) {
 				Ghoul g = ModEntities.GHOUL.create(umbral, EntitySpawnReason.COMMAND);
 				g.snapTo(spot[0], 200, spot[1], 180.0f, 0.0f);
+				// A frozen mob's body and head don't turn on their own: face them at the camera
+				g.setYBodyRot(180.0f);
+				g.setYHeadRot(180.0f);
 				g.setNoAi(true);
 				umbral.addFreshEntity(g);
 			}
@@ -476,6 +479,19 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		teleport(204.5, FEET, 6.5, 45, 25);
 		context.waitTicks(40);
 		context.takeScreenshot("crawler_by_its_plant");
+		// A frozen Crawler 3 blocks away in daylight: front, side and back
+		command("time set noon");
+		command("summon umbral_world:crawler 230.5 -60 3.5 {NoAI:1b,Rotation:[180f,0f]}");
+		teleport(230.5, FEET, 0.5, 0, 25);
+		context.waitTicks(30);
+		context.takeScreenshot("crawler_day_front");
+		command("tp @e[type=umbral_world:crawler,x=230.5,y=-60,z=3.5,distance=..1] 230.5 -60 3.5 90 0");
+		context.waitTicks(20);
+		context.takeScreenshot("crawler_day_side");
+		command("tp @e[type=umbral_world:crawler,x=230.5,y=-60,z=3.5,distance=..1] 230.5 -60 3.5 0 0");
+		context.waitTicks(20);
+		context.takeScreenshot("crawler_day_back");
+		command("kill @e[type=umbral_world:crawler,x=230.5,y=-60,z=3.5,distance=..1]");
 
 		// Step close to the plant: it attacks
 		teleport(200.5, FEET, 7.5, 0, 0);
