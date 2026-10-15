@@ -1,5 +1,10 @@
 {
   "variants": {
-    "": { "model": "umbral_world:block/dead_sea_shale" }
+    "": [
+      { "model": "umbral_world:block/dead_sea_shale" },
+      { "model": "umbral_world:block/dead_sea_shale", "y": 90 },
+      { "model": "umbral_world:block/dead_sea_shale", "y": 180 },
+      { "model": "umbral_world:block/dead_sea_shale", "y": 270 }
+    ]
   }
 }

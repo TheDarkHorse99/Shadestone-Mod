@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:block/cube_all",
   "textures": {
-    "all": "minecraft:block/tuff"
+    "all": "umbral_world:block/dead_sea_shale"
   }
 }
