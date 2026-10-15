@@ -1375,6 +1375,17 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		world.getConnection().waitForChunksRender();
 		context.waitTicks(40);
 		context.takeScreenshot("cinderite_ore_in_water_daylight");
+		// A floor of Dead Sea Shale with a low step, to see the top and the sides
+		onServer(server -> {
+			ServerLevel level = server.overworld();
+			fill(level, new BlockPos(620, GROUND, 0), new BlockPos(634, GROUND, 14), ModBlocks.DEAD_SEA_SHALE.defaultBlockState());
+			fill(level, new BlockPos(626, FEET, 8), new BlockPos(630, FEET + 1, 12), ModBlocks.DEAD_SEA_SHALE.defaultBlockState());
+			return null;
+		});
+		command("execute in minecraft:overworld run tp @a 627.5 -58 0.5 0 35");
+		world.getConnection().waitForChunksRender();
+		context.waitTicks(30);
+		context.takeScreenshot("dead_sea_shale_daylight");
 		command("execute in minecraft:overworld run tp @a 0.5 -60 0.5");
 		world.getConnection().waitForChunksRender();
 	}
@@ -1470,8 +1481,8 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		// 1. The Murkfiend chases a swimmer down and bites
 		command("execute in minecraft:overworld run tp @a 702.5 -57 0.5 -90 0");
 		world.getConnection().waitForChunksRender();
-		UUID murkfiend = spawn(ModEntities.MURKFIEND, new BlockPos(726, -57, 0));
-		double chaseSpeed = peakSpeed(murkfiend, 80, 20); // 24 blocks away: plenty of room to reach full speed
+		UUID murkfiend = spawn(ModEntities.MURKFIEND, new BlockPos(721, -57, 0));
+		double chaseSpeed = peakSpeed(murkfiend, 80, 20); // 19 blocks away: room to reach full speed, well inside its follow range (24, give or take a random bit)
 		boolean chasing = onServer(server -> ((Mob) server.overworld().getEntity(murkfiend)).getTarget() instanceof ServerPlayer);
 		check("the Murkfiend goes after a swimming player", chasing);
 		check(String.format(java.util.Locale.ROOT, "it's faster than a swimming player but slower than sprint-swimming (%.1f vs %.1f and %.1f blocks/second)",
