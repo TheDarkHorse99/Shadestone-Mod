@@ -15,14 +15,23 @@
     },
     "minecraft:gameplay/natural_mob_spawns": {
       "argument": {
-        "spawn_costs": {},
+        "spawn_costs": {
+          "umbral_world:ghoul": {
+            "charge": 1.0,
+            "energy_budget": 0.06
+          },
+          "umbral_world:wight": {
+            "charge": 1.0,
+            "energy_budget": 0.06
+          }
+        },
         "spawns_by_category": {
           "ambient": [],
           "axolotls": [],
           "creature": [
             {
               "type": "umbral_world:ghoul",
-              "count": { "type": "minecraft:uniform", "min_inclusive": 1, "max_inclusive": 2 },
+              "count": 1,
               "weight": 100
             }
           ],
@@ -30,7 +39,7 @@
           "monster": [
             {
               "type": "umbral_world:wight",
-              "count": { "type": "minecraft:uniform", "min_inclusive": 1, "max_inclusive": 2 },
+              "count": 1,
               "weight": 100
             }
           ],
@@ -52,7 +61,7 @@
       ],
       "modifier": "append"
     },
-    "minecraft:visual/water_fog_color": "#0b0609",
+    "minecraft:visual/water_fog_color": "#10080c",
     "minecraft:visual/water_fog_end_distance": 24.0
   },
   "carvers": [],
@@ -63,14 +72,19 @@
   "features": [
     [],
     [],
-    ["umbral_world:grave_rock"],
+    [
+      "umbral_world:grave_rock"
+    ],
     [],
     [],
     [],
     [],
     [],
     [],
-    ["umbral_world:patch_withered_tufts", "umbral_world:patch_grave_thorns"],
+    [
+      "umbral_world:patch_withered_tufts",
+      "umbral_world:patch_grave_thorns"
+    ],
     []
   ],
   "has_precipitation": false,

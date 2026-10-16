@@ -15,7 +15,16 @@
     },
     "minecraft:gameplay/natural_mob_spawns": {
       "argument": {
-        "spawn_costs": {},
+        "spawn_costs": {
+          "umbral_world:cursed_soul": {
+            "charge": 1.0,
+            "energy_budget": 0.06
+          },
+          "umbral_world:crawler": {
+            "charge": 1.0,
+            "energy_budget": 0.06
+          }
+        },
         "spawns_by_category": {
           "ambient": [],
           "axolotls": [],
@@ -24,20 +33,12 @@
           "monster": [
             {
               "type": "umbral_world:cursed_soul",
-              "count": {
-                "type": "minecraft:uniform",
-                "min_inclusive": 1,
-                "max_inclusive": 2
-              },
+              "count": 1,
               "weight": 100
             },
             {
               "type": "umbral_world:crawler",
-              "count": {
-                "type": "minecraft:uniform",
-                "min_inclusive": 1,
-                "max_inclusive": 2
-              },
+              "count": 1,
               "weight": 100
             }
           ],
@@ -72,7 +73,7 @@
       "modifier": "append"
     },
     "minecraft:visual/fog_color": "#1a0b22",
-    "minecraft:visual/water_fog_color": "#1d0e2a",
+    "minecraft:visual/water_fog_color": "#331d4c",
     "minecraft:visual/water_fog_end_distance": 24.0
   },
   "carvers": [],

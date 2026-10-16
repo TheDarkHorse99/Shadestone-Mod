@@ -10,7 +10,16 @@
     },
     "minecraft:gameplay/natural_mob_spawns": {
       "argument": {
-        "spawn_costs": {},
+        "spawn_costs": {
+          "umbral_world:murkfiend": {
+            "charge": 1.0,
+            "energy_budget": 0.06
+          },
+          "umbral_world:chasm_skate": {
+            "charge": 1.0,
+            "energy_budget": 0.06
+          }
+        },
         "spawns_by_category": {
           "ambient": [],
           "axolotls": [],
@@ -19,20 +28,12 @@
           "monster": [
             {
               "type": "umbral_world:murkfiend",
-              "count": {
-                "type": "minecraft:uniform",
-                "min_inclusive": 1,
-                "max_inclusive": 2
-              },
+              "count": 1,
               "weight": 100
             },
             {
               "type": "umbral_world:chasm_skate",
-              "count": {
-                "type": "minecraft:uniform",
-                "min_inclusive": 1,
-                "max_inclusive": 2
-              },
+              "count": 1,
               "weight": 100
             }
           ],
@@ -43,7 +44,7 @@
       },
       "modifier": "overlay"
     },
-    "minecraft:visual/water_fog_color": "#08121a",
+    "minecraft:visual/water_fog_color": "#131e27",
     "minecraft:visual/water_fog_end_distance": 24.0,
     "minecraft:visual/fog_color": "#0d1219",
     "minecraft:visual/ambient_particles": {
