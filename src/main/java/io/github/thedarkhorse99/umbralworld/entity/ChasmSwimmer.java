@@ -17,6 +17,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.ServerLevelAccessor;
 import net.minecraft.world.level.pathfinder.PathType;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -61,6 +62,15 @@ public abstract class ChasmSwimmer extends Monster {
     @Override
     public boolean canBreatheUnderwater() {
         return true;
+    }
+
+    /**
+     * Its bite reaches up and down as far as sideways. Vanilla only widens a mob's reach sideways
+     * (fine on land), so a swimmer hovering just above a player on the floor could never bite.
+     */
+    @Override
+    protected AABB getAttackBoundingBox(double reach) {
+        return super.getAttackBoundingBox(reach).inflate(0.0, reach, 0.0);
     }
 
     /** Currents don't push it about: it holds its place in the water. */
