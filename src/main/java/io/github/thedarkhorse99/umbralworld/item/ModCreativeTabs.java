@@ -10,6 +10,10 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.alchemy.PotionContents;
+import io.github.thedarkhorse99.umbralworld.effect.ModPotions;
+import java.util.List;
 
 /** The mod's own tab in the creative inventory. */
 public final class ModCreativeTabs {
@@ -51,6 +55,12 @@ public final class ModCreativeTabs {
 						output.accept(ModItems.CINDERITE_INGOT);
 						output.accept(ModItems.SHADESTONE_BLADE);
 						output.accept(ModItems.ECTOPLASM_BOTTLE);
+						// The Potion of the Nightstalker in every form (vanilla bottles and arrows tinted with the effect's colour)
+						for (var potion : List.of(ModPotions.NIGHTSTALKER, ModPotions.LONG_NIGHTSTALKER)) {
+							for (var item : List.of(Items.POTION, Items.SPLASH_POTION, Items.LINGERING_POTION, Items.TIPPED_ARROW)) {
+								output.accept(PotionContents.createItemStack(item, potion));
+							}
+						}
 						output.accept(ModItems.WIGHTS_SHROUD);
 						output.accept(ModItems.WIGHT_SPAWN_EGG);
 						output.accept(ModItems.GHOUL_SPAWN_EGG);
