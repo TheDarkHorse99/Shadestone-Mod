@@ -63,12 +63,9 @@ public class Murkfiend extends ChasmSwimmer {
     @Override
     protected void customServerAiStep(ServerLevel level) {
         super.customServerAiStep(level);
-        // Twice a second: if its target has climbed out of the water, give up on them
-        if (tickCount % 10 == 0) {
-            LivingEntity target = getTarget();
-            if (target != null && !target.isInWater()) {
-                setTarget(null);
-            }
+        // If its target has climbed out of the water, give up on them at once
+        if (getTarget() != null && !getTarget().isInWater()) {
+            setTarget(null);
         }
         // The last few blocks: swim straight at the middle of its prey. A path ends at the prey's block, so
         // on its own it would stop there and hover over a player lying on the bottom, just out of reach.

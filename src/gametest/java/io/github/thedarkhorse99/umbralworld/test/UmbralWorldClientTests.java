@@ -107,6 +107,7 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			section("Item icons", this::testItemIcons);
 			section("Ghost Trees", this::testGhostTrees);
 			section("Portal and Corpse Candles", this::testPortalCandle);
+			section("Chasm mobs in deep water", this::testDeepWaterMobs);
 		}
 		writeReport();
 		if (failures > 0) {
@@ -330,6 +331,66 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		context.waitTicks(60);
 		check("... but lights by itself when night falls", onServer(server ->
 				server.overworld().getBlockState(day.offset(0, 1, 0)).is(ModBlocks.UMBRAL_PORTAL)));
+		command("time set noon");
+	}
+
+	private void testDeepWaterMobs() {
+		// A pool 21 x 21 and 12 deep, built up on the flat world (its floor is the grass), with a
+		// wide stone bank along the north side whose top is level with the water
+		BlockPos corner = new BlockPos(800, FEET, -10);
+		int top = FEET + 12; // the bank's top: you stand at top + 1, the water's surface is at top
+		onServer(server -> {
+			ServerLevel level = server.overworld();
+			fill(level, corner.offset(-1, 0, -4), corner.offset(21, 12, 21), Blocks.STONE.defaultBlockState());
+			fill(level, corner, corner.offset(20, 12, 20), Blocks.WATER.defaultBlockState());
+			return null;
+		});
+		command("time set midnight");
+		command("execute in minecraft:overworld run tp @a 790.5 " + (top + 1) + " 0.5");
+		world.getConnection().waitForChunksRender();
+
+		// 1. Skates left alone sink to the floor and lie there, wherever they start
+		List<UUID> skates = new ArrayList<>();
+		for (int i = 0; i < 3; i++) {
+			BlockPos start = corner.offset(4 + 6 * i, 3 + 3 * i, 15);
+			skates.add(spawn(ModEntities.CHASM_SKATE, start));
+		}
+		context.waitTicks(300);
+		String heights = onServer(server -> {
+			StringBuilder out = new StringBuilder();
+			for (UUID id : skates) {
+				Entity skate = server.overworld().getEntity(id);
+				out.append(String.format(java.util.Locale.ROOT, "%.1f ", skate.getY() - corner.getY()));
+			}
+			return out.toString().trim();
+		});
+		check("Skates started 3, 6 and 9 blocks up sink to the floor within 15 seconds (now " + heights + " blocks up)",
+				java.util.Arrays.stream(heights.split(" ")).allMatch(h -> Double.parseDouble(h) < 0.6));
+
+		// 2. Stand on the bank and hit a Murkfiend: it may not bite back from the water
+		UUID murkfiend = spawn(ModEntities.MURKFIEND, corner.offset(10, 10, 0));
+		command("execute in minecraft:overworld run tp @a 810.5 " + (top + 1) + " -11.5 0 40");
+		context.waitTicks(5);
+		onServer(server -> {
+			Entity entity = server.overworld().getEntity(murkfiend);
+			entity.teleportTo(810.5, top - 1.0, -9.5);
+			((Mob) entity).hurtServer(server.overworld(), server.overworld().damageSources().playerAttack(player(server)), 1.0f);
+			player(server).setLastHurtByMob(null);
+			return null;
+		});
+		boolean bitten = false;
+		for (int t = 0; t < 100 && !bitten; t += 5) {
+			context.waitTicks(5);
+			bitten = onServer(server -> player(server).getLastHurtByMob() instanceof Murkfiend);
+		}
+		String where = onServer(server -> {
+			Entity entity = server.overworld().getEntity(murkfiend);
+			return String.format(java.util.Locale.ROOT, "it at %.1f %.1f %.1f, %.1f blocks from you",
+					entity.getX(), entity.getY(), entity.getZ(), entity.distanceTo(player(server)));
+		});
+		check("a Murkfiend doesn't bite a player standing on the bank, even after being hit (" + where + ")", !bitten);
+		command("kill @e[type=umbral_world:murkfiend]");
+		command("kill @e[type=umbral_world:chasm_skate]");
 		command("time set noon");
 	}
 

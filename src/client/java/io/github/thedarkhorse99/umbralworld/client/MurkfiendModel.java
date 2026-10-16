@@ -82,9 +82,10 @@ public class MurkfiendModel extends EntityModel<LivingEntityRenderState> {
 		head.yRot += Mth.clamp(state.yRot, -45.0f, 45.0f) * Mth.DEG_TO_RAD;
 
 		// The tail beats in a wave: each piece a little behind the one before. Faster and
-		// bigger when it's moving, a slow sway when it's still.
+		// bigger when it's moving (one beat about every 1.5 seconds), a slow sway when it's still
+		// (about every 4 seconds). Mac found the old beat (twice a second) too fast.
 		float moving = Math.min(1.0f, state.walkAnimationSpeed * 2.0f);
-		float wave = state.ageInTicks * (0.2f + 0.3f * moving);
+		float wave = state.ageInTicks * (0.08f + 0.13f * moving);
 		float size = 0.15f + 0.3f * moving;
 		tail.xRot += Mth.sin(wave) * size * 0.6f;
 		tailEnd.xRot += Mth.sin(wave - 0.9f) * size;

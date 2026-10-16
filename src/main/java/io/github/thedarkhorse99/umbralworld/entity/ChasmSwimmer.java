@@ -8,6 +8,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.control.SmoothSwimmingLookControl;
 import net.minecraft.world.entity.ai.control.SmoothSwimmingMoveControl;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
@@ -36,8 +37,10 @@ public abstract class ChasmSwimmer extends Monster {
 
     protected ChasmSwimmer(EntityType<? extends ChasmSwimmer> type, Level level) {
         super(type, level);
-        // The dolphin's swimming controls: turns smoothly, moves in 3D, sinks slowly when idle
-        this.moveControl = new SmoothSwimmingMoveControl<>(this, 85, 10, 0.02f, 0.1f, true);
+        // The dolphin's swimming controls: turns smoothly, moves in 3D. The last "false" turns off the
+        // dolphin's gentle float upwards (dolphins rise to breathe), so with nothing to do it sinks to the
+        // bottom (see travelInWater) instead of hanging in the water
+        this.moveControl = new SmoothSwimmingMoveControl<>(this, 85, 10, 0.02f, 0.1f, false);
         this.lookControl = new SmoothSwimmingLookControl(this, 10);
         setPathfindingMalus(PathType.WATER, 0.0f);
     }
@@ -71,6 +74,12 @@ public abstract class ChasmSwimmer extends Monster {
     @Override
     protected AABB getAttackBoundingBox(double reach) {
         return super.getAttackBoundingBox(reach).inflate(0.0, reach, 0.0);
+    }
+
+    /** It only bites prey that is in the water, never a player standing on the bank. */
+    @Override
+    public boolean isWithinMeleeAttackRange(LivingEntity target) {
+        return target.isInWater() && super.isWithinMeleeAttackRange(target);
     }
 
     /** Currents don't push it about: it holds its place in the water. */
