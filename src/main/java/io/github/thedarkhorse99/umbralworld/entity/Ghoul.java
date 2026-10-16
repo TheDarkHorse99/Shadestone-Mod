@@ -157,6 +157,15 @@ public class Ghoul extends PathfinderMob {
 		}
 	}
 
+	/**
+	 * Ghouls stay once they've appeared, like animals: creatures mostly appear when land is first made and
+	 * only rarely after, so if they despawned when you walked away there would soon be none left.
+	 */
+	@Override
+	public boolean removeWhenFarAway(double distanceSquared) {
+		return false;
+	}
+
 	// ---- Sounds (vanilla zombie sounds, quieter and lower) ----
 
 	@Override

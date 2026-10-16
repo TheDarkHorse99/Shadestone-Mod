@@ -62,7 +62,8 @@
       "modifier": "append"
     },
     "minecraft:visual/water_fog_color": "#10080c",
-    "minecraft:visual/water_fog_end_distance": 24.0
+    "minecraft:visual/water_fog_end_distance": 24.0,
+    "minecraft:gameplay/creature_world_gen_spawn_probability": 0.3
   },
   "carvers": [],
   "downfall": 0.5,

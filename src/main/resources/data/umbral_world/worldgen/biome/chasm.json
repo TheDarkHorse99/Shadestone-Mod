@@ -34,7 +34,7 @@
             {
               "type": "umbral_world:chasm_skate",
               "count": 1,
-              "weight": 100
+              "weight": 400
             }
           ],
           "underground_water_creature": [],

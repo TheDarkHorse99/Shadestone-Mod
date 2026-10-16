@@ -22,7 +22,7 @@
           },
           "umbral_world:crawler": {
             "charge": 1.0,
-            "energy_budget": 0.06
+            "energy_budget": 0.15
           }
         },
         "spawns_by_category": {
@@ -39,7 +39,7 @@
             {
               "type": "umbral_world:crawler",
               "count": 1,
-              "weight": 100
+              "weight": 300
             }
           ],
           "underground_water_creature": [],
