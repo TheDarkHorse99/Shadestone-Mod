@@ -16,7 +16,8 @@ import net.minecraft.world.level.Level;
  *
  * It works by handing out vanilla Invisibility in short bursts, so mobs, other players
  * and the game itself treat the wearer exactly like someone who drank the potion.
- * (The shroud is hidden along with them: see the client's HumanoidArmorLayerMixin.)
+ * Only players: a mob wearing it (even the Wight, whose shroud is part of its look) stays visible.
+ * (The shroud is hidden along with them: see the client's ShroudLayer.)
  */
 public final class WightsShroud {
     /** Invisible at this light level or brighter. */

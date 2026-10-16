@@ -8,13 +8,15 @@ import net.minecraft.client.model.geom.EntityModelSet;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
+import net.minecraft.client.renderer.entity.state.ArmorStandRenderState;
 import net.minecraft.client.renderer.entity.state.HumanoidRenderState;
 import net.minecraft.resources.Identifier;
 
 /**
- * Draws the 3D Wight's Shroud (ShroudModel) hanging from the body: on players wearing it in the chest
- * slot, and always on the Wight. Like the rest of the wearer it isn't drawn while they are invisible
- * (vanilla would otherwise still draw worn things on an invisible player).
+ * Draws the 3D Wight's Shroud (ShroudModel) hanging from the body: on players and armor stands wearing it
+ * in the chest slot, and always on the Wight. Like the rest of the wearer it isn't drawn while a player is
+ * invisible (vanilla would otherwise still draw worn things on an invisible player). An invisible armor
+ * stand still shows it, like vanilla armor, so it can be put on display.
  */
 public class ShroudLayer<S extends HumanoidRenderState, M extends HumanoidModel<S>> extends RenderLayer<S, M> {
 	public static final Identifier TEXTURE = UmbralWorld.id("textures/entity/wights_shroud.png");
@@ -31,7 +33,8 @@ public class ShroudLayer<S extends HumanoidRenderState, M extends HumanoidModel<
 
 	@Override
 	public void submit(PoseStack poseStack, SubmitNodeCollector collector, int light, S state, float yRot, float xRot) {
-		if (state.isInvisible || !(alwaysWorn || state.chestEquipment.is(ModItems.WIGHTS_SHROUD))) {
+		boolean hidden = state.isInvisible && !(state instanceof ArmorStandRenderState);
+		if (hidden || !(alwaysWorn || state.chestEquipment.is(ModItems.WIGHTS_SHROUD))) {
 			return;
 		}
 		poseStack.pushPose();

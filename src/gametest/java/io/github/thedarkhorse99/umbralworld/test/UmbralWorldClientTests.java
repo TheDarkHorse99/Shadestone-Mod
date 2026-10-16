@@ -260,6 +260,19 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		context.takeScreenshot("wight_day_back");
 		command("kill @e[type=umbral_world:wight,x=260.5,y=-60,z=5.5,distance=..1]");
 
+		// The shroud on an armor stand, facing the camera
+		onServer(server -> {
+			var stand = net.minecraft.world.entity.EntityTypes.ARMOR_STAND.spawn(server.overworld(), new BlockPos(270, FEET, 4), EntitySpawnReason.COMMAND);
+			stand.setYRot(180.0f);
+			stand.setYBodyRot(180.0f);
+			stand.setItemSlot(EquipmentSlot.CHEST, new ItemStack(ModItems.WIGHTS_SHROUD));
+			return null;
+		});
+		teleport(270.5, FEET, 1.0, 0, 15);
+		context.waitTicks(20);
+		context.takeScreenshot("shroud_on_armor_stand");
+		command("kill @e[type=minecraft:armor_stand]");
+
 		teleport(0.5, FEET, -30.5, 0, 0);
 		command("time set noon");
 		onServer(server -> {

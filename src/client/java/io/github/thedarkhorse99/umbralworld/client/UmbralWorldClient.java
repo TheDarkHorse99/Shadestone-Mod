@@ -10,6 +10,7 @@ import io.github.thedarkhorse99.umbralworld.entity.ModEntities;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.fabricmc.fabric.api.client.rendering.v1.LivingEntityRenderLayerRegistrationCallback;
 import net.minecraft.client.renderer.entity.player.AvatarRenderer;
+import net.minecraft.client.renderer.entity.ArmorStandRenderer;
 
 public class UmbralWorldClient implements ClientModInitializer {
 	@Override
@@ -21,11 +22,13 @@ public class UmbralWorldClient implements ClientModInitializer {
 		ParticleProviderRegistry.getInstance().register(ModParticles.MIASMA_DUST, sprites -> new TintedAshProvider(sprites, 0.80f, 0.66f, 0.95f));
 		ParticleProviderRegistry.getInstance().register(ModParticles.CHASM_DUST, sprites -> new TintedAshProvider(sprites, 0.74f, 0.84f, 0.95f));
 		MenuScreens.register(ModMenus.DARK_FURNACE, DarkFurnaceScreen::new);
-		// The Wight's Shroud: a 3D poncho on the Wight (see WightRenderer) and on players wearing it
+		// The Wight's Shroud: a 3D poncho on the Wight (see WightRenderer) and on players and armor stands wearing it
 		ModelLayerRegistry.registerModelLayer(ShroudModel.LAYER, ShroudModel::createLayer);
 		LivingEntityRenderLayerRegistrationCallback.EVENT.register((type, renderer, helper, context) -> {
 			if (renderer instanceof AvatarRenderer<?> avatar) {
 				helper.register(new ShroudLayer<>(avatar, context.getModelSet(), false));
+			} else if (renderer instanceof ArmorStandRenderer stand) {
+				helper.register(new ShroudLayer<>(stand, context.getModelSet(), false));
 			}
 		});
 		EntityRenderers.register(ModEntities.WIGHT, WightRenderer::new);
