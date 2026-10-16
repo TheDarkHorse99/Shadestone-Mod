@@ -1,5 +1,6 @@
 package io.github.thedarkhorse99.umbralworld.client;
 
+import io.github.thedarkhorse99.umbralworld.UmbralWorld;
 import io.github.thedarkhorse99.umbralworld.menu.DarkFurnaceMenu;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -10,10 +11,12 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
 
 public class DarkFurnaceScreen extends AbstractContainerScreen<DarkFurnaceMenu> {
-    // PLACEHOLDER ART: vanilla's furnace pictures. Swap these for your own when they're drawn.
-    private static final Identifier TEXTURE = Identifier.withDefaultNamespace("textures/gui/container/furnace.png");
-    private static final Identifier DARK_SPRITE = Identifier.withDefaultNamespace("container/furnace/lit_progress");
-    private static final Identifier ARROW_SPRITE = Identifier.withDefaultNamespace("container/furnace/burn_progress");
+    // Mac's art: the background, and two sprites in textures/gui/sprites/container/dark_furnace/
+    private static final Identifier TEXTURE = UmbralWorld.id("textures/gui/container/dark_furnace.png");
+    private static final Identifier DARK_SPRITE = UmbralWorld.id("container/dark_furnace/darkness_progress");
+    private static final Identifier ARROW_SPRITE = UmbralWorld.id("container/dark_furnace/burn_progress");
+    /** Light grey labels: vanilla's dark grey would barely show on the dark background. */
+    private static final int LABEL_COLOR = 0xFFB0B0B0;
 
     public DarkFurnaceScreen(DarkFurnaceMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -23,6 +26,12 @@ public class DarkFurnaceScreen extends AbstractContainerScreen<DarkFurnaceMenu> 
     protected void init() {
         super.init();
         titleLabelX = (imageWidth - font.width(title)) / 2; // centre the title, like vanilla's furnace
+    }
+
+    @Override
+    protected void extractLabels(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
+        graphics.text(font, title, titleLabelX, titleLabelY, LABEL_COLOR, false);
+        graphics.text(font, playerInventoryTitle, inventoryLabelX, inventoryLabelY, LABEL_COLOR, false);
     }
 
     @Override
