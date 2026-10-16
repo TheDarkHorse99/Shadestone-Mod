@@ -42,7 +42,7 @@ public class SpileBlock extends HorizontalDirectionalBlock {
 
     /** Hitbox: the spout drawn pointing north (log to the south), turned to match FACING. */
     private static final Map<Direction, VoxelShape> SHAPES =
-            Shapes.rotateHorizontal(Block.box(6.0, 4.5, 4.0, 10.0, 12.5, 16.0));
+            Shapes.rotateHorizontal(Block.box(6.5, 5.0, 4.0, 9.5, 12.0, 16.0));
 
     public SpileBlock(BlockBehaviour.Properties properties) {
         super(properties);
