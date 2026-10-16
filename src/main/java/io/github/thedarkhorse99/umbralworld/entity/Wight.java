@@ -90,8 +90,10 @@ public class Wight extends Monster {
 
 	@Override
 	protected void playStepSound(BlockPos pos, BlockState state) {
-		// A skeleton's steps are quiet (0.15). The Wight's are louder and deeper, so you hear it coming.
-		playSound(SoundEvents.SKELETON_STEP, 0.5f, 0.6f);
+		// A skeleton's steps are quiet (0.15). The Wight's are louder and deeper, so you hear it coming:
+		// the bony step as low as the game allows (0.5), with a soft heavy thud (the Warden's step) under it
+		playSound(SoundEvents.SKELETON_STEP, 0.5f, 0.5f);
+		playSound(SoundEvents.WARDEN_STEP, 0.2f, 0.8f);
 	}
 
 	@Override
