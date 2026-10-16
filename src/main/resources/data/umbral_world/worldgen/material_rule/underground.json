@@ -7,10 +7,10 @@
         "type": "minecraft:vertical_gradient",
         "random_name": "umbral_world:shadestone",
         "true_at_and_below": {
-          "absolute": 24
+          "absolute": 0
         },
         "false_at_and_above": {
-          "absolute": 32
+          "absolute": 8
         }
       },
       "then_run": {
