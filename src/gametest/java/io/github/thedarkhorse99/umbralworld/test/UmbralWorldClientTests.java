@@ -193,6 +193,20 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 	// =====================================================================================
 
 	private void testShroud() {
+		// A frozen Wight 5 blocks away in daylight, to show the shroud on its own texture: front, side and back
+		command("time set noon");
+		command("summon umbral_world:wight 260.5 -60 5.5 {NoAI:1b,Rotation:[180f,0f]}");
+		teleport(260.5, FEET, 0.5, 0, 10);
+		context.waitTicks(30);
+		context.takeScreenshot("wight_day_front");
+		command("tp @e[type=umbral_world:wight,x=260.5,y=-60,z=5.5,distance=..1] 260.5 -60 5.5 90 0");
+		context.waitTicks(20);
+		context.takeScreenshot("wight_day_side");
+		command("tp @e[type=umbral_world:wight,x=260.5,y=-60,z=5.5,distance=..1] 260.5 -60 5.5 0 0");
+		context.waitTicks(20);
+		context.takeScreenshot("wight_day_back");
+		command("kill @e[type=umbral_world:wight,x=260.5,y=-60,z=5.5,distance=..1]");
+
 		teleport(0.5, FEET, -30.5, 0, 0);
 		command("time set noon");
 		onServer(server -> {
@@ -216,6 +230,14 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		context.waitTicks(20);
 		check("in the dark (light 4) you're visible again", onServer(server -> !player(server).hasEffect(MobEffects.INVISIBILITY)));
 		context.takeScreenshot("shroud_night_should_be_visible");
+		// The same with Night Vision (it doesn't change the light level), to see what the worn shroud looks like
+		command("effect give @a minecraft:night_vision 30 0 true");
+		context.waitTicks(10);
+		context.takeScreenshot("shroud_worn_front_night_vision");
+		context.runOnClient(client -> client.options.setCameraType(CameraType.THIRD_PERSON_BACK));
+		context.waitTicks(10);
+		context.takeScreenshot("shroud_worn_back_night_vision");
+		command("effect clear @a minecraft:night_vision");
 		context.runOnClient(client -> client.options.setCameraType(CameraType.FIRST_PERSON));
 
 		// A torch next to you brings it back, even at night
