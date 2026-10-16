@@ -17,12 +17,12 @@
       "argument": {
         "spawn_costs": {
           "umbral_world:cursed_soul": {
-            "charge": 1.0,
-            "energy_budget": 0.06
+            "charge": 0.7,
+            "energy_budget": 0.1
           },
           "umbral_world:crawler": {
-            "charge": 1.0,
-            "energy_budget": 0.15
+            "charge": 0.7,
+            "energy_budget": 0.1
           }
         },
         "spawns_by_category": {
@@ -34,12 +34,12 @@
             {
               "type": "umbral_world:cursed_soul",
               "count": 1,
-              "weight": 100
+              "weight": 60
             },
             {
               "type": "umbral_world:crawler",
               "count": 1,
-              "weight": 300
+              "weight": 800
             }
           ],
           "underground_water_creature": [],

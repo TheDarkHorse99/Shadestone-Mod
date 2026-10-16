@@ -12,12 +12,12 @@
       "argument": {
         "spawn_costs": {
           "umbral_world:murkfiend": {
-            "charge": 1.0,
-            "energy_budget": 0.06
+            "charge": 0.7,
+            "energy_budget": 0.1
           },
           "umbral_world:chasm_skate": {
-            "charge": 1.0,
-            "energy_budget": 0.06
+            "charge": 0.7,
+            "energy_budget": 0.1
           }
         },
         "spawns_by_category": {

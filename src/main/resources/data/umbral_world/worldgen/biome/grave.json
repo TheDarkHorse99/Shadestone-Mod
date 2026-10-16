@@ -16,13 +16,9 @@
     "minecraft:gameplay/natural_mob_spawns": {
       "argument": {
         "spawn_costs": {
-          "umbral_world:ghoul": {
-            "charge": 1.0,
-            "energy_budget": 0.06
-          },
           "umbral_world:wight": {
-            "charge": 1.0,
-            "energy_budget": 0.06
+            "charge": 0.7,
+            "energy_budget": 0.1
           }
         },
         "spawns_by_category": {
@@ -63,7 +59,7 @@
     },
     "minecraft:visual/water_fog_color": "#10080c",
     "minecraft:visual/water_fog_end_distance": 24.0,
-    "minecraft:gameplay/creature_world_gen_spawn_probability": 0.3
+    "minecraft:gameplay/creature_world_gen_spawn_probability": 0.07
   },
   "carvers": [],
   "downfall": 0.5,
