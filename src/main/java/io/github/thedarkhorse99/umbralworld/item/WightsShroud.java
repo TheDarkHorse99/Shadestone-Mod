@@ -16,7 +16,8 @@ import net.minecraft.world.level.Level;
  *
  * It works by handing out vanilla Invisibility in short bursts, so mobs, other players
  * and the game itself treat the wearer exactly like someone who drank the potion.
- * Only players: a mob wearing it (even the Wight, whose shroud is part of its look) stays visible.
+ * Only players: a mob wearing one gets nothing from it. (The Umbral World's own mobs fade in the light
+ * anyway, the same way: see entity/FadeInLight.)
  * (The shroud is hidden along with them: see the client's ShroudLayer.)
  */
 public final class WightsShroud {
@@ -44,19 +45,23 @@ public final class WightsShroud {
         }
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             if (isWearing(player) && isLit(player)) {
-                // ambient, no swirls, no icon: it's the shroud, not a potion
-                player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, EFFECT_TICKS, 0, true, false, false));
+                makeInvisible(player);
             } else {
                 endShroudInvisibility(player);
             }
         }
     }
 
-    /** Light where the player's feet or head are. Sunlight counts, so the shroud works in the Overworld by day. */
-    private static boolean isLit(ServerPlayer player) {
-        Level level = player.level();
-        BlockPos feet = player.blockPosition();
-        BlockPos head = BlockPos.containing(player.getEyePosition());
+    /** A short hidden burst of Invisibility (ambient, no swirls, no icon: it's the shroud, not a potion). */
+    public static void makeInvisible(LivingEntity entity) {
+        entity.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, EFFECT_TICKS, 0, true, false, false));
+    }
+
+    /** Light where its feet or head are. Sunlight counts, so the shroud works in the Overworld by day. */
+    public static boolean isLit(LivingEntity entity) {
+        Level level = entity.level();
+        BlockPos feet = entity.blockPosition();
+        BlockPos head = BlockPos.containing(entity.getEyePosition());
         return Math.max(level.getMaxLocalRawBrightness(feet), level.getMaxLocalRawBrightness(head)) >= MIN_LIGHT;
     }
 
@@ -64,10 +69,10 @@ public final class WightsShroud {
      * Stepping into the dark (or taking the shroud off) ends the shroud's invisibility straight away.
      * Only a burst from the shroud is removed: a real Invisibility potion isn't ambient, so it's left alone.
      */
-    private static void endShroudInvisibility(ServerPlayer player) {
-        MobEffectInstance current = player.getEffect(MobEffects.INVISIBILITY);
+    public static void endShroudInvisibility(LivingEntity entity) {
+        MobEffectInstance current = entity.getEffect(MobEffects.INVISIBILITY);
         if (current != null && current.isAmbient() && !current.isVisible() && current.getDuration() <= EFFECT_TICKS) {
-            player.removeEffect(MobEffects.INVISIBILITY);
+            entity.removeEffect(MobEffects.INVISIBILITY);
         }
     }
 }

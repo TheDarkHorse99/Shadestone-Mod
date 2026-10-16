@@ -42,7 +42,9 @@ public class CursedSoulRenderer extends EntityRenderer<CursedSoul, EntityRenderS
 		poseStack.translate(0.0f, state.boundingBoxHeight / 2, 0.0f); // centre of its hitbox
 		poseStack.rotate(camera.orientation);                           // face the camera
 		poseStack.scale(SIZE, SIZE, SIZE);
-		collector.submitCustomGeometry(poseStack, RENDER_TYPE, (pose, consumer) -> quad(state, pose, consumer, -1));
+		if (!state.isInvisible) { // it fades out in the light, like the other Umbral mobs (its outline can still show)
+			collector.submitCustomGeometry(poseStack, RENDER_TYPE, (pose, consumer) -> quad(state, pose, consumer, -1));
+		}
 		// The Glowing / Nightstalker outline
 		if (state.outlineColor != 0 && RENDER_TYPE.outline().isPresent()) {
 			collector.submitCustomGeometry(poseStack, RENDER_TYPE.outline().get(),

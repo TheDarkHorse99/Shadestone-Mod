@@ -7,6 +7,7 @@ import io.github.thedarkhorse99.umbralworld.block.entity.CorpseCandleBlockEntity
 import io.github.thedarkhorse99.umbralworld.entity.ChasmSkate;
 import io.github.thedarkhorse99.umbralworld.entity.ChasmSwimmer;
 import io.github.thedarkhorse99.umbralworld.entity.Crawler;
+import io.github.thedarkhorse99.umbralworld.entity.FadeInLight;
 import io.github.thedarkhorse99.umbralworld.entity.CursedSoul;
 import io.github.thedarkhorse99.umbralworld.entity.Ghoul;
 import io.github.thedarkhorse99.umbralworld.entity.ModEntities;
@@ -88,6 +89,9 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			command("effect give @a minecraft:regeneration infinite 2 true");
 			command("effect give @a minecraft:saturation infinite 0 true");
 
+			section("Fading in the light", this::testFadeInLight);
+			// From here on the mobs don't fade, so the daylight photos show their art
+			FadeInLight.pausedForTests = true;
 			section("Corpse Candle", this::testCorpseCandle);
 			section("Wight's Shroud", this::testShroud);
 			section("Loot tables", this::testLoot);
@@ -156,6 +160,70 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		teleport(303.5, FEET + 2, 5.5, 40, 20);
 		context.waitTicks(20);
 		context.takeScreenshot("spile_and_ectoplasm_cauldron");
+
+		// The Dark Furnace's screen, with Raw Cinderite in it
+		BlockPos furnace = new BlockPos(310, FEET, 10);
+		onServer(server -> {
+			ServerLevel level = server.overworld();
+			level.setBlockAndUpdate(furnace, ModBlocks.DARK_FURNACE.defaultBlockState());
+			var blockEntity = (net.minecraft.world.level.block.entity.BaseContainerBlockEntity) level.getBlockEntity(furnace);
+			blockEntity.setItem(0, new ItemStack(ModItems.RAW_CINDERITE, 5));
+			player(server).openMenu(blockEntity);
+			return null;
+		});
+		context.waitTicks(20);
+		context.takeScreenshot("dark_furnace_screen");
+		onServer(server -> {
+			player(server).closeContainer();
+			return null;
+		});
+		context.waitTicks(5);
+	}
+
+	// =====================================================================================
+	// Umbral mobs turn invisible in light 5+ (FadeInLight)
+	// =====================================================================================
+
+	private void testFadeInLight() {
+		command("time set noon");
+		UUID ghoul = spawn(ModEntities.GHOUL, new BlockPos(330, FEET, 4));
+		UUID wight = spawn(ModEntities.WIGHT, new BlockPos(332, FEET, 4));
+		command("execute as @e[type=umbral_world:ghoul,x=330.5,y=-60,z=4.5,distance=..2] run data merge entity @s {NoAI:1b,Rotation:[180f,0f]}");
+		command("execute as @e[type=umbral_world:wight,x=332.5,y=-60,z=4.5,distance=..2] run data merge entity @s {NoAI:1b,Rotation:[180f,0f]}");
+		teleport(331.0, FEET, 0.5, 0, 10);
+		context.waitTicks(20);
+		check("in daylight a Ghoul and a Wight are invisible", onServer(server ->
+				server.overworld().getEntity(ghoul).isInvisible() && server.overworld().getEntity(wight).isInvisible()));
+		check("... on the game screen too (client)", context.computeOnClient(client -> {
+			int invisible = 0;
+			for (Entity entity : client.level.entitiesForRendering()) {
+				if ((entity.getUUID().equals(ghoul) || entity.getUUID().equals(wight)) && entity.isInvisible()) {
+					invisible++;
+				}
+			}
+			return invisible == 2;
+		}));
+		context.takeScreenshot("fade_daylight_ghoul_and_wight_should_be_invisible");
+		command("time set midnight");
+		context.waitTicks(20);
+		check("at night (light 4) they show again", onServer(server ->
+				!server.overworld().getEntity(ghoul).isInvisible() && !server.overworld().getEntity(wight).isInvisible()));
+		command("effect give @a minecraft:night_vision 10 0 true");
+		context.waitTicks(10);
+		context.takeScreenshot("fade_night_ghoul_and_wight_visible");
+		// A torch next to them at night: gone again
+		onServer(server -> {
+			server.overworld().setBlockAndUpdate(new BlockPos(331, FEET, 4), Blocks.TORCH.defaultBlockState());
+			return null;
+		});
+		context.waitTicks(20);
+		check("at night next to a torch they're invisible", onServer(server ->
+				server.overworld().getEntity(ghoul).isInvisible() && server.overworld().getEntity(wight).isInvisible()));
+		context.takeScreenshot("fade_torch_ghoul_eyes_still_show");
+		command("effect clear @a minecraft:night_vision");
+		command("kill @e[type=umbral_world:ghoul]");
+		command("kill @e[type=umbral_world:wight]");
+		command("time set noon");
 	}
 
 	// =====================================================================================
@@ -517,6 +585,18 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 				: client.level.getEntitiesOfClass(Ghoul.class, client.player.getBoundingBox().inflate(40)).size());
 		report.add("INFO  fog test: player in " + where + "; the game screen knows of " + clientGhouls + " Ghouls");
 		context.takeScreenshot("ghoul_eyes_umbral_fog_12_18_24_30_blocks");
+		// Out in the open under the Umbral sky (light 3 at most) they don't fade
+		FadeInLight.pausedForTests = false;
+		context.waitTicks(20);
+		String faded = onServer(server -> {
+			ServerLevel umbral = server.getLevel(ModDimensions.UMBRAL_WORLD);
+			var ghouls = umbral.getEntitiesOfClass(Ghoul.class, new net.minecraft.world.phys.AABB(-15, 195, -5, 15, 205, 45));
+			long invisible = ghouls.stream().filter(Entity::isInvisible).count();
+			int light = umbral.getMaxLocalRawBrightness(new BlockPos(0, 200, 12));
+			return invisible + " of " + ghouls.size() + " invisible, light " + light;
+		});
+		FadeInLight.pausedForTests = true;
+		check("under the open Umbral sky Ghouls stay visible (" + faded + ")", faded.startsWith("0 of") && !faded.contains("0 of 0"));
 		// The same with a light next to the near one, to show where the bodies are
 		command("execute in umbral_world:umbral_world run setblock 2 200 5 minecraft:glowstone");
 		context.waitTicks(20);

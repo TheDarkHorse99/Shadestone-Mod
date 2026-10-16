@@ -3,6 +3,7 @@ package io.github.thedarkhorse99.umbralworld;
 import io.github.thedarkhorse99.umbralworld.block.MiasmaPlantAuras;
 import io.github.thedarkhorse99.umbralworld.block.ModBlocks;
 import io.github.thedarkhorse99.umbralworld.block.UmbralSnuffing;
+import io.github.thedarkhorse99.umbralworld.entity.FadeInLight;
 import io.github.thedarkhorse99.umbralworld.entity.ModEntities;
 import io.github.thedarkhorse99.umbralworld.item.ModCreativeTabs;
 import io.github.thedarkhorse99.umbralworld.item.ModItems;
@@ -30,6 +31,7 @@ public class UmbralWorld implements ModInitializer {
 		MiasmaPlantAuras.initialize();
 		UmbralSnuffing.initialize();
 		ModEntities.initialize();
+		FadeInLight.initialize();
 		ModItems.initialize();
 		ModCreativeTabs.initialize();
 		ModBlockEntities.initialize();
