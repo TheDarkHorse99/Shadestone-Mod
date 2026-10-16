@@ -10,12 +10,13 @@ import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.client.renderer.entity.state.EndermanRenderState;
 import net.minecraft.resources.Identifier;
 
-/** Draws the Wight using vanilla's Enderman body with the Wight texture. */
+/** Draws the Wight using vanilla's Enderman body with the Wight texture, wearing its 3D shroud. */
 public class WightRenderer extends MobRenderer<Wight, EndermanRenderState, EndermanModel<EndermanRenderState>> {
 	private static final Identifier TEXTURE = UmbralWorld.id("textures/entity/wight/wight.png");
 
 	public WightRenderer(EntityRendererProvider.Context context) {
 		super(context, new EndermanModel<>(context.bakeLayer(ModelLayers.ENDERMAN)), 0.5f);
+		addLayer(new ShroudLayer<>(this, context.getModelSet(), true)); // its shroud, the same one players can wear
 	}
 
 	@Override

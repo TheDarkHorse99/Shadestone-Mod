@@ -50,10 +50,13 @@ public class ModItems {
 			new Item.Properties().craftRemainder(Items.GLASS_BOTTLE).stacksTo(16));
 
 	// What the Shroud looks like when worn: assets/umbral_world/equipment/wights_shroud.json
-	public static final ResourceKey<EquipmentAsset> WIGHTS_SHROUD_ASSET =
-			ResourceKey.create(EquipmentAssets.ROOT_ID, UmbralWorld.id("wights_shroud"));
 
 	// Worn in the chest slot; invisible in the light (see WightsShroud). No armor and no durability, like an Elytra.
+	// It's drawn as a 3D poncho (client ShroudLayer), not as flat armor. It still needs an equipment asset,
+	// because the game only tells renderers about chest items that have one; the asset
+	// (equipment/wights_shroud.json) only has a wolf-armor layer, which is never drawn for a chest item.
+	public static final ResourceKey<EquipmentAsset> WIGHTS_SHROUD_ASSET =
+			ResourceKey.create(EquipmentAssets.ROOT_ID, UmbralWorld.id("wights_shroud"));
 	public static final Item WIGHTS_SHROUD = register("wights_shroud", Item::new,
 			new Item.Properties()
 					.stacksTo(1)
