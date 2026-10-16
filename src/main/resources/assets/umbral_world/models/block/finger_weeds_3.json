@@ -3,7 +3,7 @@
   "ambientocclusion": false,
   "textures": {
     "particle": "#roots",
-    "roots": "minecraft:block/pale_oak_log"
+    "roots": "umbral_world:block/finger_weeds"
   },
   "elements": [
     {
