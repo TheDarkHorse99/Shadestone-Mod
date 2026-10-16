@@ -109,6 +109,7 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			section("Portal and Corpse Candles", this::testPortalCandle);
 			section("Chasm mobs in deep water", this::testDeepWaterMobs);
 			section("Finger Weeds round a corner", this::testFingerWeedsCorner);
+			section("Cinderite steam", this::testCinderiteSteam);
 		}
 		writeReport();
 		if (failures > 0) {
@@ -433,6 +434,24 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		teleport(x0 + 5.5, FEET + 1, z0 + 3.3, 180, 10);
 		context.waitTicks(5);
 		context.takeScreenshot("finger_weeds_hands_close");
+	}
+
+	private void testCinderiteSteam() {
+		// Three Cinderite Ores on the floor of a glass tank of water, in daylight
+		BlockPos tank = new BlockPos(880, FEET, 40);
+		onServer(server -> {
+			ServerLevel level = server.overworld();
+			fill(level, tank.offset(-3, 0, -3), tank.offset(3, 4, 3), Blocks.GLASS.defaultBlockState());
+			fill(level, tank.offset(-2, 0, -2), tank.offset(2, 4, 2), Blocks.WATER.defaultBlockState());
+			for (int x = -1; x <= 1; x++) {
+				level.setBlockAndUpdate(tank.offset(x, 0, 0), ModBlocks.CINDERITE_ORE.defaultBlockState());
+			}
+			return null;
+		});
+		command("time set noon");
+		teleport(880.5, FEET + 2, 35.5, 0, 25);
+		context.waitTicks(40);
+		context.takeScreenshot("cinderite_steam_underwater");
 	}
 
 	/** Logs and vapor around a tree's base: {logs, vapor}. */
