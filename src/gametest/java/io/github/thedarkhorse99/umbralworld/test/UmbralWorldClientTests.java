@@ -112,6 +112,7 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			section("Cinderite steam", this::testCinderiteSteam);
 			section("Recipes", this::testRecipes);
 			section("Ectoplasm Bottle", this::testEctoplasmBottle);
+			section("Plants, weeds and Ghouls", this::testPlantsWeedsGhouls);
 		}
 		writeReport();
 		if (failures > 0) {
@@ -515,6 +516,79 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			player(server).getInventory().clearContent();
 			return null;
 		});
+	}
+
+	// =====================================================================================
+	// Plants on Barrow Refuse, where Finger Weeds grow (and their colour), aura strength, Ghouls staying
+	// =====================================================================================
+
+	private void testPlantsWeedsGhouls() {
+		String plants = onServer(server -> {
+			ServerLevel level = server.overworld();
+			StringBuilder failed = new StringBuilder();
+			BlockPos soil = new BlockPos(1200, GROUND, 0);
+			level.setBlockAndUpdate(soil, ModBlocks.BARROW_REFUSE.defaultBlockState());
+			for (var plant : List.of(ModBlocks.WITHERED_TUFTS, ModBlocks.GRAVE_THORNS, ModBlocks.FRAIL_BRAMBLE, ModBlocks.PALE_BLOSSOMS,
+					ModBlocks.TORPOR_SPROUT, ModBlocks.GHOST_SAPLING, ModBlocks.PHANTOM_SAPLING)) {
+				if (!plant.defaultBlockState().canSurvive(level, soil.above())) {
+					failed.append(' ').append(plant.getName().getString());
+				}
+			}
+			return failed.toString();
+		});
+		check("every plant can be planted on Barrow Refuse (can't:" + plants + ")", plants.isEmpty());
+
+		// Finger Weeds on a wall of each kind: {survives, dried}
+		String weeds = onServer(server -> {
+			ServerLevel level = server.overworld();
+			StringBuilder out = new StringBuilder();
+			int x = 1204;
+			for (var wall : List.of(ModBlocks.BARROW_REFUSE, Blocks.DIRT, Blocks.GRASS_BLOCK, ModBlocks.DEAD_SEA_SHALE, Blocks.STONE,
+					Blocks.DEEPSLATE, ModBlocks.SHADESTONE_BLOCK)) {
+				BlockPos wallPos = new BlockPos(x, FEET, 1);
+				level.setBlockAndUpdate(wallPos, wall.defaultBlockState());
+				BlockState weedsState = ModBlocks.FINGER_WEEDS.defaultBlockState()
+						.setValue(net.minecraft.world.level.block.HorizontalDirectionalBlock.FACING, Direction.NORTH);
+				boolean survives = weedsState.canSurvive(level, wallPos.north());
+				boolean dried = io.github.thedarkhorse99.umbralworld.block.FingerWeedsBlock.matchWall(weedsState, wall.defaultBlockState())
+						.getValue(io.github.thedarkhorse99.umbralworld.block.FingerWeedsBlock.DRIED);
+				out.append(wall.getName().getString()).append('=').append(!survives ? "no" : dried ? "brown" : "green").append(' ');
+				x += 2;
+			}
+			return out.toString().trim();
+		});
+		check("Finger Weeds: green on Refuse and dirt, brown on shale and stone, never on Shadestone (" + weeds + ")",
+				weeds.equals("Barrow Refuse=green Dirt=green Grass Block=green Dead Sea Shale=brown Stone=brown Deepslate=brown Shadestone=no"));
+
+		// Standing by a Torpor Sprout and a Frail Bramble gives level II Slowness and Weakness
+		onServer(server -> {
+			ServerLevel level = server.overworld();
+			level.setBlockAndUpdate(new BlockPos(1220, GROUND, 0), ModBlocks.EFFLUVIUM.defaultBlockState());
+			level.setBlockAndUpdate(new BlockPos(1221, GROUND, 0), ModBlocks.EFFLUVIUM.defaultBlockState());
+			level.setBlockAndUpdate(new BlockPos(1220, FEET, 0), ModBlocks.TORPOR_SPROUT.defaultBlockState());
+			level.setBlockAndUpdate(new BlockPos(1221, FEET, 0), ModBlocks.FRAIL_BRAMBLE.defaultBlockState());
+			return null;
+		});
+		teleport(1220.5, FEET, 1.5, 0, 0);
+		context.waitTicks(25);
+		String auras = onServer(server -> {
+			ServerPlayer player = player(server);
+			var slow = player.getEffect(MobEffects.SLOWNESS);
+			var weak = player.getEffect(MobEffects.WEAKNESS);
+			return (slow == null ? "none" : String.valueOf(slow.getAmplifier() + 1)) + "/" + (weak == null ? "none" : String.valueOf(weak.getAmplifier() + 1));
+		});
+		check("the aura plants give level II Slowness and Weakness (levels " + auras + ")", auras.equals("2/2"));
+		command("effect clear @a minecraft:slowness");
+		command("effect clear @a minecraft:weakness");
+
+		// Ghouls never despawn (creatures hardly ever spawn again once the land is made)
+		boolean ghoulStays = onServer(server -> {
+			Mob ghoul = ModEntities.GHOUL.create(server.overworld(), EntitySpawnReason.NATURAL);
+			return ghoul != null && !ghoul.removeWhenFarAway(200 * 200);
+		});
+		check("a Ghoul doesn't despawn when you walk away", ghoulStays);
+		check("Barrow Refuse sounds like gravel and mud", ModBlocks.BARROW_REFUSE.defaultBlockState().getSoundType()
+				== io.github.thedarkhorse99.umbralworld.sound.ModSounds.BARROW_REFUSE);
 	}
 
 	/** What a crafting grid of this size holding these items (row by row) makes, or "nothing". */
@@ -1270,7 +1344,7 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 
 		// 2. Scan the terrain deep inside a Chasm: heights from the generator itself, without building chunks
 		List<Fissure> fissures = new ArrayList<>();
-		int[] plateau = {Integer.MAX_VALUE, Integer.MIN_VALUE};
+		List<Integer> plateauHeights = new ArrayList<>();
 		int[] scanned = {0, 0}; // Chasm columns, fissure columns
 		BlockPos centre = onServer(server -> {
 			ServerLevel umbral = server.getLevel(ModDimensions.UMBRAL_WORLD);
@@ -1304,11 +1378,10 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 						scanned[0]++;
 						if (low) {
 							scanned[1]++;
-						} else if (isChasm(umbral, x + 48, z) && isChasm(umbral, x - 48, z)
-								&& isChasm(umbral, x, z + 48) && isChasm(umbral, x, z - 48)) {
-							// The flat land, away from the Chasm's edge (where it rises into the other biomes' hills)
-							plateau[0] = Math.min(plateau[0], height);
-							plateau[1] = Math.max(plateau[1], height);
+						} else if (isChasm(umbral, x + 128, z) && isChasm(umbral, x - 128, z)
+								&& isChasm(umbral, x, z + 128) && isChasm(umbral, x, z - 128)) {
+							// The flat land, well away from the Chasm's edge (where it slopes up into the other biomes)
+							plateauHeights.add(height);
 						}
 					}
 					if (low) {
@@ -1324,7 +1397,7 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 				}
 			}
 			// A map seen from above, 4 blocks per letter: ' ' another biome, '.' fissure bottom,
-			// 'o' halfway down (y 20-50), '-' lower than the land (y 50-62), '#' the flat land
+			// 'o' halfway down (y 20-40), '-' the slope down from the other biomes (y 55+), '#' the Chasm's land (y 40-55)
 			report.add("INFO  map of 512 x 512 blocks around " + found.toShortString() + " (north at the top):");
 			for (int z = found.getZ() - 256; z < found.getZ() + 256; z += 8) {
 				StringBuilder line = new StringBuilder("      ");
@@ -1334,7 +1407,7 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 						continue;
 					}
 					int height = generator.getBaseHeight(x, z, Heightmap.Types.OCEAN_FLOOR_WG, umbral, random);
-					line.append(height < 20 ? '.' : height < 50 ? 'o' : height < 62 ? '-' : '#');
+					line.append(height < 20 ? '.' : height < 40 ? 'o' : height < 55 ? '#' : '-');
 				}
 				report.add(line.toString());
 			}
@@ -1350,7 +1423,11 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		report.add("INFO  scanned 32 rows of 513 blocks around " + centre.toShortString() + ": " + scanned[0] + " Chasm columns, "
 				+ scanned[1] + " in fissures (" + Math.round(scanned[1] * 100.0 / Math.max(1, scanned[0])) + "%)");
 		report.add("INFO  fissure crossings: " + widths.size() + ", widths (blocks, sorted): " + widths);
-		report.add("INFO  plateau top between y=" + plateau[0] + " and y=" + plateau[1] + "; fissure floors between y=" + floorLow + " and y=" + floorHigh);
+		// The middle 96% of the land's heights: a few spots near a curving edge are still on the slope down
+		List<Integer> sortedLand = plateauHeights.stream().sorted().toList();
+		int[] plateau = sortedLand.isEmpty() ? new int[]{0, 0}
+				: new int[]{sortedLand.get(sortedLand.size() / 50), sortedLand.get(sortedLand.size() - 1 - sortedLand.size() / 50)};
+		report.add("INFO  plateau top (middle 96%) between y=" + plateau[0] + " and y=" + plateau[1] + "; fissure floors between y=" + floorLow + " and y=" + floorHigh);
 		check("the scan crossed fissures (" + widths.size() + ")", widths.size() >= 4);
 		if (widths.isEmpty()) {
 			return;
@@ -1360,6 +1437,66 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		check("fissure floors sit just under the water (y=" + floorLow + " to " + floorHigh + "; between -60 and -47)", floorLow >= -60 && floorHigh <= -47);
 		check("most fissures are thin (median width " + median + "; 5-12 blocks)", median >= 5 && median <= 12);
 		check("some gorges are wide (widest " + widths.getLast() + "; 20+ blocks)", widths.getLast() >= 20);
+
+		// The shore: the land slopes down into the Chasm like a dried-up seabed (Mac, 2026-10-16).
+		// From deep inside, go east until the Chasm ends, then measure the land from 64 blocks outside to 160 inside.
+		String shore = onServer(server -> {
+			ServerLevel umbral = server.getLevel(ModDimensions.UMBRAL_WORLD);
+			ChunkGenerator generator = umbral.getChunkSource().getGenerator();
+			RandomState random = umbral.getChunkSource().randomState();
+			StringBuilder out = new StringBuilder();
+			int found = 0;
+			int worstStep = 0;
+			int smallestDrop = Integer.MAX_VALUE;
+			for (int row = 0; row < 8 && found < 4; row++) {
+				int z = centre.getZ() - 200 + row * 57;
+				int edge = Integer.MIN_VALUE;
+				for (int x = centre.getX(); x < centre.getX() + 3000; x += 2) {
+					if (isChasm(umbral, x, z) && !isChasm(umbral, x + 2, z)) {
+						edge = x;
+						break;
+					}
+				}
+				if (edge == Integer.MIN_VALUE || !isChasm(umbral, edge - 160, z) || isChasm(umbral, edge + 64, z)) {
+					continue; // no clean crossing on this row
+				}
+				found++;
+				List<Integer> heights = new ArrayList<>(); // land only, every 4 blocks, from outside going in
+				int last = Integer.MIN_VALUE;
+				for (int x = edge + 64; x >= edge - 160; x--) {
+					int h = generator.getBaseHeight(x, z, Heightmap.Types.OCEAN_FLOOR_WG, umbral, random);
+					if (h < 20) {
+						last = Integer.MIN_VALUE; // a fissure: skip it
+						continue;
+					}
+					if (last != Integer.MIN_VALUE) {
+						worstStep = Math.max(worstStep, Math.abs(h - last));
+					}
+					last = h;
+					if ((edge + 64 - x) % 8 == 0) {
+						heights.add(h);
+					}
+				}
+				int outside = generator.getBaseHeight(edge + 48, z, Heightmap.Types.OCEAN_FLOOR_WG, umbral, random);
+				int deepest = Integer.MAX_VALUE;
+				for (int x = edge - 160; x <= edge - 120; x++) {
+					int h = generator.getBaseHeight(x, z, Heightmap.Types.OCEAN_FLOOR_WG, umbral, random);
+					if (h >= 20) {
+						deepest = Math.min(deepest, h);
+					}
+				}
+				smallestDrop = Math.min(smallestDrop, outside - deepest);
+				out.append(" | z=").append(z).append(" edge x=").append(edge).append(": ").append(heights);
+			}
+			return found + "|" + worstStep + "|" + smallestDrop + "|" + out;
+		});
+		String[] shoreParts = shore.split("\\|", 4);
+		report.add("INFO  land heights every 8 blocks from 64 outside the Chasm to 160 inside (fissures skipped)" + shoreParts[3]);
+		check("found places where the land crosses into the Chasm (" + shoreParts[0] + ")", Integer.parseInt(shoreParts[0]) >= 1);
+		check("the land drops 12+ blocks from outside the Chasm to inside it (smallest drop " + shoreParts[2] + ")",
+				Integer.parseInt(shoreParts[2]) >= 12);
+		check("it slopes down gently, no cliffs (biggest step between neighbouring blocks " + shoreParts[1] + "; 2 or less)",
+				Integer.parseInt(shoreParts[1]) <= 2);
 
 		// Every block of every fissure, in a 321 x 321 square: how narrow is the narrowest spot, and does it all join up?
 		int[] web = onServer(server -> chasmWeb(server.getLevel(ModDimensions.UMBRAL_WORLD), centre, 160));
@@ -1794,8 +1931,9 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 	private void testChasmLife() {
 		int radius = 5; // chunks each way: 11 x 11 chunks
 		// Fields: weed blocks, columns, columns reaching the top, unbroken columns, Chasm chunks, ore blocks, veins,
-		// ore blocks touching water, ore blocks below the water top, average column width (x10)
-		int[] stats = new int[10];
+		// ore blocks touching water, ore blocks below the water top, average column width (x10),
+		// weeds on Shadestone, weeds the wrong colour for their wall, weeds on shale, weeds on Barrow Refuse
+		int[] stats = new int[14];
 		List<String> notes = new ArrayList<>();
 		BlockPos[] climbStart = {null};
 		Direction[] climbFacing = {null};
@@ -1844,6 +1982,22 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 				}
 			}
 			stats[0] = weeds.size();
+			for (BlockPos pos : weeds) {
+				BlockState state = umbral.getBlockState(pos);
+				BlockState wall = umbral.getBlockState(pos.relative(state.getValue(net.minecraft.world.level.block.HorizontalDirectionalBlock.FACING).getOpposite()));
+				boolean dried = state.getValue(io.github.thedarkhorse99.umbralworld.block.FingerWeedsBlock.DRIED);
+				if (wall.is(ModBlocks.SHADESTONE_BLOCK)) {
+					stats[10]++;
+				}
+				if (wall.is(ModBlocks.DEAD_SEA_SHALE)) {
+					stats[12]++;
+					stats[11] += dried ? 0 : 1;
+				}
+				if (wall.is(ModBlocks.BARROW_REFUSE)) {
+					stats[13]++;
+					stats[11] += dried ? 1 : 0;
+				}
+			}
 			List<Integer> widths = new ArrayList<>(); // blocks per row (x10) of each column
 			for (List<BlockPos> column : groups(weeds)) {
 				// Skip columns touching the outer ring of chunks: they may carry on outside the scanned area
@@ -1860,7 +2014,8 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 					perRow.merge(pos.getY(), 1, Integer::sum);
 				}
 				boolean unbroken = perRow.size() == high - low + 1;
-				boolean fromWaterToTop = low <= seaLevel + 1 && high >= 55;
+				// From the bottom of the Barrow Refuse (it blends into Shadestone at y 24-32) to the top of the wall
+				boolean fromWaterToTop = low <= 38 && high >= 40;
 				if (unbroken) {
 					stats[3]++;
 				}
@@ -1920,11 +2075,14 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 				+ (2 * radius - 1) * (2 * radius - 1) + " (where Finger Weeds are judged) have " + stats[4] + " Chasm chunks");
 		report.add("INFO  Finger Weeds: " + stats[0] + " blocks in " + stats[1] + " columns (median width " + stats[9] / 10.0 + "); first few: " + notes);
 		report.add("INFO  Cinderite Ore: " + stats[5] + " blocks in " + stats[6] + " veins");
+		report.add("INFO  Finger Weeds walls: " + stats[13] + " on Barrow Refuse, " + stats[12] + " on Dead Sea Shale");
 		check("Finger Weeds columns generate (" + stats[1] + " whole columns in " + stats[4] + " Chasm chunks)", stats[1] > 0);
 		check("every column is unbroken from bottom to top (" + stats[3] + " of " + stats[1] + ")", stats[3] == stats[1]);
-		check("columns run from the water to the top of the wall (" + stats[2] + " of " + stats[1] + "; 90%+)", stats[2] * 10 >= stats[1] * 9);
+		check("columns run from the Barrow Refuse to the top of the wall (" + stats[2] + " of " + stats[1] + "; 90%+)", stats[2] * 10 >= stats[1] * 9);
+		check("no Finger Weeds on Shadestone (" + stats[10] + ")", stats[10] == 0);
+		check("Finger Weeds are green on Barrow Refuse and brown on shale (" + stats[11] + " the wrong colour)", stats[11] == 0);
 		check("columns are 3-4 blocks wide (median " + stats[9] / 10.0 + ")", stats[9] >= 25 && stats[9] <= 45);
-		check("Cinderite Ore generates (" + stats[5] + " blocks, " + stats[6] + " veins)", stats[5] > 0);
+		check("Cinderite Ore generates, rarely (" + stats[5] + " blocks, " + stats[6] + " veins in " + stats[4] + " Chasm chunks)", stats[5] > 0);
 		check("every Cinderite Ore touches water (" + stats[7] + " of " + stats[5] + ")", stats[7] == stats[5]);
 		check("every Cinderite Ore is under the water line (" + stats[8] + " of " + stats[5] + ")", stats[8] == stats[5]);
 
@@ -1998,13 +2156,15 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		// a stone wall with a patch of Finger Weeds, and Cinderite Ore in a pool
 		onServer(server -> {
 			ServerLevel level = server.overworld();
-			fill(level, new BlockPos(600, FEET, 10), new BlockPos(606, FEET + 6, 10), Blocks.STONE.defaultBlockState());
+			fill(level, new BlockPos(600, FEET, 10), new BlockPos(602, FEET + 6, 10), ModBlocks.BARROW_REFUSE.defaultBlockState());
+			fill(level, new BlockPos(603, FEET, 10), new BlockPos(606, FEET + 6, 10), Blocks.STONE.defaultBlockState());
 			BlockState weeds = ModBlocks.FINGER_WEEDS.defaultBlockState()
 					.setValue(net.minecraft.world.level.block.HorizontalDirectionalBlock.FACING, Direction.NORTH);
 			for (int x = 601; x <= 605; x++) {
 				for (int y = FEET; y <= FEET + 5; y++) {
 					if (Math.abs(x - 603) + (y == FEET + 5 ? 1 : 0) <= 1 || (x - 601 + y) % 2 == 0) {
-						level.setBlockAndUpdate(new BlockPos(x, y, 9), weeds);
+						level.setBlockAndUpdate(new BlockPos(x, y, 9), io.github.thedarkhorse99.umbralworld.block.FingerWeedsBlock.matchWall(
+								weeds, level.getBlockState(new BlockPos(x, y, 10))));
 					}
 				}
 			}
