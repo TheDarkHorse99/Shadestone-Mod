@@ -1,6 +1,6 @@
 {
   "variants": {
-    "facing=north": [
+    "dried=false,facing=north": [
       {
         "model": "umbral_world:block/finger_weeds_1"
       },
@@ -11,7 +11,7 @@
         "model": "umbral_world:block/finger_weeds_3"
       }
     ],
-    "facing=east": [
+    "dried=false,facing=east": [
       {
         "model": "umbral_world:block/finger_weeds_1",
         "y": 90
@@ -25,7 +25,7 @@
         "y": 90
       }
     ],
-    "facing=south": [
+    "dried=false,facing=south": [
       {
         "model": "umbral_world:block/finger_weeds_1",
         "y": 180
@@ -39,7 +39,7 @@
         "y": 180
       }
     ],
-    "facing=west": [
+    "dried=false,facing=west": [
       {
         "model": "umbral_world:block/finger_weeds_1",
         "y": 270
@@ -50,6 +50,59 @@
       },
       {
         "model": "umbral_world:block/finger_weeds_3",
+        "y": 270
+      }
+    ],
+    "dried=true,facing=north": [
+      {
+        "model": "umbral_world:block/finger_weeds_1_dried"
+      },
+      {
+        "model": "umbral_world:block/finger_weeds_2_dried"
+      },
+      {
+        "model": "umbral_world:block/finger_weeds_3_dried"
+      }
+    ],
+    "dried=true,facing=east": [
+      {
+        "model": "umbral_world:block/finger_weeds_1_dried",
+        "y": 90
+      },
+      {
+        "model": "umbral_world:block/finger_weeds_2_dried",
+        "y": 90
+      },
+      {
+        "model": "umbral_world:block/finger_weeds_3_dried",
+        "y": 90
+      }
+    ],
+    "dried=true,facing=south": [
+      {
+        "model": "umbral_world:block/finger_weeds_1_dried",
+        "y": 180
+      },
+      {
+        "model": "umbral_world:block/finger_weeds_2_dried",
+        "y": 180
+      },
+      {
+        "model": "umbral_world:block/finger_weeds_3_dried",
+        "y": 180
+      }
+    ],
+    "dried=true,facing=west": [
+      {
+        "model": "umbral_world:block/finger_weeds_1_dried",
+        "y": 270
+      },
+      {
+        "model": "umbral_world:block/finger_weeds_2_dried",
+        "y": 270
+      },
+      {
+        "model": "umbral_world:block/finger_weeds_3_dried",
         "y": 270
       }
     ]

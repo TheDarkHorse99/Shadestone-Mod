@@ -1,0 +1,6 @@
+{
+  "parent": "umbral_world:block/finger_weeds_2",
+  "textures": {
+    "roots": "umbral_world:block/finger_weeds_dried"
+  }
+}

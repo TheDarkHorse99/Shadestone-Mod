@@ -3,6 +3,9 @@ package io.github.thedarkhorse99.umbralworld.block;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.tags.TagKey;
+import io.github.thedarkhorse99.umbralworld.UmbralWorld;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.player.Player;
@@ -36,11 +39,19 @@ import net.minecraft.world.phys.shapes.VoxelShape;
  * It spreads very slowly onto bare wall next to it, mostly upward, so a single one
  * planted at the bottom of a wall will, given a long time, climb it. Thick patches
  * (like the columns that generate in the Chasm) don't spread any further.
+ *
+ * What it grows on (Mac, 2026-10-16): green on dirt-type blocks and Barrow Refuse
+ * (#umbral_world:finger_weeds_grow_green), brown and dried-up (DRIED) on Dead Sea Shale
+ * and any stone (#umbral_world:finger_weeds_grow_dried). Never on Shadestone.
  */
 public class FingerWeedsBlock extends HorizontalDirectionalBlock implements SimpleWaterloggedBlock {
     /** How far past a player's sides Finger Weeds still count as in reach for climbing, in blocks. */
     private static final double REACH = 0.35;
     public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
+    /** Brown and dried-up, because the wall behind it is stone or shale. */
+    public static final BooleanProperty DRIED = BooleanProperty.create("dried");
+    public static final TagKey<Block> GROWS_GREEN = TagKey.create(Registries.BLOCK, UmbralWorld.id("finger_weeds_grow_green"));
+    public static final TagKey<Block> GROWS_DRIED = TagKey.create(Registries.BLOCK, UmbralWorld.id("finger_weeds_grow_dried"));
 
     /** Chance per random tick to spread. A block gets a random tick about every 68 seconds, so about once every 30 minutes. */
     private static final float SPREAD_CHANCE = 1.0f / 30.0f;
@@ -53,12 +64,12 @@ public class FingerWeedsBlock extends HorizontalDirectionalBlock implements Simp
 
     public FingerWeedsBlock(BlockBehaviour.Properties properties) {
         super(properties);
-        registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(WATERLOGGED, false));
+        registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(WATERLOGGED, false).setValue(DRIED, false));
     }
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(FACING, WATERLOGGED);
+        builder.add(FACING, WATERLOGGED, DRIED);
     }
 
     @Override
@@ -66,12 +77,27 @@ public class FingerWeedsBlock extends HorizontalDirectionalBlock implements Simp
         return SHAPES.get(state.getValue(FACING));
     }
 
-    /** Needs a solid wall behind it. */
+    /** Needs a solid wall behind it, of something it grows on. */
     @Override
     protected boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
         Direction toWall = state.getValue(FACING).getOpposite();
         BlockPos wall = pos.relative(toWall);
-        return level.getBlockState(wall).isFaceSturdy(level, wall, state.getValue(FACING));
+        BlockState wallState = level.getBlockState(wall);
+        return growsOn(wallState) && wallState.isFaceSturdy(level, wall, state.getValue(FACING));
+    }
+
+    /** Dirt-type blocks and Barrow Refuse (green), Dead Sea Shale and stone (dried). Not Shadestone. */
+    public static boolean growsOn(BlockState wall) {
+        return wall.is(GROWS_GREEN) || wall.is(GROWS_DRIED);
+    }
+
+    /** The same weeds, green or dried to match the wall behind them. */
+    public static BlockState matchWall(BlockState state, BlockState wall) {
+        return state.setValue(DRIED, wall.is(GROWS_DRIED) && !wall.is(GROWS_GREEN));
+    }
+
+    private static BlockState matchWall(BlockState state, LevelReader level, BlockPos pos) {
+        return matchWall(state, level.getBlockState(pos.relative(state.getValue(FACING).getOpposite())));
     }
 
     /** Placed on the side of a block it sticks out of that side; otherwise it tries the walls around. */
@@ -79,7 +105,7 @@ public class FingerWeedsBlock extends HorizontalDirectionalBlock implements Simp
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         boolean water = context.getLevel().getFluidState(context.getClickedPos()).is(Fluids.WATER);
         BlockState placed = choosePlacement(context);
-        return placed == null ? null : placed.setValue(WATERLOGGED, water);
+        return placed == null ? null : matchWall(placed, context.getLevel(), context.getClickedPos()).setValue(WATERLOGGED, water);
     }
 
     private BlockState choosePlacement(BlockPlaceContext context) {
@@ -104,8 +130,11 @@ public class FingerWeedsBlock extends HorizontalDirectionalBlock implements Simp
     @Override
     protected BlockState updateShape(BlockState state, LevelReader level, ScheduledTickAccess ticks, BlockPos pos,
                                      Direction direction, BlockPos neighborPos, BlockState neighborState, RandomSource random) {
-        if (direction == state.getValue(FACING).getOpposite() && !state.canSurvive(level, pos)) {
-            return Blocks.AIR.defaultBlockState();
+        if (direction == state.getValue(FACING).getOpposite()) {
+            if (!state.canSurvive(level, pos)) {
+                return Blocks.AIR.defaultBlockState();
+            }
+            state = matchWall(state, neighborState); // the wall changed (say from Barrow Refuse to stone)
         }
         if (state.getValue(WATERLOGGED)) {
             ticks.scheduleTick(pos, Fluids.WATER, Fluids.WATER.getTickDelay(level));
@@ -141,7 +170,7 @@ public class FingerWeedsBlock extends HorizontalDirectionalBlock implements Simp
         boolean water = there.is(Blocks.WATER) && there.getFluidState().isSource();
         BlockState grown = defaultBlockState().setValue(FACING, facing).setValue(WATERLOGGED, water);
         if ((there.isAir() || water) && grown.canSurvive(level, target)) {
-            level.setBlockAndUpdate(target, grown);
+            level.setBlockAndUpdate(target, matchWall(grown, level, target));
         }
     }
 

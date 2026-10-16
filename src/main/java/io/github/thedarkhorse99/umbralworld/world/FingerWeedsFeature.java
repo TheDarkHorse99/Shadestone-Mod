@@ -22,8 +22,9 @@ import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.feature.Feature;
 
 /**
- * Grows one column of Finger Weeds up a Chasm fissure wall, from two blocks under the
- * water to the top, so a player who fell in can always climb out by finding one.
+ * Grows one column of Finger Weeds up a Chasm fissure wall, from where the wall stops being
+ * Shadestone (the weeds never grow on it; Mac, 2026-10-16) up through the Barrow Refuse
+ * (green) and the Dead Sea Shale (dried, brown) to the top.
  *
  * The column is 3-4 blocks wide and wanders left and right as it goes up (in sweeps
  * that last a few blocks), so it looks natural. Each row follows the wall in and out:
@@ -47,8 +48,8 @@ public record FingerWeedsFeature(int maxReach) implements Feature {
     private static final int MAX_DRIFT = 6;
     /** Safety limit on height. The fissures are about 115 blocks deep. */
     private static final int MAX_HEIGHT = 200;
-    /** How many blocks under the water surface the column starts. */
-    private static final int UNDERWATER = 2;
+    /** The column starts where this many blocks of wall in a row (going up) are something the weeds grow on. */
+    private static final int GOOD_WALL_TO_START = 6;
 
     @Override
     public MapCodec<FingerWeedsFeature> codec() {
@@ -70,7 +71,7 @@ public record FingerWeedsFeature(int maxReach) implements Feature {
             for (int i = 1; i <= maxReach && i < distance; i++) {
                 BlockPos check = start.relative(direction, i);
                 if (!level.getBlockState(check).isAir()) {
-                    if (isWall(level, check, direction)) {
+                    if (level.getBlockState(check).isFaceSturdy(level, check, direction.getOpposite())) {
                         toWall = direction;
                         distance = i;
                     }
@@ -84,10 +85,24 @@ public record FingerWeedsFeature(int maxReach) implements Feature {
         Direction along = toWall.getClockWise();
         BlockState weeds = ModBlocks.FINGER_WEEDS.defaultBlockState().setValue(FingerWeedsBlock.FACING, toWall.getOpposite());
 
-        // 3. Plan the climb, one row at a time, until the wall runs out at the top.
-        // "anchor" is the middle of the column in the row below: the air or water right against the wall.
+        // 3. Go up the wall to where it stops being Shadestone (the Barrow Refuse above it)
         BlockPos home = start.relative(toWall, distance - 1);
-        BlockPos anchor = home.below(UNDERWATER + 1);
+        BlockPos firstGood = null;
+        int goodInARow = 0;
+        for (BlockPos up = home; up.getY() < home.getY() + MAX_HEIGHT && goodInARow < GOOD_WALL_TO_START; up = up.above()) {
+            if (findSpotAgainstWall(level, up, toWall) != null) {
+                firstGood = goodInARow++ == 0 ? up : firstGood;
+            } else {
+                goodInARow = 0;
+            }
+        }
+        if (goodInARow < GOOD_WALL_TO_START) {
+            return false;
+        }
+
+        // 4. Plan the climb, one row at a time, until the wall runs out at the top.
+        // "anchor" is the middle of the column in the row below: the air or water right against the wall.
+        BlockPos anchor = firstGood.below();
         List<BlockPos> rowBelow = null;
         int drift = random.nextInt(3) - 1; // -1, 0 or 1: which way the column is currently sweeping
         Map<BlockPos, BlockState> plan = new LinkedHashMap<>();
@@ -109,7 +124,8 @@ public record FingerWeedsFeature(int maxReach) implements Feature {
             }
             for (BlockPos spot : row) {
                 BlockState here = level.getBlockState(spot);
-                plan.put(spot, isWaterSource(here) ? weeds.setValue(FingerWeedsBlock.WATERLOGGED, true) : weeds);
+                BlockState placed = FingerWeedsBlock.matchWall(weeds, level.getBlockState(spot.relative(toWall)));
+                plan.put(spot, isWaterSource(here) ? placed.setValue(FingerWeedsBlock.WATERLOGGED, true) : placed);
             }
             rowBelow = row;
             anchor = row.getFirst(); // planRow puts the middle first
@@ -127,7 +143,7 @@ public record FingerWeedsFeature(int maxReach) implements Feature {
             }
         }
 
-        // 4. Build it, if it all fits
+        // 5. Build it, if it all fits
         if (plan.isEmpty()) {
             return false;
         }
@@ -234,8 +250,9 @@ public record FingerWeedsFeature(int maxReach) implements Feature {
                 && Math.abs(SectionPos.blockToSectionCoord(pos.getZ()) - region.getCenter().z()) <= 1;
     }
 
-    /** A block the weeds can hang on: solid on the side facing the fissure. */
+    /** A block the weeds can hang on: something they grow on (not Shadestone), solid on the side facing the fissure. */
     private static boolean isWall(WorldGenLevel level, BlockPos pos, Direction toWall) {
-        return level.getBlockState(pos).isFaceSturdy(level, pos, toWall.getOpposite());
+        BlockState state = level.getBlockState(pos);
+        return FingerWeedsBlock.growsOn(state) && state.isFaceSturdy(level, pos, toWall.getOpposite());
     }
 }
