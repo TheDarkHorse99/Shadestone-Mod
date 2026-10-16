@@ -1600,6 +1600,9 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			ServerLevel umbral = server.getLevel(ModDimensions.UMBRAL_WORLD);
 			umbral.setBlockAndUpdate(platform.offset(2, 1, 0), Blocks.CAMPFIRE.defaultBlockState().setValue(net.minecraft.world.level.block.CampfireBlock.LIT, true));
 			umbral.setBlockAndUpdate(platform.offset(-2, 1, 0), Blocks.CANDLE.defaultBlockState().setValue(net.minecraft.world.level.block.CandleBlock.LIT, true));
+			// Fire on netherrack, which would burn for ever anywhere else
+			umbral.setBlockAndUpdate(platform.offset(0, 0, 2), Blocks.NETHERRACK.defaultBlockState());
+			umbral.setBlockAndUpdate(platform.offset(0, 1, 2), Blocks.FIRE.defaultBlockState());
 			ServerLevel overworld = server.overworld();
 			overworld.setBlockAndUpdate(new BlockPos(410, FEET, 0), Blocks.CAMPFIRE.defaultBlockState().setValue(net.minecraft.world.level.block.CampfireBlock.LIT, true));
 			return null;
@@ -1612,13 +1615,15 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			return new boolean[]{
 					!umbral.getBlockState(platform.offset(2, 1, 0)).getValue(net.minecraft.world.level.block.CampfireBlock.LIT),
 					!umbral.getBlockState(platform.offset(-2, 1, 0)).getValue(net.minecraft.world.level.block.CandleBlock.LIT),
-					server.overworld().getBlockState(new BlockPos(410, FEET, 0)).getValue(net.minecraft.world.level.block.CampfireBlock.LIT)
+					server.overworld().getBlockState(new BlockPos(410, FEET, 0)).getValue(net.minecraft.world.level.block.CampfireBlock.LIT),
+					umbral.getBlockState(platform.offset(0, 1, 2)).isAir()
 			};
 		});
 		check("a campfire lit in the Umbral World starts lit...", litAtFirst);
 		check("... and is snuffed within 2 seconds", out[0]);
 		check("a candle lit in the Umbral World is snuffed within 2 seconds", out[1]);
 		check("a campfire in the Overworld stays lit", out[2]);
+		check("fire on netherrack in the Umbral World goes out within 2 seconds", out[3]);
 
 		// 3. Smoke from a held Shadestone Blade (screenshots only: smoke is client-side)
 		onServer(server -> {

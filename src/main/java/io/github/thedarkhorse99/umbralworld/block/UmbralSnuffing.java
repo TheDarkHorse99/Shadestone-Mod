@@ -10,14 +10,18 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.block.AbstractCandleBlock;
+import net.minecraft.world.level.block.BaseFireBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.CampfireBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
- * The Umbral World's darkness snuffs out vanilla flames: a candle, candle cake or campfire
- * that gets lit there flickers for a moment, then goes out with a puff of smoke.
+ * The Umbral World's darkness snuffs out vanilla flames: a candle, candle cake, campfire or fire
+ * (Mac added fire, 2026-10-16) that gets lit there flickers for a moment, then goes out with a puff
+ * of smoke. Torches and lanterns are left alone.
  *
  * Every block change passes through {@link #onBlockChanged} (from mixin/LevelMixin). A
  * newly lit flame in the Umbral World goes on a short waiting list, and the tick handler
@@ -54,7 +58,8 @@ public final class UmbralSnuffing {
 
     private static boolean isLitFlame(BlockState state) {
         return (state.getBlock() instanceof AbstractCandleBlock && AbstractCandleBlock.isLit(state))
-                || CampfireBlock.isLitCampfire(state);
+                || CampfireBlock.isLitCampfire(state)
+                || state.getBlock() instanceof BaseFireBlock; // fire and soul fire
     }
 
     private static void tick(ServerLevel level) {
@@ -76,7 +81,12 @@ public final class UmbralSnuffing {
             if (!isLitFlame(state)) {
                 continue; // already out, or broken
             }
-            if (state.getBlock() instanceof AbstractCandleBlock) {
+            if (state.getBlock() instanceof BaseFireBlock) {
+                // Fire just goes out, with the hiss of a fire being put out
+                level.removeBlock(pos, false);
+                level.playSound(null, pos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.5f,
+                        2.6f + (level.getRandom().nextFloat() - level.getRandom().nextFloat()) * 0.8f);
+            } else if (state.getBlock() instanceof AbstractCandleBlock) {
                 // Vanilla's own "blown out" (sound and all), as if a player had put it out
                 AbstractCandleBlock.extinguish(null, state, level, pos);
             } else {
