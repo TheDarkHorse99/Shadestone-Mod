@@ -26,9 +26,6 @@
         }
       }
     },
-    {
-      "type": "minecraft:block",
-      "result_state": "umbral_world:shadestone_block"
-    }
+    "umbral_world:underground"
   ]
 }

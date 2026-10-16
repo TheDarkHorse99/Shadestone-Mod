@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:sequence",
+  "sequence": [
+    {
+      "type": "minecraft:condition",
+      "if_true": {
+        "type": "minecraft:vertical_gradient",
+        "random_name": "umbral_world:shadestone",
+        "true_at_and_below": {
+          "absolute": 24
+        },
+        "false_at_and_above": {
+          "absolute": 32
+        }
+      },
+      "then_run": {
+        "type": "minecraft:block",
+        "result_state": "umbral_world:shadestone_block"
+      }
+    },
+    {
+      "type": "minecraft:block",
+      "result_state": "umbral_world:barrow_refuse"
+    }
+  ]
+}

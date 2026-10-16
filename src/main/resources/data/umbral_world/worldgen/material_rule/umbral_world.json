@@ -18,6 +18,7 @@
       },
       "then_run": "umbral_world:chasm_surface"
     },
-    "umbral_world:grave_surface"
+    "umbral_world:grave_surface",
+    "umbral_world:underground"
   ]
 }

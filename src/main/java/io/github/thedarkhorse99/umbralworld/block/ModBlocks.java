@@ -58,6 +58,14 @@ public class ModBlocks {
 			BlockBehaviour.Properties.ofFullCopy(Blocks.TUFF)
 	);
 
+	// Under the top layer of every biome (Barrow Dirt, Effluvium, Dead Sea Shale), down to about y=24-32.
+	// Below it is Shadestone. Stone-like, like vanilla stone above deepslate.
+	public static final Block BARROW_REFUSE = register(
+			"barrow_refuse",
+			Block::new,
+			BlockBehaviour.Properties.ofFullCopy(Blocks.STONE)
+	);
+
 	// The Chasm's plant: roots and twigs growing out of the fissure walls, climbable like vines
 	public static final Block FINGER_WEEDS = register(
 			"finger_weeds",
@@ -273,6 +281,7 @@ public class ModBlocks {
 					output.accept(BARROW_DIRT);
 					output.accept(EFFLUVIUM);
 					output.accept(DEAD_SEA_SHALE);
+					output.accept(BARROW_REFUSE);
 					output.accept(FINGER_WEEDS);
 					output.accept(CINDERITE_ORE);
 					output.accept(GHOST_LOG);

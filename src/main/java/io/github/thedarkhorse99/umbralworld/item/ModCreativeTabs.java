@@ -29,6 +29,7 @@ public final class ModCreativeTabs {
 						output.accept(ModBlocks.BARROW_DIRT);
 						output.accept(ModBlocks.EFFLUVIUM);
 						output.accept(ModBlocks.DEAD_SEA_SHALE);
+						output.accept(ModBlocks.BARROW_REFUSE);
 						output.accept(ModBlocks.FINGER_WEEDS);
 						output.accept(ModBlocks.CINDERITE_ORE);
 						output.accept(ModBlocks.GHOST_LOG);
