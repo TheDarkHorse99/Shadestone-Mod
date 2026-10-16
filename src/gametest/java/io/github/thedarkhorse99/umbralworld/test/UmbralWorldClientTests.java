@@ -1522,7 +1522,13 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			context.waitTicks(5);
 			waited[0] += 5;
 		}
-		check(String.format(java.util.Locale.ROOT, "it bites (after %.1f more seconds)", waited[0] / 20.0),
+		String biteWhere = onServer(server -> {
+			Entity entity = server.overworld().getEntity(murkfiend);
+			Vec3 me = player(server).position();
+			return String.format(java.util.Locale.ROOT, "it at %.1f %.1f %.1f, you at %.1f %.1f %.1f",
+					entity.getX(), entity.getY(), entity.getZ(), me.x, me.y, me.z);
+		});
+		check(String.format(java.util.Locale.ROOT, "it bites (after %.1f more seconds; %s)", waited[0] / 20.0, biteWhere),
 				onServer(server -> player(server).getLastHurtByMob() instanceof Murkfiend));
 
 		// 2. Climb out and it gives up
