@@ -9,10 +9,9 @@ import com.mojang.renderpearl.api.commands.RenderPass;
 import io.github.thedarkhorse99.umbralworld.UmbralWorld;
 import io.github.thedarkhorse99.umbralworld.client.ModRenderPipelines;
 import io.github.thedarkhorse99.umbralworld.world.ModDimensions;
-import net.minecraft.client.Camera;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.SkyRenderer;
-import net.minecraft.client.renderer.state.level.SkyRenderState;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureManager;
@@ -55,7 +54,6 @@ public class SkyRendererMixin {
     // timeline, data/umbral_world/timeline/twin_suns.json.
     @Unique private @Nullable GpuBuffer umbral_world$purpleSunBuffer;
     @Unique private @Nullable GpuBuffer umbral_world$redSunBuffer;
-    @Unique private boolean umbral_world$inUmbralWorld;
 
     // 1. When the sky renderer is built, also build the two suns' shapes.
     @Inject(method = "<init>", at = @At("TAIL"))
@@ -67,18 +65,19 @@ public class SkyRendererMixin {
                 this.celestialsAtlas.getSprite(UmbralWorld.id("red_black_sun")));
     }
 
-    // 2. Every frame, remember whether we're in the Umbral World.
-    @Inject(method = "extractRenderState", at = @At("HEAD"))
-    private void umbral_world$checkDimension(ClientLevel level, float partialTicks, Camera camera,
-                                             SkyRenderState state, CallbackInfo ci) {
-        this.umbral_world$inUmbralWorld = level.dimension() == ModDimensions.UMBRAL_WORLD;
+    // 2. Are we in the Umbral World right now? Asked of the level being shown at the moment we draw,
+    //    so the suns can never follow the player out through a portal.
+    @Unique
+    private static boolean umbral_world$inUmbralWorld() {
+        ClientLevel level = Minecraft.getInstance().level;
+        return level != null && level.dimension() == ModDimensions.UMBRAL_WORLD;
     }
 
     // 3. In the Umbral World, draw the purple black sun instead of the vanilla sun...
     @Inject(method = "renderSun", at = @At("HEAD"), cancellable = true)
     private void umbral_world$renderPurpleSun(RenderPass renderPass, float rainBrightness,
                                               PoseStack poseStack, CallbackInfo ci) {
-        if (this.umbral_world$inUmbralWorld && this.umbral_world$purpleSunBuffer != null) {
+        if (umbral_world$inUmbralWorld() && this.umbral_world$purpleSunBuffer != null) {
             umbral_world$drawBlackSun(renderPass, poseStack, this.umbral_world$purpleSunBuffer, "Purple black sun");
             ci.cancel(); // skip vanilla's sun
         }
@@ -88,7 +87,7 @@ public class SkyRendererMixin {
     @Inject(method = "renderMoon", at = @At("HEAD"), cancellable = true)
     private void umbral_world$renderRedSun(RenderPass renderPass, MoonPhase moonPhase, float rainBrightness,
                                            PoseStack poseStack, CallbackInfo ci) {
-        if (this.umbral_world$inUmbralWorld && this.umbral_world$redSunBuffer != null) {
+        if (umbral_world$inUmbralWorld() && this.umbral_world$redSunBuffer != null) {
             umbral_world$drawBlackSun(renderPass, poseStack, this.umbral_world$redSunBuffer, "Red black sun");
             ci.cancel(); // skip vanilla's moon
         }

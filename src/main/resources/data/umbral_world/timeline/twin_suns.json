@@ -64,27 +64,27 @@
       "keyframes": [
         {
           "ticks": 0,
-          "value": "#140b1c"
+          "value": "#0d0a0f"
         },
         {
           "ticks": 1500,
-          "value": "#1b1238"
+          "value": "#15121e"
         },
         {
           "ticks": 10500,
-          "value": "#1b1238"
+          "value": "#15121e"
         },
         {
           "ticks": 12000,
-          "value": "#140b1c"
+          "value": "#0d0a0f"
         },
         {
           "ticks": 13500,
-          "value": "#300a10"
+          "value": "#190d0f"
         },
         {
           "ticks": 22500,
-          "value": "#300a10"
+          "value": "#190d0f"
         }
       ]
     }
