@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:mul",
+  "left": {
+    "type": "minecraft:mul",
+    "left": "umbral_world:chasm/shore",
+    "right": "umbral_world:chasm/shore"
+  },
+  "right": {
+    "type": "minecraft:add",
+    "left": 3.0,
+    "right": {
+      "type": "minecraft:mul",
+      "left": "umbral_world:chasm/shore",
+      "right": -2.0
+    }
+  }
+}
