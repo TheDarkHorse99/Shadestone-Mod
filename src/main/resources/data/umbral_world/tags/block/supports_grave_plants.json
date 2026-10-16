@@ -1,6 +1,7 @@
 {
   "values": [
     "umbral_world:barrow_dirt",
-    "#minecraft:supports_vegetation"
+    "#minecraft:supports_vegetation",
+    "umbral_world:barrow_refuse"
   ]
 }
