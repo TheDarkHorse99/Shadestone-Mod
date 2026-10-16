@@ -5,6 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelReader;
@@ -20,6 +21,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -36,6 +38,8 @@ import net.minecraft.world.phys.shapes.VoxelShape;
  * (like the columns that generate in the Chasm) don't spread any further.
  */
 public class FingerWeedsBlock extends HorizontalDirectionalBlock implements SimpleWaterloggedBlock {
+    /** How far past a player's sides Finger Weeds still count as in reach for climbing, in blocks. */
+    private static final double REACH = 0.35;
     public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
 
     /** Chance per random tick to spread. A block gets a random tick about every 68 seconds, so about once every 30 minutes. */
@@ -149,5 +153,22 @@ public class FingerWeedsBlock extends HorizontalDirectionalBlock implements Simp
             }
         }
         return count;
+    }
+
+    /**
+     * Climbing them is forgiving (Mac found the climb hard, mostly around corners): a player counts as
+     * climbing whenever Finger Weeds are anywhere around their body, not only in the block at their
+     * feet like a ladder. So a column that wanders sideways, or turns a corner with the wall, doesn't
+     * drop you. Used by mixin/LivingEntityMixin.
+     */
+    public static boolean isTouching(Player player) {
+        AABB box = player.getBoundingBox().inflate(REACH, 0.0, REACH);
+        for (BlockPos pos : BlockPos.betweenClosed(BlockPos.containing(box.minX, box.minY, box.minZ),
+                BlockPos.containing(box.maxX, box.maxY, box.maxZ))) {
+            if (player.level().getBlockState(pos).is(ModBlocks.FINGER_WEEDS)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

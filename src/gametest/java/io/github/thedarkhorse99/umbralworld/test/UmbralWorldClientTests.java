@@ -108,6 +108,7 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			section("Ghost Trees", this::testGhostTrees);
 			section("Portal and Corpse Candles", this::testPortalCandle);
 			section("Chasm mobs in deep water", this::testDeepWaterMobs);
+			section("Finger Weeds round a corner", this::testFingerWeedsCorner);
 		}
 		writeReport();
 		if (failures > 0) {
@@ -392,6 +393,46 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		command("kill @e[type=umbral_world:murkfiend]");
 		command("kill @e[type=umbral_world:chasm_skate]");
 		command("time set noon");
+	}
+
+	private void testFingerWeedsCorner() {
+		// An inside corner: a wall along x (weeds on its south side) meeting a wall along z (weeds on its
+		// west side). The column climbs the first wall, moves round onto the second, then back again
+		int x0 = 850;
+		int z0 = 40;
+		int height = 15;
+		onServer(server -> {
+			ServerLevel level = server.overworld();
+			fill(level, new BlockPos(x0, FEET, z0), new BlockPos(x0 + 7, FEET + height, z0), Blocks.STONE.defaultBlockState());
+			fill(level, new BlockPos(x0 + 7, FEET, z0), new BlockPos(x0 + 7, FEET + height, z0 + 7), Blocks.STONE.defaultBlockState());
+			BlockState south = ModBlocks.FINGER_WEEDS.defaultBlockState().setValue(io.github.thedarkhorse99.umbralworld.block.FingerWeedsBlock.FACING, Direction.SOUTH);
+			BlockState west = ModBlocks.FINGER_WEEDS.defaultBlockState().setValue(io.github.thedarkhorse99.umbralworld.block.FingerWeedsBlock.FACING, Direction.WEST);
+			for (int y = 0; y < height; y++) {
+				boolean onSecondWall = y >= 5 && y < 10;
+				for (int i = 0; i < 3; i++) {
+					BlockPos pos = onSecondWall ? new BlockPos(x0 + 6, FEET + y, z0 + 1 + i) : new BlockPos(x0 + 4 + i, FEET + y, z0 + 1);
+					level.setBlockAndUpdate(pos, onSecondWall ? west : south);
+				}
+			}
+			return null;
+		});
+		// Stand in the corner, face into it, and hold forward and jump
+		teleport(x0 + 6.5, FEET, z0 + 1.5, -135, -20);
+		context.waitTicks(10);
+		context.getInput().holdKey(options -> options.keyUp);
+		context.getInput().holdKey(options -> options.keyJump);
+		context.waitTicks(200);
+		context.getInput().releaseKey(options -> options.keyUp);
+		context.getInput().releaseKey(options -> options.keyJump);
+		double climbed = onServer(server -> player(server).getY()) - FEET;
+		check(String.format(java.util.Locale.ROOT, "Finger Weeds can be climbed round an inside corner (%.1f of %d blocks in 10 seconds)",
+				climbed, height), climbed >= height - 1);
+		teleport(x0 + 2.5, FEET, z0 + 6.5, -150, -30);
+		context.waitTicks(5);
+		context.takeScreenshot("finger_weeds_corner");
+		teleport(x0 + 5.5, FEET + 1, z0 + 3.3, 180, 10);
+		context.waitTicks(5);
+		context.takeScreenshot("finger_weeds_hands_close");
 	}
 
 	/** Logs and vapor around a tree's base: {logs, vapor}. */
