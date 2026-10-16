@@ -26,8 +26,9 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jspecify.annotations.Nullable;
 
 /**
- * A little orb of fire floating just above the ground. Dropped by Ghouls.
- * It has no model: the orb is made of flame particles, drawn by {@link CorpseCandleBlockEntity}.
+ * A see-through pale blue candle floating just above the ground and slowly bobbing, with a little
+ * flame of sparkles. Dropped by Ghouls. Drawn by the client's CorpseCandleRenderer and
+ * {@link CorpseCandleBlockEntity} (the sparkles), so the block itself has no model.
  * On Effluvium it slowly spreads: now and then it makes a new candle on a
  * nearby Effluvium block, and the Effluvium under the old one dies into Barrow Dirt.
  */
@@ -38,8 +39,8 @@ public class CorpseCandleBlock extends Block implements EntityBlock {
     /** Chance per random tick to spread. A block gets a random tick about once a minute, so this is roughly every 5 minutes. */
     private static final float SPREAD_CHANCE = 0.2F;
 
-    /** Hitbox (only the outline you aim at; you can walk through it): the orb, floating 1 pixel above the ground. */
-    private static final VoxelShape SHAPE = Block.box(4.0, 1.0, 4.0, 12.0, 9.0, 12.0);
+    /** Hitbox (only the outline you aim at; you can walk through it): round the floating candle and its flame. */
+    private static final VoxelShape SHAPE = Block.box(5.0, 0.0, 5.0, 11.0, 11.0, 11.0);
 
     public CorpseCandleBlock(BlockBehaviour.Properties properties) {
         super(properties);

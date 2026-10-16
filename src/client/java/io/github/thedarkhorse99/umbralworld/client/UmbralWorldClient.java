@@ -4,6 +4,8 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.particle.v1.ParticleProviderRegistry;
 import io.github.thedarkhorse99.umbralworld.particle.ModParticles;
 import net.fabricmc.fabric.api.client.rendering.v1.ModelLayerRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
+import io.github.thedarkhorse99.umbralworld.block.entity.ModBlockEntities;
 import io.github.thedarkhorse99.umbralworld.menu.ModMenus;
 import net.minecraft.client.gui.screens.MenuScreens;
 import io.github.thedarkhorse99.umbralworld.entity.ModEntities;
@@ -22,6 +24,9 @@ public class UmbralWorldClient implements ClientModInitializer {
 		ParticleProviderRegistry.getInstance().register(ModParticles.MIASMA_DUST, sprites -> new TintedAshProvider(sprites, 0.80f, 0.66f, 0.95f));
 		ParticleProviderRegistry.getInstance().register(ModParticles.CHASM_DUST, sprites -> new TintedAshProvider(sprites, 0.74f, 0.84f, 0.95f));
 		MenuScreens.register(ModMenus.DARK_FURNACE, DarkFurnaceScreen::new);
+		// The Corpse Candle: a see-through blue candle bobbing above the ground
+		ModelLayerRegistry.registerModelLayer(CorpseCandleRenderer.LAYER, CorpseCandleRenderer::createLayer);
+		BlockEntityRendererRegistry.register(ModBlockEntities.CORPSE_CANDLE, CorpseCandleRenderer::new);
 		// The Wight's Shroud: a 3D poncho on the Wight (see WightRenderer) and on players and armor stands wearing it
 		ModelLayerRegistry.registerModelLayer(ShroudModel.LAYER, ShroudModel::createLayer);
 		LivingEntityRenderLayerRegistrationCallback.EVENT.register((type, renderer, helper, context) -> {
