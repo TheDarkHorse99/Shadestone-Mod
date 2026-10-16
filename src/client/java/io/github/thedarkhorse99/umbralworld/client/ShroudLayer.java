@@ -13,8 +13,8 @@ import net.minecraft.client.renderer.entity.state.HumanoidRenderState;
 import net.minecraft.resources.Identifier;
 
 /**
- * Draws the 3D Wight's Shroud (ShroudModel) hanging from the body: on players and armor stands wearing it
- * in the chest slot, and always on the Wight. Like the rest of the wearer it isn't drawn while a player is
+ * Draws the Wight's Shroud (ShroudModel) round the body of players and armor stands wearing it in the
+ * chest slot. (The Wight's own shroud is painted on its texture.) Like the rest of the wearer it isn't drawn while a player is
  * invisible (vanilla would otherwise still draw worn things on an invisible player). An invisible armor
  * stand still shows it, like vanilla armor, so it can be put on display.
  */
