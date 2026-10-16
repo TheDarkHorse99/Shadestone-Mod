@@ -70,16 +70,20 @@ public class Murkfiend extends ChasmSwimmer {
                 setTarget(null);
             }
         }
-        // The last few blocks: swim straight at the middle of its prey. Vanilla's swimming only moves a mob
-        // while its path is unfinished, and a path ends at the prey's block, so on its own it would stop
-        // there and hover over a player lying on the bottom, just out of reach.
+        // The last few blocks: swim straight at the middle of its prey. A path ends at the prey's block, so
+        // on its own it would stop there and hover over a player lying on the bottom, just out of reach.
+        // This runs after the path has steered it and before it moves, so it replaces the path's aim.
         LivingEntity target = getTarget();
-        if (target != null && isInWater() && getNavigation().isDone() && distanceToSqr(target) < 4.0 * 4.0) {
-            Vec3 aim = new Vec3(target.getX(), target.getY() + target.getBbHeight() * 0.4, target.getZ())
-                    .subtract(getX(), getY() + getBbHeight() * 0.5, getZ());
-            if (aim.lengthSqr() > 0.01) {
-                // with the water's drag this tops out at about its chase speed (3.6 blocks/second)
-                setDeltaMovement(getDeltaMovement().add(aim.normalize().scale(0.02)));
+        if (target != null && isInWater() && distanceToSqr(target) < 4.0 * 4.0) {
+            double aimY = target.getY() + target.getBbHeight() * 0.4;
+            getMoveControl().setWantedPosition(target.getX(), aimY, target.getZ(), 1.0);
+            // Vanilla's swimming stands still once the path is finished, so then it pushes itself instead
+            // (with the water's drag this tops out at about its chase speed, 3.6 blocks/second)
+            if (getNavigation().isDone()) {
+                Vec3 aim = new Vec3(target.getX(), aimY, target.getZ()).subtract(getX(), getY() + getBbHeight() * 0.5, getZ());
+                if (aim.lengthSqr() > 0.01) {
+                    setDeltaMovement(getDeltaMovement().add(aim.normalize().scale(0.02)));
+                }
             }
             getLookControl().setLookAt(target, 30.0f, 30.0f);
         }
