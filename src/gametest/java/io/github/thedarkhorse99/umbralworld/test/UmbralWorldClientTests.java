@@ -98,11 +98,35 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			section("Small things", this::testSmallThings);
 			section("Chasm life", this::testChasmLife);
 			section("Chasm mobs", this::testChasmMobs);
+			section("Item icons", this::testItemIcons);
 		}
 		writeReport();
 		if (failures > 0) {
 			throw new AssertionError(failures + " Umbral World check(s) failed; see umbral_test_report.txt");
 		}
+	}
+
+	// =====================================================================================
+	// Item icons: the mod's items in the hotbar, to see Mac's icons in-game
+	// =====================================================================================
+
+	private void testItemIcons() {
+		command("time set noon");
+		teleport(0.5, FEET, -60.5, 0, 0);
+		onServer(server -> {
+			var inventory = player(server).getInventory();
+			inventory.clearContent();
+			var items = List.of(ModItems.WIGHT_SPAWN_EGG, ModItems.GHOUL_SPAWN_EGG, ModItems.CRAWLER_SPAWN_EGG,
+					ModItems.CURSED_SOUL_SPAWN_EGG, ModItems.MURKFIEND_SPAWN_EGG, ModItems.CHASM_SKATE_SPAWN_EGG,
+					ModItems.WIGHTS_SHROUD, ModItems.ECTOPLASM_BOTTLE, ModItems.SHADESTONE_SHARD);
+			for (int slot = 0; slot < items.size(); slot++) {
+				inventory.setItem(slot, new ItemStack(items.get(slot)));
+			}
+			inventory.setSelectedSlot(8);
+			return null;
+		});
+		context.waitTicks(20);
+		context.takeScreenshot("item_icons_hotbar");
 	}
 
 	// =====================================================================================
