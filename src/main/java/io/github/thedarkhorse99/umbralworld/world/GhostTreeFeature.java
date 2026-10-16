@@ -3,6 +3,7 @@ package io.github.thedarkhorse99.umbralworld.world;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.github.thedarkhorse99.umbralworld.block.GhostLogBlock;
+import io.github.thedarkhorse99.umbralworld.block.GhostVaporBlock;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,8 +38,8 @@ public record GhostTreeFeature(Block log, Block vapor) implements Feature {
 
     /** How far (in blocks) logs may reach sideways from the trunk. Keeps trees inside the area worldgen allows. */
     private static final int MAX_SPREAD = 4;
-    /** How far vapor reaches from each branch tip. */
-    private static final int VAPOR_RADIUS = 2;
+    /** How far vapor reaches from each branch tip (sideways; a little less up and down). */
+    private static final int VAPOR_RADIUS = 3;
 
     @Override
     public MapCodec<GhostTreeFeature> codec() {
@@ -75,21 +76,16 @@ public record GhostTreeFeature(Block log, Block vapor) implements Feature {
             }
         }
 
-        // 3. Plan the vapor: a rough ball around each tip, a bit ragged at the edges
+        // 3. Plan the vapor: a big ragged puff around each tip, like a leafy crown, and a thin
+        //    wisp around the branches below the tips, so the whole top of the tree looks leafy
         Set<BlockPos> vaporSpots = new LinkedHashSet<>();
         for (BlockPos tip : tips) {
-            for (BlockPos pos : BlockPos.betweenClosed(tip.offset(-VAPOR_RADIUS, -1, -VAPOR_RADIUS),
-                    tip.offset(VAPOR_RADIUS, VAPOR_RADIUS, VAPOR_RADIUS))) {
-                int distance = Math.abs(pos.getX() - tip.getX()) + Math.abs(pos.getY() - tip.getY())
-                        + Math.abs(pos.getZ() - tip.getZ());
-                if (distance > VAPOR_RADIUS || (distance == VAPOR_RADIUS && random.nextFloat() < 0.35F)) {
-                    continue;
-                }
-                BlockPos immutable = pos.immutable();
-                if (!logs.contains(immutable) && !level.isOutsideBuildHeight(immutable)
-                        && isFree(level.getBlockState(immutable))) {
-                    vaporSpots.add(immutable);
-                }
+            addVaporBall(level, random, tip, VAPOR_RADIUS, logs, vaporSpots);
+        }
+        int crownStart = origin.getY() + trunkHeight - 1;
+        for (BlockPos pos : logs) {
+            if (pos.getY() >= crownStart) {
+                addVaporBall(level, random, pos, 1, logs, vaporSpots);
             }
         }
 
@@ -143,6 +139,27 @@ public record GhostTreeFeature(Block log, Block vapor) implements Feature {
         }
     }
 
+    /** A rough ball of vapor (squashed a bit up and down), thinning out at the edge. */
+    private static void addVaporBall(WorldGenLevel level, RandomSource random, BlockPos centre, int radius,
+                                     Set<BlockPos> logs, Set<BlockPos> vaporSpots) {
+        int down = Math.max(1, radius - 2);
+        int up = Math.max(1, radius - 1);
+        for (BlockPos pos : BlockPos.betweenClosed(centre.offset(-radius, -down, -radius), centre.offset(radius, up, radius))) {
+            double dx = (pos.getX() - centre.getX()) / (radius + 0.5);
+            double dz = (pos.getZ() - centre.getZ()) / (radius + 0.5);
+            int dyBlocks = pos.getY() - centre.getY();
+            double dy = dyBlocks / ((dyBlocks < 0 ? down : up) + 0.5);
+            double edge = dx * dx + dy * dy + dz * dz;
+            if (edge > 1.0 || (edge > 0.55 && random.nextFloat() < 0.4F)) {
+                continue;
+            }
+            BlockPos immutable = pos.immutable();
+            if (!logs.contains(immutable) && !level.isOutsideBuildHeight(immutable) && isFree(level.getBlockState(immutable))) {
+                vaporSpots.add(immutable);
+            }
+        }
+    }
+
     /** Walks outward from the logs through the vapor, counting steps (1 = touching a log). */
     private static Map<BlockPos, Integer> distancesFromLogs(Set<BlockPos> logs, Set<BlockPos> vapor) {
         Map<BlockPos, Integer> distances = new HashMap<>();
@@ -154,7 +171,7 @@ public record GhostTreeFeature(Block log, Block vapor) implements Feature {
         while (!queue.isEmpty()) {
             BlockPos pos = queue.poll();
             int next = steps.get(pos) + 1;
-            if (next >= LeavesBlock.DECAY_DISTANCE) {
+            if (next > GhostVaporBlock.MAX_DISTANCE) {
                 continue;
             }
             for (Direction direction : Direction.values()) {

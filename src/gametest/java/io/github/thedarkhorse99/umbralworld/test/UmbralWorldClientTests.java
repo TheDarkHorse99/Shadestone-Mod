@@ -105,6 +105,7 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			section("Chasm life", this::testChasmLife);
 			section("Chasm mobs", this::testChasmMobs);
 			section("Item icons", this::testItemIcons);
+			section("Ghost Trees", this::testGhostTrees);
 		}
 		writeReport();
 		if (failures > 0) {
@@ -189,6 +190,86 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			return null;
 		});
 		context.waitTicks(5);
+	}
+
+	// =====================================================================================
+	// Ghost Trees: grown from a sapling in daylight, hand-placed logs, a Spile on a Phantom Log,
+	// and the vapor fading once the tree is cut down
+	// =====================================================================================
+
+	private void testGhostTrees() {
+		command("time set noon");
+		BlockPos sapling = new BlockPos(400, GROUND, 40);
+		int[] vapor = onServer(server -> {
+			ServerLevel level = server.overworld();
+			fill(level, sapling.offset(-6, 0, -6), sapling.offset(6, 0, 6), ModBlocks.EFFLUVIUM.defaultBlockState());
+			level.setBlockAndUpdate(sapling.above(), ModBlocks.GHOST_SAPLING.defaultBlockState());
+			io.github.thedarkhorse99.umbralworld.block.GhostSaplingBlock.GHOST_TREE_GROWER.growTree(level,
+					level.getChunkSource().getGenerator(), sapling.above(), level.getBlockState(sapling.above()), level.getRandom());
+			return countTree(level, sapling.above());
+		});
+		check("a Ghost Sapling grows a tree (" + vapor[0] + " logs, " + vapor[1] + " vapor)", vapor[0] >= 4 && vapor[1] >= 40);
+		teleport(400.5, FEET, 30.5, 0, -15);
+		context.waitTicks(30);
+		context.takeScreenshot("ghost_tree_daylight");
+		teleport(403.5, FEET + 3, 36.5, 30, 10);
+		context.waitTicks(10);
+		context.takeScreenshot("ghost_tree_daylight_close");
+
+		// Logs placed by hand, like a player would: a column, an arm out of it and a log on its own
+		BlockPos hand = new BlockPos(420, FEET, 40);
+		onServer(server -> {
+			ServerLevel level = server.overworld();
+			for (BlockPos pos : List.of(hand, hand.above(), hand.above(2), hand.above(2).east(), hand.above(2).east(2),
+					hand.east(4), hand.above(2).west())) {
+				level.setBlockAndUpdate(pos, ModBlocks.PHANTOM_LOG.defaultBlockState());
+				level.setBlockAndUpdate(pos, io.github.thedarkhorse99.umbralworld.block.GhostLogBlock.withConnections(level, pos,
+						ModBlocks.PHANTOM_LOG.defaultBlockState()));
+			}
+			// A Spile on the side of the column, over a cauldron
+			level.setBlockAndUpdate(hand.above().north(), ModBlocks.SPILE.defaultBlockState().setValue(SpileBlock.FACING, Direction.NORTH));
+			level.setBlockAndUpdate(hand.north(2).below(0), Blocks.CAULDRON.defaultBlockState());
+			return null;
+		});
+		teleport(423.5, FEET + 1, 36.5, 35, 10);
+		context.waitTicks(20);
+		context.takeScreenshot("phantom_logs_by_hand_and_spile");
+		teleport(418.5, FEET + 2, 38.0, -60, 25);
+		context.waitTicks(10);
+		context.takeScreenshot("phantom_logs_by_hand_from_the_other_side");
+		teleport(420.5, FEET + 1.2, 37.8, 0, 15);
+		context.waitTicks(10);
+		context.takeScreenshot("spile_on_phantom_log_close");
+
+		// Cut the tree down: the vapor should be gone within a few seconds, not minutes
+		onServer(server -> {
+			ServerLevel level = server.overworld();
+			for (BlockPos pos : BlockPos.betweenClosed(sapling.offset(-5, 1, -5), sapling.offset(5, 14, 5))) {
+				BlockState state = level.getBlockState(pos);
+				if (state.is(ModBlocks.GHOST_LOG)) {
+					level.destroyBlock(pos, false);
+				}
+			}
+			return null;
+		});
+		context.waitTicks(200);
+		int[] left = onServer(server -> countTree(server.overworld(), sapling.above()));
+		check("10 seconds after the tree is cut down its vapor is gone (" + left[1] + " left)", left[0] == 0 && left[1] == 0);
+	}
+
+	/** Logs and vapor around a tree's base: {logs, vapor}. */
+	private static int[] countTree(ServerLevel level, BlockPos base) {
+		int logs = 0;
+		int vapor = 0;
+		for (BlockPos pos : BlockPos.betweenClosed(base.offset(-8, 0, -8), base.offset(8, 16, 8))) {
+			BlockState state = level.getBlockState(pos);
+			if (state.is(ModBlocks.GHOST_LOG)) {
+				logs++;
+			} else if (state.is(ModBlocks.GHOST_VAPOR)) {
+				vapor++;
+			}
+		}
+		return new int[] {logs, vapor};
 	}
 
 	// =====================================================================================
@@ -1869,6 +1950,16 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 	// =====================================================================================
 
 	private void section(String name, Runnable test) {
+		// While working on one thing, a file build/umbral_only.txt can list the sections to run
+		// (one per line); without it every section runs. The game runs in build/run/clientGameTest.
+		java.nio.file.Path only = java.nio.file.Path.of("../../umbral_only.txt");
+		try {
+			if (java.nio.file.Files.exists(only) && !java.nio.file.Files.readAllLines(only).contains(name)) {
+				return;
+			}
+		} catch (java.io.IOException e) {
+			throw new java.io.UncheckedIOException(e);
+		}
 		report.add("");
 		report.add("== " + name + " ==");
 		try {
