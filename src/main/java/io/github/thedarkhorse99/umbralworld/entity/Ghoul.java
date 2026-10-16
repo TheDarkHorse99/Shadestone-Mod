@@ -80,7 +80,7 @@ public class Ghoul extends PathfinderMob {
 		// Listen 4 times a second
 		if (tickCount % 5 == 0) {
 			for (Player player : level.players()) {
-				if (EntitySelector.NO_CREATIVE_OR_SPECTATOR.test(player) && canHear(player)) {
+				if (EntitySelector.NO_SPECTATORS.test(player) && canHear(player)) { // creative players too (Mac)
 					scare(player);
 				}
 			}
