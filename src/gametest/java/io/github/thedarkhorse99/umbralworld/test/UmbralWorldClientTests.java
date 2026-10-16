@@ -1623,6 +1623,23 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		command("execute in minecraft:overworld run tp @a 712.5 -56 1.5 0 60");
 		context.waitTicks(30);
 		context.takeScreenshot("chasm_skate_from_above");
+		// The Skate closer, from all round (turned to face south, +z), without the Murkfiend in the way
+		command("kill @e[type=umbral_world:murkfiend]");
+		command("tp @e[type=umbral_world:chasm_skate] 712.5 -60 4.5 0 0");
+		command("effect give @a minecraft:water_breathing infinite 0 true");
+		String[][] skateViews = {
+				{"712.5 -59.3 2.3 0 50", "chasm_skate_top"},
+				{"712.5 -59.7 7.0 180 15", "chasm_skate_front"},
+				{"709.7 -59.5 4.5 -90 20", "chasm_skate_side"},
+				{"714.8 -59.3 6.8 135 25", "chasm_skate_front_three_quarter"},
+				{"710.4 -59.3 1.6 -35 25", "chasm_skate_back_three_quarter"},
+		};
+		for (String[] view : skateViews) {
+			command("execute in minecraft:overworld run tp @a " + view[0]);
+			context.waitTicks(20);
+			context.takeScreenshot(view[1]);
+		}
+		command("effect clear @a minecraft:water_breathing");
 		command("kill @e[type=umbral_world:murkfiend]");
 		command("kill @e[type=umbral_world:chasm_skate]");
 		command("execute in minecraft:overworld run tp @a 0.5 -60 0.5");
