@@ -26,6 +26,8 @@ public final class MiasmaPlantAuras {
     private static final int RADIUS = 2;
     /** How long the effect lasts after the last check: 4 seconds. */
     private static final int EFFECT_TICKS = 80;
+    /** 1 = level II (Mac wanted stronger Slowness and Weakness; Nausea is the same at any level). */
+    private static final int AMPLIFIER = 1;
 
     private MiasmaPlantAuras() {
     }
@@ -51,7 +53,7 @@ public final class MiasmaPlantAuras {
             }
             for (Holder<MobEffect> effect : effects) {
                 // ambient = true: fainter swirl particles on the player, like a beacon's
-                player.addEffect(new MobEffectInstance(effect, EFFECT_TICKS, 0, true, true));
+                player.addEffect(new MobEffectInstance(effect, EFFECT_TICKS, AMPLIFIER, true, true));
             }
         }
     }
