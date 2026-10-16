@@ -4,7 +4,10 @@ import io.github.thedarkhorse99.umbralworld.block.ModBlocks;
 import java.util.EnumSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.DustParticleOptions;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.entity.EntitySpawnReason;
@@ -123,10 +126,32 @@ public class CursedSoul extends Vex {
 		return false;
 	}
 
-	// ---- Sounds: the Vex's own, deeper ----
+	// ---- Sounds: the Ghast's moans and screams (vanilla's tortured souls), a little higher for a smaller soul ----
+
+	@Override
+	protected SoundEvent getAmbientSound() {
+		return SoundEvents.GHAST_AMBIENT;
+	}
+
+	@Override
+	protected SoundEvent getHurtSound(DamageSource source) {
+		return SoundEvents.GHAST_HURT;
+	}
+
+	@Override
+	protected SoundEvent getDeathSound() {
+		return SoundEvents.GHAST_DEATH;
+	}
+
+	/** The Vex's charge plays its own shriek; a Cursed Soul wails like a Ghast about to fire instead. */
+	@Override
+	public void playSound(SoundEvent sound, float volume, float pitch) {
+		super.playSound(sound == SoundEvents.VEX_CHARGE ? SoundEvents.GHAST_WARN : sound, volume,
+				sound == SoundEvents.VEX_CHARGE ? getVoicePitch() : pitch);
+	}
 
 	@Override
 	public float getVoicePitch() {
-		return 0.6f + (getRandom().nextFloat() - getRandom().nextFloat()) * 0.1f;
+		return 1.2f + (getRandom().nextFloat() - getRandom().nextFloat()) * 0.15f;
 	}
 }
