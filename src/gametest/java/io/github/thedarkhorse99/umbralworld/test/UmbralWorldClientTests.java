@@ -141,10 +141,21 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			for (int slot = 0; slot < items.size(); slot++) {
 				inventory.setItem(slot, new ItemStack(items.get(slot)));
 			}
+			// The Nightstalker potions: vanilla's bottles tinted with the effect's colour
+			var potions = List.of(net.minecraft.world.item.Items.POTION, net.minecraft.world.item.Items.SPLASH_POTION,
+					net.minecraft.world.item.Items.LINGERING_POTION, net.minecraft.world.item.Items.TIPPED_ARROW);
+			for (int i = 0; i < potions.size(); i++) {
+				inventory.setItem(9 + i, net.minecraft.world.item.alchemy.PotionContents.createItemStack(potions.get(i),
+						io.github.thedarkhorse99.umbralworld.effect.ModPotions.NIGHTSTALKER));
+			}
 			return null;
 		});
 		context.waitTicks(20);
 		context.takeScreenshot("item_icons_hotbar_2");
+		context.runOnClient(client -> client.setScreenAndShow(new net.minecraft.client.gui.screens.inventory.InventoryScreen(client.player)));
+		context.waitTicks(10);
+		context.takeScreenshot("item_icons_inventory_with_potions");
+		context.runOnClient(client -> client.player.closeContainer());
 
 		// A Spile on a log over a full Ectoplasm Cauldron, in daylight
 		BlockPos log = new BlockPos(300, FEET, 10);
@@ -188,10 +199,19 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		command("time set noon");
 		UUID ghoul = spawn(ModEntities.GHOUL, new BlockPos(330, FEET, 4));
 		UUID wight = spawn(ModEntities.WIGHT, new BlockPos(332, FEET, 4));
-		command("execute as @e[type=umbral_world:ghoul,x=330.5,y=-60,z=4.5,distance=..2] run data merge entity @s {NoAI:1b,Rotation:[180f,0f]}");
-		command("execute as @e[type=umbral_world:wight,x=332.5,y=-60,z=4.5,distance=..2] run data merge entity @s {NoAI:1b,Rotation:[180f,0f]}");
 		teleport(331.0, FEET, 0.5, 0, 10);
-		context.waitTicks(20);
+		context.waitTicks(5);
+		onServer(server -> { // frozen, facing the camera
+			for (UUID id : List.of(ghoul, wight)) {
+				Mob mob = (Mob) server.overworld().getEntity(id);
+				mob.setNoAi(true);
+				mob.setYRot(180.0f);
+				mob.setYBodyRot(180.0f);
+				mob.setYHeadRot(180.0f);
+			}
+			return null;
+		});
+		context.waitTicks(15);
 		check("in daylight a Ghoul and a Wight are invisible", onServer(server ->
 				server.overworld().getEntity(ghoul).isInvisible() && server.overworld().getEntity(wight).isInvisible()));
 		check("... on the game screen too (client)", context.computeOnClient(client -> {
@@ -220,6 +240,30 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		check("at night next to a torch they're invisible", onServer(server ->
 				server.overworld().getEntity(ghoul).isInvisible() && server.overworld().getEntity(wight).isInvisible()));
 		context.takeScreenshot("fade_torch_ghoul_eyes_still_show");
+		// The same with a Corpse Candle instead: as bright as a torch, but they stay visible
+		onServer(server -> {
+			server.overworld().setBlockAndUpdate(new BlockPos(331, FEET, 4), ModBlocks.CORPSE_CANDLE.defaultBlockState());
+			return null;
+		});
+		context.waitTicks(20);
+		String candle = onServer(server -> "light " + server.overworld().getMaxLocalRawBrightness(new BlockPos(330, FEET, 4)));
+		check("next to a Corpse Candle (as bright as a torch: " + candle + ") they stay visible", onServer(server ->
+				!server.overworld().getEntity(ghoul).isInvisible() && !server.overworld().getEntity(wight).isInvisible()));
+		context.takeScreenshot("fade_corpse_candle_they_stay_visible");
+		// A torch right by the Ghoul (brighter there than the candle could make it) hides the Ghoul,
+		// while the Wight, nearer the candle than the torch, stays visible
+		onServer(server -> {
+			server.overworld().setBlockAndUpdate(new BlockPos(330, FEET, 4), Blocks.TORCH.defaultBlockState());
+			return null;
+		});
+		context.waitTicks(20);
+		check("a torch right by the Ghoul hides it, the Wight nearer the candle stays visible", onServer(server ->
+				server.overworld().getEntity(ghoul).isInvisible() && !server.overworld().getEntity(wight).isInvisible()));
+		onServer(server -> {
+			server.overworld().setBlockAndUpdate(new BlockPos(330, FEET, 4), Blocks.AIR.defaultBlockState());
+			server.overworld().setBlockAndUpdate(new BlockPos(331, FEET, 4), Blocks.AIR.defaultBlockState());
+			return null;
+		});
 		command("effect clear @a minecraft:night_vision");
 		command("kill @e[type=umbral_world:ghoul]");
 		command("kill @e[type=umbral_world:wight]");

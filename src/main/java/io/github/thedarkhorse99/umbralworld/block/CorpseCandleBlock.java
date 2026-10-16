@@ -30,6 +30,9 @@ import org.jspecify.annotations.Nullable;
  * nearby Effluvium block, and the Effluvium under the old one dies into Barrow Dirt.
  */
 public class CorpseCandleBlock extends Block implements EntityBlock {
+    /** As bright as a torch (Mac, 2026-10-16). Its light never makes Umbral mobs fade (see entity/FadeInLight). */
+    public static final int LIGHT = 14;
+
     /** Chance per random tick to spread. A block gets a random tick about once a minute, so this is roughly every 5 minutes. */
     private static final float SPREAD_CHANCE = 0.2F;
 

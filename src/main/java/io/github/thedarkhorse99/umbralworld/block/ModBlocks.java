@@ -208,7 +208,7 @@ public class ModBlocks {
 					.noOcclusion()
 					.instabreak()
 					.randomTicks()
-					.lightLevel(_ -> 4)
+					.lightLevel(_ -> CorpseCandleBlock.LIGHT)
 					.sound(SoundType.CANDLE)
 					.pushReaction(PushReaction.POPPED)
 	);
