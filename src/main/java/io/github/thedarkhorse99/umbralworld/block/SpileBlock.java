@@ -42,7 +42,7 @@ public class SpileBlock extends HorizontalDirectionalBlock {
 
     /** Hitbox: the spout drawn pointing north (log to the south), turned to match FACING. */
     private static final Map<Direction, VoxelShape> SHAPES =
-            Shapes.rotateHorizontal(Block.box(6.5, 6.0, 7.0, 9.5, 9.0, 16.0));
+            Shapes.rotateHorizontal(Block.box(6.0, 4.5, 4.0, 10.0, 12.5, 16.0));
 
     public SpileBlock(BlockBehaviour.Properties properties) {
         super(properties);
@@ -139,8 +139,11 @@ public class SpileBlock extends HorizontalDirectionalBlock {
         if (random.nextFloat() >= DRIP_PARTICLE_CHANCE || !isTapped(state, level, pos)) {
             return;
         }
-        // The tip of the spout is at the middle of the block, just under the spout
+        // Just under the open end of the trough, which sticks out 3.6 pixels past the middle of the block
+        Direction facing = state.getValue(FACING);
+        double out = 3.6 / 16.0;
         level.addParticle(ParticleTypes.DRIPPING_OBSIDIAN_TEAR,
-                pos.getX() + 0.5, pos.getY() + 6.0 / 16.0, pos.getZ() + 0.5, 0.0, 0.0, 0.0);
+                pos.getX() + 0.5 + facing.getStepX() * out, pos.getY() + 4.5 / 16.0, pos.getZ() + 0.5 + facing.getStepZ() * out,
+                0.0, 0.0, 0.0);
     }
 }
