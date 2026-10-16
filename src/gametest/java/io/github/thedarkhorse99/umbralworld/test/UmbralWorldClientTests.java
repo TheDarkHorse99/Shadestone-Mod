@@ -110,6 +110,7 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			section("Chasm mobs in deep water", this::testDeepWaterMobs);
 			section("Finger Weeds round a corner", this::testFingerWeedsCorner);
 			section("Cinderite steam", this::testCinderiteSteam);
+			section("Recipes", this::testRecipes);
 		}
 		writeReport();
 		if (failures > 0) {
@@ -452,6 +453,38 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		teleport(880.5, FEET + 2, 35.5, 0, 25);
 		context.waitTicks(40);
 		context.takeScreenshot("cinderite_steam_underwater");
+	}
+
+	private void testRecipes() {
+		var block = ModBlocks.SHADESTONE_BLOCK.asItem();
+		var shard = ModItems.SHADESTONE_SHARD;
+		var stick = net.minecraft.world.item.Items.STICK;
+		var iron = net.minecraft.world.item.Items.IRON_INGOT;
+		var air = net.minecraft.world.item.Items.AIR;
+		check("Shadestone Blade: 2 Shadestone Blocks over a stick (" + craft(1, 3, block, block, stick) + ")",
+				craft(1, 3, block, block, stick).equals("umbral_world:shadestone_blade"));
+		report.add("INFO  2 Shards over a stick makes: " + craft(1, 3, shard, shard, stick));
+		check("Shadestone Block: 2 x 2 shards (" + craft(2, 2, shard, shard, shard, shard) + ")",
+				craft(2, 2, shard, shard, shard, shard).equals("umbral_world:shadestone_block"));
+		check("Spile: 3 iron ingots (" + craft(3, 2, iron, iron, air, air, air, iron) + ")",
+				craft(3, 2, iron, iron, air, air, air, iron).equals("umbral_world:spile"));
+		check("Dark Furnace: a ring of Shadestone Blocks (" + craft(3, 3, block, block, block, block, air, block, block, block, block) + ")",
+				craft(3, 3, block, block, block, block, air, block, block, block, block).equals("umbral_world:dark_furnace"));
+	}
+
+	/** What a crafting grid of this size holding these items (row by row) makes, or "nothing". */
+	private String craft(int width, int height, net.minecraft.world.item.Item... items) {
+		return onServer(server -> {
+			List<ItemStack> stacks = new ArrayList<>();
+			for (var item : items) {
+				stacks.add(new ItemStack(item));
+			}
+			var input = net.minecraft.world.item.crafting.CraftingInput.of(width, height, stacks);
+			return server.getRecipeManager().getRecipeFor(net.minecraft.world.item.crafting.RecipeType.CRAFTING, input, server.overworld())
+					.map(recipe -> net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(
+							recipe.value().assemble(input).getItem()).toString())
+					.orElse("nothing");
+		});
 	}
 
 	/** Logs and vapor around a tree's base: {logs, vapor}. */
