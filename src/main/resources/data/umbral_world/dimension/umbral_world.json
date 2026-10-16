@@ -10,7 +10,7 @@
           "parameters": {
             "temperature": [
               -1.0,
-              0.2
+              0.0
             ],
             "humidity": [
               -1.0,
@@ -28,7 +28,7 @@
           "parameters": {
             "temperature": [
               -1.0,
-              0.2
+              0.0
             ],
             "humidity": [
               0.0,
@@ -45,7 +45,7 @@
           "biome": "umbral_world:chasm",
           "parameters": {
             "temperature": [
-              0.2,
+              0.0,
               1.0
             ],
             "humidity": [

@@ -52,7 +52,7 @@
                     "right": {
                       "type": "minecraft:mul",
                       "left": "umbral_world:chasm/mask",
-                      "right": -0.2
+                      "right": -0.24
                     }
                   }
                 }
@@ -71,7 +71,7 @@
                 "left": 0.15,
                 "right": {
                   "type": "minecraft:mul",
-                  "right": 1.2,
+                  "right": 0.85,
                   "left": {
                     "type": "minecraft:noise",
                     "noise": "umbral_world:miasma_hills",

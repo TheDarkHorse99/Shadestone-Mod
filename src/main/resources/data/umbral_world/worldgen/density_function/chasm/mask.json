@@ -5,7 +5,7 @@
     "left": {
       "type": "minecraft:add",
       "left": "umbral_world:chasm/layout",
-      "right": -0.2
+      "right": 0.0
     },
     "right": 20.0
   },

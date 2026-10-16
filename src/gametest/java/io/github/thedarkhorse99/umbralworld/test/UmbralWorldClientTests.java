@@ -1188,7 +1188,7 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		});
 		report.add("INFO  biome shares (%): " + shares);
 		int chasmShare = shares.getOrDefault("chasm", 0);
-		check("the Chasm covers roughly a third of the world (25-42%; measured " + chasmShare + "%)", chasmShare >= 25 && chasmShare <= 42);
+		check("the Chasm covers half the world (42-58%; measured " + chasmShare + "%)", chasmShare >= 42 && chasmShare <= 58);
 
 		// 2. Scan the terrain deep inside a Chasm: heights from the generator itself, without building chunks
 		List<Fissure> fissures = new ArrayList<>();
@@ -1226,7 +1226,9 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 						scanned[0]++;
 						if (low) {
 							scanned[1]++;
-						} else {
+						} else if (isChasm(umbral, x + 48, z) && isChasm(umbral, x - 48, z)
+								&& isChasm(umbral, x, z + 48) && isChasm(umbral, x, z - 48)) {
+							// The flat land, away from the Chasm's edge (where it rises into the other biomes' hills)
 							plateau[0] = Math.min(plateau[0], height);
 							plateau[1] = Math.max(plateau[1], height);
 						}
@@ -1276,7 +1278,7 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			return;
 		}
 		int median = widths.get(widths.size() / 2);
-		check("the land between fissures is flat (top varies by " + (plateau[1] - plateau[0]) + " blocks; under 16)", plateau[1] - plateau[0] < 16);
+		check("the land between fissures is really flat (top varies by " + (plateau[1] - plateau[0]) + " blocks; 3 or less)", plateau[1] - plateau[0] <= 3);
 		check("fissure floors sit just under the water (y=" + floorLow + " to " + floorHigh + "; between -60 and -47)", floorLow >= -60 && floorHigh <= -47);
 		check("most fissures are thin (median width " + median + "; 5-12 blocks)", median >= 5 && median <= 12);
 		check("some gorges are wide (widest " + widths.getLast() + "; 20+ blocks)", widths.getLast() >= 20);
@@ -1284,7 +1286,7 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		// Every block of every fissure, in a 321 x 321 square: how narrow is the narrowest spot, and does it all join up?
 		int[] web = onServer(server -> chasmWeb(server.getLevel(ModDimensions.UMBRAL_WORLD), centre, 160));
 		report.add("INFO  fissure web in 321 x 321 blocks: " + web[0] + " fissure columns, narrowest spot " + web[1]
-				+ " blocks across, " + web[2] + " pieces cut off from the rest");
+				+ " blocks across (at " + web[3] + ", " + web[4] + "), " + web[2] + " pieces cut off from the rest");
 		check("no fissure is narrower than 5 blocks (narrowest " + web[1] + ")", web[1] >= 5);
 		check("all fissures join up into one web (" + web[2] + " pieces cut off)", web[2] == 0);
 
@@ -1302,12 +1304,18 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			BlockState deep = umbral.getBlockState(edge.atY(top - 12));
 			BlockState water = umbral.getBlockState(new BlockPos(x, -47, thin.z()));
 			BlockState middle = umbral.getBlockState(new BlockPos(x, 10, thin.z()));
+			int floorY = -47;
+			while (floorY > -64 && !umbral.getFluidState(new BlockPos(x, floorY, thin.z())).isEmpty()) {
+				floorY--;
+			}
+			BlockState floor = umbral.getBlockState(new BlockPos(x, floorY, thin.z()));
 			return new String[]{
 					String.valueOf(surface.is(ModBlocks.DEAD_SEA_SHALE)), String.valueOf(deep.is(ModBlocks.SHADESTONE_BLOCK)),
 					String.valueOf(water.is(Blocks.WATER)), String.valueOf(middle.isAir()),
-					"y=" + top + " " + surface + " / " + deep + " / " + water + " / " + middle};
+					"y=" + top + " " + surface + " / " + deep + " / " + water + " / " + middle + " / floor " + floor,
+					String.valueOf(floor.is(ModBlocks.SHADESTONE_BLOCK) || floor.is(ModBlocks.CINDERITE_ORE))};
 		});
-		report.add("INFO  edge surface / 12 below it / fissure at y=-47 / fissure at y=10: " + column[4]);
+		report.add("INFO  edge surface / 12 below it / fissure at y=-47 / fissure at y=10 / fissure floor: " + column[4]);
 		// The height map (used for mob spawning, rain and more) must see the real ground: a solid block
 		// only counts if it's in the #minecraft:blocks_motion_no_leaves tag
 		int[] heights = onServer(server -> {
@@ -1349,6 +1357,7 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		check("Shadestone lies under the shale", Boolean.parseBoolean(column[1]));
 		check("water fills the bottom of the fissure", Boolean.parseBoolean(column[2]));
 		check("the fissure is open air halfway down", Boolean.parseBoolean(column[3]));
+		check("the fissure's floor is Shadestone, not mud", Boolean.parseBoolean(column[5]));
 		int bottomX = (thin.startX() + thin.endX()) / 2;
 		command(String.format(java.util.Locale.ROOT, "execute in umbral_world:umbral_world run tp @a %d.5 -46 %d.5 0 -70", bottomX, thin.z()));
 		world.getConnection().waitForChunksRender();
@@ -1375,8 +1384,9 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			for (int j = 0; j < size; j++) {
 				int x = centre.getX() - radius + i;
 				int z = centre.getZ() - radius + j;
-				interior[i][j] = isChasm(umbral, x, z) && isChasm(umbral, x + 24, z) && isChasm(umbral, x - 24, z)
-						&& isChasm(umbral, x, z + 24) && isChasm(umbral, x, z - 24);
+				// Well inside the Chasm: near its edge fissures are cut off bluntly, which can leave slivers
+				interior[i][j] = isChasm(umbral, x, z) && isChasm(umbral, x + 48, z) && isChasm(umbral, x - 48, z)
+						&& isChasm(umbral, x, z + 48) && isChasm(umbral, x, z - 48);
 				low[i][j] = isChasm(umbral, x, z) && generator.getBaseHeight(x, z, Heightmap.Types.OCEAN_FLOOR_WG, umbral, random) < 20;
 				if (low[i][j]) {
 					fissureColumns++;
@@ -1384,10 +1394,14 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			}
 		}
 		// Narrowest: for each fissure column, the shorter of its east-west and north-south runs
-		// (never less than the true width; only counted where the run doesn't reach the square's edge)
-		int narrowest = Integer.MAX_VALUE;
+		// (never less than the true width; only counted where the run doesn't reach the square's edge).
+		// A pinch only counts if it lasts 3 blocks along the fissure, so a one-block notch in the side
+		// of a wide gorge (short one way, long the other) isn't mistaken for a narrow fissure.
+		int[][] across = new int[size][size];
+		boolean[][] alongX = new boolean[size][size];
 		for (int i = 0; i < size; i++) {
 			for (int j = 0; j < size; j++) {
+				across[i][j] = Integer.MAX_VALUE;
 				if (!low[i][j] || !interior[i][j]) {
 					continue;
 				}
@@ -1409,8 +1423,27 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 				}
 				boolean xOpen = west > 0 && east < size - 1;
 				boolean zOpen = north > 0 && south < size - 1;
-				int across = Math.min(xOpen ? east - west + 1 : Integer.MAX_VALUE, zOpen ? south - north + 1 : Integer.MAX_VALUE);
-				narrowest = Math.min(narrowest, across);
+				int ew = xOpen ? east - west + 1 : Integer.MAX_VALUE;
+				int ns = zOpen ? south - north + 1 : Integer.MAX_VALUE;
+				across[i][j] = Math.min(ew, ns);
+				alongX[i][j] = ew > ns; // the fissure runs east-west here, so look along x for the pinch
+			}
+		}
+		int narrowest = Integer.MAX_VALUE;
+		int[] narrowAt = new int[2];
+		for (int i = 1; i < size - 1; i++) {
+			for (int j = 1; j < size - 1; j++) {
+				if (across[i][j] == Integer.MAX_VALUE) {
+					continue;
+				}
+				int di = alongX[i][j] ? 1 : 0;
+				int dj = alongX[i][j] ? 0 : 1;
+				int pinch = Math.max(across[i][j], Math.max(across[i - di][j - dj], across[i + di][j + dj]));
+				if (pinch < narrowest) {
+					narrowest = pinch;
+					narrowAt[0] = centre.getX() - radius + i;
+					narrowAt[1] = centre.getZ() - radius + j;
+				}
 			}
 		}
 		// Cut-off pieces: flood-fill each piece of fissure (corners count as touching)
@@ -1446,7 +1479,7 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 				}
 			}
 		}
-		return new int[]{fissureColumns, narrowest == Integer.MAX_VALUE ? 0 : narrowest, cutOff};
+		return new int[]{fissureColumns, narrowest == Integer.MAX_VALUE ? 0 : narrowest, cutOff, narrowAt[0], narrowAt[1]};
 	}
 
 	/** Stands 2 blocks back from a fissure's west edge, facing east and looking down into it. */

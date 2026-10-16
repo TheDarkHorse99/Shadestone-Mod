@@ -19,7 +19,7 @@
       "right": 20.0,
       "left": {
         "type": "minecraft:sub",
-        "left": 0.2,
+        "left": 0.0,
         "right": "umbral_world:chasm/layout"
       }
     }
