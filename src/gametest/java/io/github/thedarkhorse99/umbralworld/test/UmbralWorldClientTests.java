@@ -1395,6 +1395,12 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		world.getConnection().waitForChunksRender();
 		context.waitTicks(30);
 		context.takeScreenshot("finger_weeds_daylight");
+		command("execute in minecraft:overworld run tp @a 603.5 -58.5 7.0 0 10");
+		context.waitTicks(20);
+		context.takeScreenshot("finger_weeds_close");
+		command("execute in minecraft:overworld run tp @a 600.0 -58.5 6.5 -50 15");
+		context.waitTicks(20);
+		context.takeScreenshot("finger_weeds_close_from_the_side");
 		command("execute in minecraft:overworld run tp @a 610.5 -59 3.5 0 50");
 		world.getConnection().waitForChunksRender();
 		context.waitTicks(40);
@@ -1600,6 +1606,20 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		world.getConnection().waitForChunksRender();
 		context.waitTicks(30);
 		context.takeScreenshot("murkfiend_side_view");
+		// Closer, from all round (it faces south, +z)
+		command("effect give @a minecraft:water_breathing infinite 0 true");
+		String[][] views = {
+				{"712.5 -57.6 3.5 180 5", "murkfiend_front"},
+				{"715.0 -57.3 3.0 135 15", "murkfiend_front_three_quarter"},
+				{"710.0 -57.3 -2.5 -45 15", "murkfiend_back_three_quarter"},
+				{"712.5 -56.7 0.6 0 90", "murkfiend_from_above"},
+		};
+		for (String[] view : views) {
+			command("execute in minecraft:overworld run tp @a " + view[0]);
+			context.waitTicks(20);
+			context.takeScreenshot(view[1]);
+		}
+		command("effect clear @a minecraft:water_breathing");
 		command("execute in minecraft:overworld run tp @a 712.5 -56 1.5 0 60");
 		context.waitTicks(30);
 		context.takeScreenshot("chasm_skate_from_above");
