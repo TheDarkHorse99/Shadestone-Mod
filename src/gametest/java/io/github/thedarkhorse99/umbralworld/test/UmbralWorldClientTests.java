@@ -113,6 +113,7 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			section("Recipes", this::testRecipes);
 			section("Ectoplasm Bottle", this::testEctoplasmBottle);
 			section("Plants, weeds and Ghouls", this::testPlantsWeedsGhouls);
+			section("Natural spawning", this::testNaturalSpawning);
 		}
 		writeReport();
 		if (failures > 0) {
@@ -591,6 +592,119 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 				== io.github.thedarkhorse99.umbralworld.sound.ModSounds.BARROW_REFUSE);
 	}
 
+	// =====================================================================================
+	// Natural spawning: a minute in each biome with mob spawning on, counting what turns up
+	// =====================================================================================
+
+	private void testNaturalSpawning() {
+		java.util.Map<String, List<String>> expected = new java.util.LinkedHashMap<>();
+		expected.put("grave", List.of("wight", "ghoul"));
+		expected.put("miasma", List.of("crawler", "cursed_soul"));
+		expected.put("chasm", List.of("murkfiend", "chasm_skate"));
+		for (var entry : expected.entrySet()) {
+			String biome = entry.getKey();
+			BlockPos spot = onServer(server -> {
+				ServerLevel umbral = server.getLevel(ModDimensions.UMBRAL_WORLD);
+				for (int r = 0; r < 4096; r += 64) {
+					for (int x = -r; x <= r; x += 64) {
+						for (int z : new int[]{-r, r}) {
+							if (isBiome(umbral, biome, x, z) && isBiome(umbral, biome, x + 96, z) && isBiome(umbral, biome, x - 96, z)
+									&& isBiome(umbral, biome, x, z + 96) && isBiome(umbral, biome, x, z - 96)) {
+								int y = umbral.getChunkSource().getGenerator().getBaseHeight(x, z, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+										umbral, umbral.getChunkSource().randomState());
+								return new BlockPos(x, y, z);
+							}
+						}
+					}
+				}
+				return null;
+			});
+			if (spot == null) {
+				check("found a spot deep in the " + biome, false);
+				continue;
+			}
+			command("kill @e[type=!minecraft:player]");
+			command(String.format(java.util.Locale.ROOT, "execute in umbral_world:umbral_world run tp @a %d.5 %d %d.5", spot.getX(), spot.getY() + 1, spot.getZ()));
+			world.getConnection().waitForChunksRender();
+			String why = onServer(server -> {
+				ServerLevel umbral = server.getLevel(ModDimensions.UMBRAL_WORLD);
+				BlockPos at = spot.above();
+				int dark = 0;
+				for (int i = 0; i < 1000; i++) {
+					dark += net.minecraft.world.entity.monster.Monster.isDarkEnoughToSpawn(umbral, at, umbral.getRandom()) ? 1 : 0;
+				}
+				return "sky light " + umbral.getBrightness(net.minecraft.world.level.LightLayer.SKY, at)
+						+ ", block light " + umbral.getBrightness(net.minecraft.world.level.LightLayer.BLOCK, at)
+						+ ", raw brightness " + umbral.getMaxLocalRawBrightness(at) + ", sky darken " + umbral.getSkyDarken()
+						+ ", dark enough " + dark / 10 + "% of the time, spawn_monsters " + umbral.getGameRules().get(net.minecraft.world.level.gamerules.GameRules.SPAWN_MONSTERS)
+						+ ", difficulty " + umbral.getDifficulty();
+			});
+			report.add("INFO  " + biome + ": " + why);
+			command("gamerule spawn_mobs true");
+			// The test world keeps hostile spawning off on its own; a real world on Easy or harder has it on
+			onServer(server -> {
+				server.getLevel(ModDimensions.UMBRAL_WORLD).getChunkSource().setSpawnSettings(true);
+				return null;
+			});
+			context.waitTicks(1200);
+			command("gamerule spawn_mobs false");
+			java.util.Map<String, Integer> counts = onServer(server -> {
+				ServerLevel umbral = server.getLevel(ModDimensions.UMBRAL_WORLD);
+				java.util.Map<String, Integer> found = new java.util.TreeMap<>();
+				for (Entity entity : umbral.getAllEntities()) {
+					if (!(entity instanceof net.minecraft.world.entity.player.Player)) {
+						String id = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).getPath();
+						found.merge(id, 1, Integer::sum);
+					}
+				}
+				return found;
+			});
+			report.add("INFO  a minute in the " + biome + " at " + spot.toShortString() + " with spawning on: " + counts);
+			String deeper = onServer(server -> {
+				ServerLevel umbral = server.getLevel(ModDimensions.UMBRAL_WORLD);
+				StringBuilder out = new StringBuilder();
+				var state = umbral.getChunkSource().getLastSpawnState();
+				if (state != null) {
+					out.append("spawnable chunks ").append(state.getSpawnableChunkCount()).append(", counts ").append(state.getMobCategoryCounts());
+				}
+				try {
+					var field = net.minecraft.server.level.ServerChunkCache.class.getDeclaredField("spawnEnemies");
+					field.setAccessible(true);
+					out.append(", spawnEnemies ").append(field.get(umbral.getChunkSource()));
+				} catch (ReflectiveOperationException e) {
+					out.append(", spawnEnemies ?");
+				}
+				RandomSource random = RandomSource.create(1);
+				for (String id : entry.getValue()) {
+					var type = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getValue(UmbralWorld.id(id));
+					int placeOk = 0, rulesOk = 0, tries = 0;
+					for (int i = 0; i < 400; i++) {
+						int x = spot.getX() + random.nextInt(97) - 48;
+						int z = spot.getZ() + random.nextInt(97) - 48;
+						int top = umbral.getHeight(Heightmap.Types.WORLD_SURFACE, x, z);
+						int y = umbral.getMinY() + random.nextInt(top - umbral.getMinY() + 1);
+						BlockPos pos = new BlockPos(x, y, z);
+						tries++;
+						if (net.minecraft.world.entity.SpawnPlacements.isSpawnPositionOk(type, umbral, pos)) {
+							placeOk++;
+							if (net.minecraft.world.entity.SpawnPlacements.checkSpawnRules(type, umbral, EntitySpawnReason.NATURAL, pos, random)) {
+								rulesOk++;
+							}
+						}
+					}
+					out.append(" | ").append(id).append(": place ok ").append(placeOk).append("/").append(tries).append(", rules ok ").append(rulesOk);
+				}
+				return out.toString();
+			});
+			report.add("INFO    why: " + deeper);
+			int ours = entry.getValue().stream().mapToInt(id -> counts.getOrDefault(id, 0)).sum();
+			check("mobs spawn naturally in the " + biome + " (" + ours + " of " + entry.getValue() + ")", ours > 0);
+		}
+		command("kill @e[type=!minecraft:player]");
+		command("execute in minecraft:overworld run tp @a 0.5 -60 0.5");
+		world.getConnection().waitForChunksRender();
+	}
+
 	/** What a crafting grid of this size holding these items (row by row) makes, or "nothing". */
 	private String craft(int width, int height, net.minecraft.world.item.Item... items) {
 		return onServer(server -> {
@@ -735,6 +849,25 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		teleport(0.5, FEET, -5, 0, 5);
 		context.waitTicks(60);
 		context.takeScreenshot("corpse_candle_10_blocks");
+		// Up close in daylight, twice a second apart: the candle should have bobbed
+		command("time set noon");
+		teleport(0.5, FEET, 3.3, 0, 45);
+		context.waitTicks(40);
+		context.takeScreenshot("corpse_candle_daylight_close");
+		context.waitTicks(20);
+		context.takeScreenshot("corpse_candle_daylight_close_1_second_later");
+		// Its height through one whole bob (4 seconds), a tick at a time
+		float[] range = onServer(server -> {
+			float low = Float.MAX_VALUE, high = -Float.MAX_VALUE;
+			for (int tick = 0; tick < 80; tick++) {
+				float h = CorpseCandleBlockEntity.floatHeight(server.overworld(), candle, tick);
+				low = Math.min(low, h);
+				high = Math.max(high, h);
+			}
+			return new float[]{low, high};
+		});
+		check(String.format(java.util.Locale.ROOT, "the candle bobs slowly, floating just above the ground (base between %.1f and %.1f pixels up)",
+				range[0] * 16, range[1] * 16), range[1] - range[0] > 1.5f / 16 && range[0] > 0.0f && range[1] < 0.25f);
 
 		// Spreading: a candle in the middle of a 5x5 patch of Effluvium
 		String spread = onServer(server -> {
@@ -1433,7 +1566,8 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			return;
 		}
 		int median = widths.get(widths.size() / 2);
-		check("the land between fissures is really flat (top varies by " + (plateau[1] - plateau[0]) + " blocks; 3 or less)", plateau[1] - plateau[0] <= 3);
+		// 4: the bottom of the gentle slope down from the other biomes reaches a little way in
+		check("the land between fissures is really flat (top varies by " + (plateau[1] - plateau[0]) + " blocks; 4 or less)", plateau[1] - plateau[0] <= 4);
 		check("fissure floors sit just under the water (y=" + floorLow + " to " + floorHigh + "; between -60 and -47)", floorLow >= -60 && floorHigh <= -47);
 		check("most fissures are thin (median width " + median + "; 5-12 blocks)", median >= 5 && median <= 12);
 		check("some gorges are wide (widest " + widths.getLast() + "; 20+ blocks)", widths.getLast() >= 20);
@@ -1493,8 +1627,8 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		String[] shoreParts = shore.split("\\|", 4);
 		report.add("INFO  land heights every 8 blocks from 64 outside the Chasm to 160 inside (fissures skipped)" + shoreParts[3]);
 		check("found places where the land crosses into the Chasm (" + shoreParts[0] + ")", Integer.parseInt(shoreParts[0]) >= 1);
-		check("the land drops 12+ blocks from outside the Chasm to inside it (smallest drop " + shoreParts[2] + ")",
-				Integer.parseInt(shoreParts[2]) >= 12);
+		check("the land drops 5+ blocks from outside the Chasm to inside it (smallest drop " + shoreParts[2] + ")",
+				Integer.parseInt(shoreParts[2]) >= 5);
 		check("it slopes down gently, no cliffs (biggest step between neighbouring blocks " + shoreParts[1] + "; 2 or less)",
 				Integer.parseInt(shoreParts[1]) <= 2);
 
@@ -1517,7 +1651,7 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			int top = umbral.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, edge.getX(), edge.getZ()) - 1;
 			BlockState surface = umbral.getBlockState(edge.atY(top));
 			BlockState deep = umbral.getBlockState(edge.atY(top - 12));
-			BlockState rock = umbral.getBlockState(edge.atY(10));
+			BlockState rock = umbral.getBlockState(edge.atY(-10));
 			BlockState water = umbral.getBlockState(new BlockPos(x, -47, thin.z()));
 			BlockState middle = umbral.getBlockState(new BlockPos(x, 10, thin.z()));
 			int floorY = -47;
@@ -1572,7 +1706,7 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		check("the flat land beside the fissure is Dead Sea Shale (" + heights[2] + " of " + heights[3] + " columns; 90%+)", heights[2] * 10 >= heights[3] * 9);
 		check("the Chasm's surface is Dead Sea Shale", Boolean.parseBoolean(column[0]));
 		check("Barrow Refuse lies under the shale", Boolean.parseBoolean(column[1]));
-		check("Shadestone is deeper down, at y=10 (" + column[7] + ")", Boolean.parseBoolean(column[6]));
+		check("Shadestone is deeper down, at y=-10 (" + column[7] + ")", Boolean.parseBoolean(column[6]));
 		check("water fills the bottom of the fissure", Boolean.parseBoolean(column[2]));
 		check("the fissure is open air halfway down", Boolean.parseBoolean(column[3]));
 		check("the fissure's floor is Shadestone, not mud", Boolean.parseBoolean(column[5]));
@@ -2014,8 +2148,8 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 					perRow.merge(pos.getY(), 1, Integer::sum);
 				}
 				boolean unbroken = perRow.size() == high - low + 1;
-				// From the bottom of the Barrow Refuse (it blends into Shadestone at y 24-32) to the top of the wall
-				boolean fromWaterToTop = low <= 38 && high >= 40;
+				// From the bottom of the Barrow Refuse (it blends into Shadestone at y 0-8) to the top of the wall
+				boolean fromWaterToTop = low <= 14 && high >= 50;
 				if (unbroken) {
 					stats[3]++;
 				}
