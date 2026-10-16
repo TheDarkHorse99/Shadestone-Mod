@@ -7,6 +7,7 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.monster.Enemy;
+import io.github.thedarkhorse99.umbralworld.entity.FadeInLight;
 
 /**
  * What the Nightstalker effect looks like on your own screen:
@@ -33,7 +34,7 @@ public final class NightstalkerVision {
         LocalPlayer player = Minecraft.getInstance().player;
         return player != null
                 && entity != player
-                && entity instanceof Enemy
+                && (entity instanceof Enemy || entity.getType().builtInRegistryHolder().is(FadeInLight.FADES_IN_LIGHT)) // and every Umbral mob, even the Ghoul (Mac)
                 && player.hasEffect(ModEffects.NIGHTSTALKER)
                 && player.distanceToSqr(entity) < OUTLINE_RANGE * OUTLINE_RANGE
                 && player.hasLineOfSight(entity);
