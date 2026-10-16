@@ -2,6 +2,7 @@ package io.github.thedarkhorse99.umbralworld.test;
 
 import io.github.thedarkhorse99.umbralworld.UmbralWorld;
 import io.github.thedarkhorse99.umbralworld.block.ModBlocks;
+import io.github.thedarkhorse99.umbralworld.block.SpileBlock;
 import io.github.thedarkhorse99.umbralworld.block.entity.CorpseCandleBlockEntity;
 import io.github.thedarkhorse99.umbralworld.entity.ChasmSkate;
 import io.github.thedarkhorse99.umbralworld.entity.ChasmSwimmer;
@@ -41,6 +42,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LayeredCauldronBlock;
 import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkGenerator;
@@ -127,6 +129,33 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		});
 		context.waitTicks(20);
 		context.takeScreenshot("item_icons_hotbar");
+		onServer(server -> {
+			var inventory = player(server).getInventory();
+			inventory.clearContent();
+			var items = List.of(ModBlocks.SPILE.asItem(), ModBlocks.CORPSE_CANDLE.asItem(), ModItems.RAW_CINDERITE,
+					ModItems.CINDERITE_INGOT, ModItems.ECTOPLASM_BOTTLE, ModBlocks.CINDERITE_ORE.asItem(), ModBlocks.FINGER_WEEDS.asItem());
+			for (int slot = 0; slot < items.size(); slot++) {
+				inventory.setItem(slot, new ItemStack(items.get(slot)));
+			}
+			return null;
+		});
+		context.waitTicks(20);
+		context.takeScreenshot("item_icons_hotbar_2");
+
+		// A Spile on a log over a full Ectoplasm Cauldron, in daylight
+		BlockPos log = new BlockPos(300, FEET, 10);
+		onServer(server -> {
+			ServerLevel level = server.overworld();
+			for (int up = 0; up < 3; up++) {
+				level.setBlockAndUpdate(log.above(up), Blocks.OAK_LOG.defaultBlockState());
+			}
+			level.setBlockAndUpdate(log.above(2).north(), ModBlocks.SPILE.defaultBlockState().setValue(SpileBlock.FACING, Direction.NORTH));
+			level.setBlockAndUpdate(log.north(), ModBlocks.ECTOPLASM_CAULDRON.defaultBlockState().setValue(LayeredCauldronBlock.LEVEL, 3));
+			return null;
+		});
+		teleport(303.5, FEET + 2, 5.5, 40, 20);
+		context.waitTicks(20);
+		context.takeScreenshot("spile_and_ectoplasm_cauldron");
 	}
 
 	// =====================================================================================
