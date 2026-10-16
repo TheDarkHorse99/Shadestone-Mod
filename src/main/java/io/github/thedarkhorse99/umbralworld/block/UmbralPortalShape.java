@@ -164,7 +164,9 @@ public class UmbralPortalShape {
     public int getBrightestLight(Level level) {
         int brightest = 0;
         for (BlockPos pos : interior()) {
-            brightest = Math.max(brightest, level.getMaxLocalRawBrightness(pos));
+            if (level.getMaxLocalRawBrightness(pos) > brightest) { // quick check before looking for candles
+                brightest = Math.max(brightest, CorpseCandleBlock.lightIgnoringCandles(level, pos));
+            }
         }
         return brightest;
     }

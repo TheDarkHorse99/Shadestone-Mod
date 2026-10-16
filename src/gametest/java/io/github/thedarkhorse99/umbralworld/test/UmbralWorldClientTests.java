@@ -106,6 +106,7 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			section("Chasm mobs", this::testChasmMobs);
 			section("Item icons", this::testItemIcons);
 			section("Ghost Trees", this::testGhostTrees);
+			section("Portal and Corpse Candles", this::testPortalCandle);
 		}
 		writeReport();
 		if (failures > 0) {
@@ -255,6 +256,81 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		context.waitTicks(200);
 		int[] left = onServer(server -> countTree(server.overworld(), sapling.above()));
 		check("10 seconds after the tree is cut down its vapor is gone (" + left[1] + " left)", left[0] == 0 && left[1] == 0);
+	}
+
+	private void testPortalCandle() {
+		command("time set midnight");
+		BlockPos base = new BlockPos(440, GROUND, 40);
+		onServer(server -> {
+			ServerLevel level = server.overworld();
+			// A 2 x 3 frame (4 x 5 with the frame) in the x direction; one block is "placed by a player"
+			for (int x = -1; x <= 2; x++) {
+				for (int y = 0; y <= 4; y++) {
+					if (x == -1 || x == 2 || y == 0 || y == 4) {
+						level.setBlockAndUpdate(base.offset(x, y, 0), ModBlocks.SHADESTONE_BLOCK.defaultBlockState()
+								.setValue(io.github.thedarkhorse99.umbralworld.block.ShadestoneBlock.PLACED, true));
+					}
+				}
+			}
+			return null;
+		});
+		context.waitTicks(5); // let night fall first
+		onServer(server -> {
+			ServerLevel level = server.overworld();
+			BlockPos last = base.offset(1, 4, 0); // the top middle: it touches the inside of the frame
+			ModBlocks.SHADESTONE_BLOCK.setPlacedBy(level, last, level.getBlockState(last), player(server), ItemStack.EMPTY);
+			return null;
+		});
+		context.waitTicks(40);
+		java.util.function.Supplier<Boolean> open = () -> onServer(server ->
+				server.overworld().getBlockState(base.offset(0, 1, 0)).is(ModBlocks.UMBRAL_PORTAL));
+		check("a Shadestone frame opens a portal at night", open.get());
+		onServer(server -> {
+			server.overworld().setBlockAndUpdate(base.offset(0, 1, -1), ModBlocks.CORPSE_CANDLE.defaultBlockState());
+			return null;
+		});
+		context.waitTicks(60);
+		check("a Corpse Candle right next to the portal doesn't shut it", open.get());
+		teleport(440.5, FEET, 34.5, 0, -10);
+		context.waitTicks(10);
+		context.takeScreenshot("portal_with_corpse_candle");
+		onServer(server -> {
+			server.overworld().setBlockAndUpdate(base.offset(1, 1, -1), Blocks.TORCH.defaultBlockState());
+			return null;
+		});
+		context.waitTicks(60);
+		check("a torch next to it does", !open.get());
+		command("time set noon");
+
+		// A frame finished in daylight waits, then lights by itself once night falls
+		BlockPos day = base.offset(30, 0, 0); // far from the torch
+		onServer(server -> {
+			ServerLevel level = server.overworld();
+			for (int x = -1; x <= 2; x++) {
+				for (int y = 0; y <= 4; y++) {
+					if (x == -1 || x == 2 || y == 0 || y == 4) {
+						level.setBlockAndUpdate(day.offset(x, y, 0), ModBlocks.SHADESTONE_BLOCK.defaultBlockState()
+								.setValue(io.github.thedarkhorse99.umbralworld.block.ShadestoneBlock.PLACED, true));
+					}
+				}
+			}
+			return null;
+		});
+		context.waitTicks(5);
+		onServer(server -> {
+			ServerLevel level = server.overworld();
+			BlockPos last = day.offset(1, 4, 0);
+			ModBlocks.SHADESTONE_BLOCK.setPlacedBy(level, last, level.getBlockState(last), player(server), ItemStack.EMPTY);
+			return null;
+		});
+		context.waitTicks(30);
+		check("a frame finished in daylight doesn't light", onServer(server ->
+				!server.overworld().getBlockState(day.offset(0, 1, 0)).is(ModBlocks.UMBRAL_PORTAL)));
+		command("time set midnight");
+		context.waitTicks(60);
+		check("... but lights by itself when night falls", onServer(server ->
+				server.overworld().getBlockState(day.offset(0, 1, 0)).is(ModBlocks.UMBRAL_PORTAL)));
+		command("time set noon");
 	}
 
 	/** Logs and vapor around a tree's base: {logs, vapor}. */
@@ -506,6 +582,13 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		});
 		context.waitTicks(20);
 		check("at night next to a torch you're invisible", onServer(server -> player(server).hasEffect(MobEffects.INVISIBILITY)));
+		// A Corpse Candle is as bright as a torch, but its light doesn't count
+		onServer(server -> {
+			server.overworld().setBlockAndUpdate(new BlockPos(1, FEET, -31), ModBlocks.CORPSE_CANDLE.defaultBlockState());
+			return null;
+		});
+		context.waitTicks(20);
+		check("at night next to a Corpse Candle you stay visible", onServer(server -> !player(server).hasEffect(MobEffects.INVISIBILITY)));
 		onServer(server -> {
 			server.overworld().setBlockAndUpdate(new BlockPos(1, FEET, -31), Blocks.AIR.defaultBlockState());
 			return null;
@@ -728,6 +811,14 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		context.takeScreenshot("ghoul_umbral_with_glowstone");
 		command("execute in minecraft:overworld run tp @a 0.5 -60 0.5");
 		world.getConnection().waitForChunksRender();
+		// Back in the Overworld the normal sun must be back (Mac once saw a black sun there)
+		command("time set noon");
+		command("execute in minecraft:overworld run tp @a 0.5 -60 0.5 -90 -90");
+		context.waitTicks(30);
+		context.takeScreenshot("sky_overworld_after_the_umbral_world_normal_sun");
+		boolean blackSun = context.computeOnClient(client ->
+				client.level.dimension() == ModDimensions.UMBRAL_WORLD);
+		check("back in the Overworld the sky is the Overworld's", !blackSun);
 	}
 
 	private boolean ghoulScared(UUID id) {

@@ -1,6 +1,7 @@
 package io.github.thedarkhorse99.umbralworld.item;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import io.github.thedarkhorse99.umbralworld.block.CorpseCandleBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -57,12 +58,19 @@ public final class WightsShroud {
         entity.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, EFFECT_TICKS, 0, true, false, false));
     }
 
-    /** Light where its feet or head are. Sunlight counts, so the shroud works in the Overworld by day. */
+    /**
+     * Light where its feet or head are. Sunlight counts, so the shroud works in the Overworld by day;
+     * Corpse Candle light doesn't (see CorpseCandleBlock.lightIgnoringCandles).
+     */
     public static boolean isLit(LivingEntity entity) {
         Level level = entity.level();
         BlockPos feet = entity.blockPosition();
         BlockPos head = BlockPos.containing(entity.getEyePosition());
-        return Math.max(level.getMaxLocalRawBrightness(feet), level.getMaxLocalRawBrightness(head)) >= MIN_LIGHT;
+        if (Math.max(level.getMaxLocalRawBrightness(feet), level.getMaxLocalRawBrightness(head)) < MIN_LIGHT) {
+            return false; // quick check first: dark is dark
+        }
+        return CorpseCandleBlock.lightIgnoringCandles(level, feet) >= MIN_LIGHT
+                || CorpseCandleBlock.lightIgnoringCandles(level, head) >= MIN_LIGHT;
     }
 
     /**

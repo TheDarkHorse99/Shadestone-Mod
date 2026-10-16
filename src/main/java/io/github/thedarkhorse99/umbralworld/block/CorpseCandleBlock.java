@@ -9,6 +9,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.ScheduledTickAccess;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -19,6 +20,7 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jspecify.annotations.Nullable;
@@ -101,5 +103,43 @@ public class CorpseCandleBlock extends Block implements EntityBlock {
             return null;
         }
         return (BlockEntityTicker<T>) (BlockEntityTicker<CorpseCandleBlockEntity>) CorpseCandleBlockEntity::clientTick;
+    }
+
+    /**
+     * The light at pos as if Corpse Candles gave none (Mac, 2026-10-16): their light never makes
+     * Umbral mobs fade, never turns a Shroud wearer invisible and never shuts an Umbral portal.
+     * Light fades by 1 per block, and walls only make it fade faster, so a candle n blocks away
+     * (counting each step along x, y and z) gives at most 14 - n here. If the block light here is no
+     * brighter than the nearest candle could make it, the candles may be all there is, so it doesn't
+     * count. Sunlight always counts.
+     */
+    public static int lightIgnoringCandles(Level level, BlockPos pos) {
+        int sky = level.getBrightness(LightLayer.SKY, pos) - level.getSkyDarken();
+        int block = level.getBrightness(LightLayer.BLOCK, pos);
+        if (block > sky && block <= brightestCandle(level, pos)) {
+            block = 0;
+        }
+        return Math.max(sky, block);
+    }
+
+    /** The most light any Corpse Candle within reach could give at pos (0 if none). */
+    private static int brightestCandle(Level level, BlockPos pos) {
+        int best = 0;
+        int chunkX = pos.getX() >> 4;
+        int chunkZ = pos.getZ() >> 4;
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                LevelChunk chunk = level.getChunkSource().getChunkNow(chunkX + dx, chunkZ + dz);
+                if (chunk == null) {
+                    continue;
+                }
+                for (BlockEntity blockEntity : chunk.getBlockEntities().values()) {
+                    if (blockEntity instanceof CorpseCandleBlockEntity) {
+                        best = Math.max(best, LIGHT - blockEntity.getBlockPos().distManhattan(pos));
+                    }
+                }
+            }
+        }
+        return best;
     }
 }

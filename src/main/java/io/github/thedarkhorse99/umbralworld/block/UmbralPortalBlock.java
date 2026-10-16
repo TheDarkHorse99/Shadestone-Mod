@@ -83,7 +83,7 @@ public class UmbralPortalBlock extends Block implements Portal {
 
     @Override
     protected void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
-        if (level.getMaxLocalRawBrightness(pos) > UmbralPortalShape.MAX_LIGHT) {
+        if (CorpseCandleBlock.lightIgnoringCandles(level, pos) > UmbralPortalShape.MAX_LIGHT) { // candles don't count
             level.playSound(null, pos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 1.0f, 0.6f);
             level.sendParticles(ParticleTypes.SMOKE,
                     pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
