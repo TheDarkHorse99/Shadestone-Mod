@@ -17,6 +17,7 @@ import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * A fiendish merfolk with claws and sharp teeth that lives in the water at the bottom of
@@ -68,6 +69,19 @@ public class Murkfiend extends ChasmSwimmer {
             if (target != null && !target.isInWater()) {
                 setTarget(null);
             }
+        }
+        // The last few blocks: swim straight at the middle of its prey. Vanilla's swimming only moves a mob
+        // while its path is unfinished, and a path ends at the prey's block, so on its own it would stop
+        // there and hover over a player lying on the bottom, just out of reach.
+        LivingEntity target = getTarget();
+        if (target != null && isInWater() && getNavigation().isDone() && distanceToSqr(target) < 4.0 * 4.0) {
+            Vec3 aim = new Vec3(target.getX(), target.getY() + target.getBbHeight() * 0.4, target.getZ())
+                    .subtract(getX(), getY() + getBbHeight() * 0.5, getZ());
+            if (aim.lengthSqr() > 0.01) {
+                // with the water's drag this tops out at about its chase speed (3.6 blocks/second)
+                setDeltaMovement(getDeltaMovement().add(aim.normalize().scale(0.02)));
+            }
+            getLookControl().setLookAt(target, 30.0f, 30.0f);
         }
     }
 
