@@ -1,0 +1,84 @@
+{
+  "block.barrow_refuse.break": {
+    "sounds": [
+      {
+        "name": "minecraft:block.gravel.break",
+        "type": "event"
+      },
+      {
+        "name": "minecraft:block.mud.break",
+        "type": "event"
+      }
+    ],
+    "subtitle": "subtitles.block.generic.break"
+  },
+  "block.barrow_refuse.step": {
+    "sounds": [
+      {
+        "name": "minecraft:block.gravel.step",
+        "type": "event"
+      },
+      {
+        "name": "minecraft:block.mud.step",
+        "type": "event"
+      }
+    ],
+    "subtitle": "subtitles.block.generic.footsteps"
+  },
+  "block.barrow_refuse.place": {
+    "sounds": [
+      {
+        "name": "minecraft:block.gravel.place",
+        "type": "event"
+      },
+      {
+        "name": "minecraft:block.mud.place",
+        "type": "event"
+      }
+    ],
+    "subtitle": "subtitles.block.generic.place"
+  },
+  "block.barrow_refuse.hit": {
+    "sounds": [
+      {
+        "name": "minecraft:block.gravel.hit",
+        "type": "event"
+      },
+      {
+        "name": "minecraft:block.mud.hit",
+        "type": "event"
+      }
+    ],
+    "subtitle": "subtitles.block.generic.hit"
+  },
+  "block.barrow_refuse.fall": {
+    "sounds": [
+      {
+        "name": "minecraft:block.gravel.fall",
+        "type": "event"
+      },
+      {
+        "name": "minecraft:block.mud.fall",
+        "type": "event"
+      }
+    ],
+    "subtitle": "subtitles.block.generic.fall"
+  },
+  "block.finger_weeds.step": {
+    "sounds": [
+      {
+        "name": "minecraft:block.slime_block.step",
+        "type": "event"
+      },
+      {
+        "name": "minecraft:block.honey_block.step",
+        "type": "event"
+      },
+      {
+        "name": "minecraft:entity.slime.squish_small",
+        "type": "event"
+      }
+    ],
+    "subtitle": "subtitles.block.generic.footsteps"
+  }
+}

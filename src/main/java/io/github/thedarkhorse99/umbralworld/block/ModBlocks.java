@@ -1,5 +1,6 @@
 package io.github.thedarkhorse99.umbralworld.block;
 
+import io.github.thedarkhorse99.umbralworld.sound.ModSounds;
 import io.github.thedarkhorse99.umbralworld.UmbralWorld;
 import java.util.function.Function;
 import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
@@ -64,6 +65,7 @@ public class ModBlocks {
 			"barrow_refuse",
 			Block::new,
 			BlockBehaviour.Properties.ofFullCopy(Blocks.STONE)
+					.sound(ModSounds.BARROW_REFUSE) // gravel and mud (Mac)
 	);
 
 	// The Chasm's plant: roots and twigs growing out of the fissure walls, climbable like vines
@@ -76,7 +78,7 @@ public class ModBlocks {
 					.noOcclusion()
 					.randomTicks()
 					.strength(0.2F)
-					.sound(SoundType.HANGING_ROOTS)
+					.sound(ModSounds.FINGER_WEEDS) // slimy when walked or climbed through (Mac)
 					.pushReaction(PushReaction.POPPED)
 	);
 

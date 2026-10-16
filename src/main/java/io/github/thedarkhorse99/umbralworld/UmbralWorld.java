@@ -17,6 +17,7 @@ import io.github.thedarkhorse99.umbralworld.effect.ModPotions;
 import io.github.thedarkhorse99.umbralworld.block.entity.ModBlockEntities;
 import io.github.thedarkhorse99.umbralworld.menu.ModMenus;
 import io.github.thedarkhorse99.umbralworld.particle.ModParticles;
+import io.github.thedarkhorse99.umbralworld.sound.ModSounds;
 
 public class UmbralWorld implements ModInitializer {
 	public static final String MOD_ID = "umbral_world";
@@ -25,6 +26,7 @@ public class UmbralWorld implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		ModParticles.initialize();
+		ModSounds.initialize();
 		ModEffects.initialize();
 		ModPotions.initialize();
 		ModBlocks.initialize();
