@@ -111,6 +111,7 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			section("Finger Weeds round a corner", this::testFingerWeedsCorner);
 			section("Cinderite steam", this::testCinderiteSteam);
 			section("Recipes", this::testRecipes);
+			section("Ectoplasm Bottle", this::testEctoplasmBottle);
 		}
 		writeReport();
 		if (failures > 0) {
@@ -470,6 +471,50 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 				craft(3, 2, iron, iron, air, air, air, iron).equals("umbral_world:spile"));
 		check("Dark Furnace: a ring of Shadestone Blocks (" + craft(3, 3, block, block, block, block, air, block, block, block, block) + ")",
 				craft(3, 3, block, block, block, block, air, block, block, block, block).equals("umbral_world:dark_furnace"));
+	}
+
+	// =====================================================================================
+	// Filling a glass bottle from an Ectoplasm Cauldron with a real right-click
+	// =====================================================================================
+
+	private void testEctoplasmBottle() {
+		command("time set noon");
+		BlockPos cauldron = new BlockPos(1100, FEET, -2);
+		teleport(1100.5, FEET, 0.5, 180, 30);
+		context.waitTicks(20);
+		for (String mode : List.of("survival", "creative")) {
+			for (int bottles : List.of(1, 3)) {
+				command("gamemode " + mode + " @a");
+				onServer(server -> {
+					server.overworld().setBlockAndUpdate(cauldron,
+							ModBlocks.ECTOPLASM_CAULDRON.defaultBlockState().setValue(LayeredCauldronBlock.LEVEL, 3));
+					var inventory = player(server).getInventory();
+					inventory.clearContent();
+					inventory.setSelectedSlot(0);
+					inventory.setItem(0, new ItemStack(net.minecraft.world.item.Items.GLASS_BOTTLE, bottles));
+					return null;
+				});
+				context.waitTicks(5);
+				context.getInput().lookAt(cauldron);
+				context.getInput().pressKey(options -> options.keyUse);
+				context.waitTicks(10);
+				String result = onServer(server -> {
+					var inventory = player(server).getInventory();
+					int ecto = inventory.countItem(ModItems.ECTOPLASM_BOTTLE);
+					BlockState state = server.overworld().getBlockState(cauldron);
+					String level = state.is(ModBlocks.ECTOPLASM_CAULDRON) ? String.valueOf(state.getValue(LayeredCauldronBlock.LEVEL)) : state.toString();
+					return inventory.getSelectedItem() + "|" + ecto + "|" + level;
+				});
+				String[] parts = result.split("\\|");
+				String what = mode + ", " + bottles + " glass bottle(s): hand now " + parts[0] + ", Ectoplasm Bottles " + parts[1] + ", cauldron level " + parts[2];
+				check(what, parts[1].equals("1") && (mode.equals("creative") || parts[2].equals("2")));
+			}
+		}
+		command("gamemode survival @a");
+		onServer(server -> {
+			player(server).getInventory().clearContent();
+			return null;
+		});
 	}
 
 	/** What a crafting grid of this size holding these items (row by row) makes, or "nothing". */
@@ -1335,6 +1380,7 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			int top = umbral.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, edge.getX(), edge.getZ()) - 1;
 			BlockState surface = umbral.getBlockState(edge.atY(top));
 			BlockState deep = umbral.getBlockState(edge.atY(top - 12));
+			BlockState rock = umbral.getBlockState(edge.atY(10));
 			BlockState water = umbral.getBlockState(new BlockPos(x, -47, thin.z()));
 			BlockState middle = umbral.getBlockState(new BlockPos(x, 10, thin.z()));
 			int floorY = -47;
@@ -1343,10 +1389,11 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 			}
 			BlockState floor = umbral.getBlockState(new BlockPos(x, floorY, thin.z()));
 			return new String[]{
-					String.valueOf(surface.is(ModBlocks.DEAD_SEA_SHALE)), String.valueOf(deep.is(ModBlocks.SHADESTONE_BLOCK)),
+					String.valueOf(surface.is(ModBlocks.DEAD_SEA_SHALE)), String.valueOf(deep.is(ModBlocks.BARROW_REFUSE)),
 					String.valueOf(water.is(Blocks.WATER)), String.valueOf(middle.isAir()),
 					"y=" + top + " " + surface + " / " + deep + " / " + water + " / " + middle + " / floor " + floor,
-					String.valueOf(floor.is(ModBlocks.SHADESTONE_BLOCK) || floor.is(ModBlocks.CINDERITE_ORE))};
+					String.valueOf(floor.is(ModBlocks.SHADESTONE_BLOCK) || floor.is(ModBlocks.CINDERITE_ORE)),
+					String.valueOf(rock.is(ModBlocks.SHADESTONE_BLOCK)), rock.toString()};
 		});
 		report.add("INFO  edge surface / 12 below it / fissure at y=-47 / fissure at y=10 / fissure floor: " + column[4]);
 		// The height map (used for mob spawning, rain and more) must see the real ground: a solid block
@@ -1387,7 +1434,8 @@ public class UmbralWorldClientTests implements FabricClientGameTest {
 		check("the height map matches the real ground beside the fissure (" + heights[1] + " of " + heights[0] + " columns wrong)", heights[1] == 0);
 		check("the flat land beside the fissure is Dead Sea Shale (" + heights[2] + " of " + heights[3] + " columns; 90%+)", heights[2] * 10 >= heights[3] * 9);
 		check("the Chasm's surface is Dead Sea Shale", Boolean.parseBoolean(column[0]));
-		check("Shadestone lies under the shale", Boolean.parseBoolean(column[1]));
+		check("Barrow Refuse lies under the shale", Boolean.parseBoolean(column[1]));
+		check("Shadestone is deeper down, at y=10 (" + column[7] + ")", Boolean.parseBoolean(column[6]));
 		check("water fills the bottom of the fissure", Boolean.parseBoolean(column[2]));
 		check("the fissure is open air halfway down", Boolean.parseBoolean(column[3]));
 		check("the fissure's floor is Shadestone, not mud", Boolean.parseBoolean(column[5]));
