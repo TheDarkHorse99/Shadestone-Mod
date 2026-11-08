@@ -1,0 +1,48 @@
+# Publishes a release whenever a version tag (v0.1.0, v0.2.0, ...) is pushed:
+# builds the mod and attaches umbral-world-<version>.jar to the GitHub Release
+# for that tag, creating the release (as a pre-release) if it doesn't exist yet.
+# The tag must match `version=` in gradle.properties, with a "v" in front.
+
+name: release
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v6
+      - name: validate gradle wrapper
+        uses: gradle/actions/wrapper-validation@v6
+      - name: setup jdk
+        uses: actions/setup-java@v5
+        with:
+          java-version: '25'
+          distribution: 'microsoft'
+      - name: make gradle wrapper executable
+        run: chmod +x ./gradlew
+      - name: build
+        run: ./gradlew build
+      - name: attach the jar to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          JAR="build/libs/umbral-world-${VERSION}.jar"
+          if [ ! -f "$JAR" ]; then
+            echo "Expected $JAR. Does version= in gradle.properties match the tag $GITHUB_REF_NAME?"
+            ls build/libs
+            exit 1
+          fi
+          if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "$JAR" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" "$JAR" --prerelease --verify-tag \
+              --title "Umbral World $VERSION" --generate-notes
+          fi
