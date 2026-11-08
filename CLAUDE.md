@@ -26,6 +26,8 @@ Act as a veteran modder: rigorous, honest feedback, no reflexive praise. Point o
 - **Mac often works from his phone** through Remote Control of a Claude Code session running in IntelliJ's terminal on his PC (the PC stays on). He can't easily reach the PC mid-session, so finish work end to end (code, build, commit, push) without needing him at the keyboard. In-game testing waits until he's back at the PC.
 - **In-game tests (do this before pushing gameplay changes):** `.\gradlew.bat runClientGameTest` (about 1.5 minutes; opens a game window, so it works while Mac is away from the PC). It runs `src/gametest/java/.../test/UmbralWorldClientTests.java` in a fresh flat world: places blocks, spawns mobs, presses keys, waits, and checks results. Results: `build/run/clientGameTest/umbral_test_report.txt` (PASS/FAIL per check, with measured numbers); screenshots: `build/run/clientGameTest/screenshots/` (look at them with Read). Add checks for every new feature. Tests can't judge Mac's art, how things feel, or long-term spawn rates, so Mac's in-game test list still covers those.
 - **GitHub access:** the GitHub CLI is installed at `C:\Program Files\GitHub CLI\gh.exe` (may not be on PATH), logged in as TheDarkHorse99, and set up as git's credential helper, so `git push` works without prompts.
+- **Releases** (first one: v0.1.0, 2026-11-08, a pre-release): the version is `version=` in `gradle.properties`; the jar is `build/libs/umbral-world-<version>.jar` (`rootProject.name` in `settings.gradle`). To release: bump the version, push, then attach the jar to a GitHub Release tagged `v<version>` on `26.3` (`gh release create`). The jar from GitHub Actions' "Artifacts" for that commit works too. Upload only the main jar, not `-sources.jar`. Mark releases as pre-releases while the mod is in alpha.
+- **License** (Claude's pick when Mac said "you just do all that", 2026-11-08; Mac can change it): code and data files MIT, art and assets (`src/main/resources/assets`, `texture_guides`) All Rights Reserved. See `LICENSE`. Was the template's CC0.
 
 ## Project layout
 
@@ -165,7 +167,7 @@ Written, checked by the in-game tests, awaiting Mac's in-game look: **Barrow Ref
 
 ## Planned
 
-Shadestone tools and armor (they must smoke, see above) · Cinderite tools and armor · animated portal · Grave ruins with a spire · the Chasm's plant, mobs and ore (see below) · a see-in-the-dark item and shadow powers · license, icon, version 0.1.0
+Shadestone tools and armor (they must smoke, see above) · Cinderite tools and armor · animated portal · Grave ruins with a spire · the Chasm's plant, mobs and ore (see below) · a see-in-the-dark item and shadow powers · a mod icon (`assets/umbral_world/icon.png`, plus an `"icon"` line in `fabric.mod.json`; Mac to draw, 128x128) · uploading releases to Modrinth/CurseForge
 
 ## Biome designs (decided, partly built)
 

@@ -9,5 +9,5 @@ pluginManagement {
 	}
 }
 
-// Should match your modid
-rootProject.name = 'modid'
+// Name of the finished file: umbral-world-<version>.jar
+rootProject.name = 'umbral-world'

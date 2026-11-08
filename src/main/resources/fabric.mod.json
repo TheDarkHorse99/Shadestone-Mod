@@ -9,9 +9,10 @@
 	],
 	"contact": {
 		"homepage": "https://github.com/TheDarkHorse99/Shadestone-Mod",
-		"sources": "https://github.com/TheDarkHorse99/Shadestone-Mod"
+		"sources": "https://github.com/TheDarkHorse99/Shadestone-Mod",
+		"issues": "https://github.com/TheDarkHorse99/Shadestone-Mod/issues"
 	},
-	"license": "CC0-1.0",
+	"license": "MIT AND LicenseRef-All-Rights-Reserved",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
