@@ -1,12 +1,13 @@
-# Publishes a release whenever a version tag (v0.1.0, v0.2.0, ...) is pushed:
-# builds the mod and attaches umbral-world-<version>.jar to the GitHub Release
-# for that tag, creating the release (as a pre-release) if it doesn't exist yet.
-# The tag must match `version=` in gradle.properties, with a "v" in front.
+# Runs when a release is published on GitHub (Releases > Draft a new release).
+# Builds the mod and attaches umbral-world-<version>.jar to that release.
+# If .github/release-notes/<tag>.md exists (e.g. v0.1.0.md), it becomes the
+# release's description.
+# The tag must be `version=` from gradle.properties with a "v" in front.
 
 name: release
 on:
-  push:
-    tags: ['v*']
+  release:
+    types: [published]
 
 permissions:
   contents: write
@@ -17,6 +18,8 @@ jobs:
     steps:
       - name: checkout repository
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.release.tag_name }}
       - name: validate gradle wrapper
         uses: gradle/actions/wrapper-validation@v6
       - name: setup jdk
@@ -28,21 +31,21 @@ jobs:
         run: chmod +x ./gradlew
       - name: build
         run: ./gradlew build
-      - name: attach the jar to the release
+      - name: attach the jar (and notes) to the release
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.event.release.tag_name }}
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="${TAG#v}"
           JAR="build/libs/umbral-world-${VERSION}.jar"
           if [ ! -f "$JAR" ]; then
-            echo "Expected $JAR. Does version= in gradle.properties match the tag $GITHUB_REF_NAME?"
+            echo "Expected $JAR. Does version= in gradle.properties match the tag $TAG?"
             ls build/libs
             exit 1
           fi
-          if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" "$JAR" --clobber
-          else
-            gh release create "$GITHUB_REF_NAME" "$JAR" --prerelease --verify-tag \
-              --title "Umbral World $VERSION" --generate-notes
+          gh release upload "$TAG" "$JAR" --clobber
+          NOTES=".github/release-notes/${TAG}.md"
+          if [ -f "$NOTES" ]; then
+            gh release edit "$TAG" --notes-file "$NOTES"
           fi
